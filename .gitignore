@@ -1,3 +1,16 @@
+## Custom ##
+# Ignore everything in the inventories folder
+inventories/*
+
+# Except for demo group vars
+!inventories/group_vars/demo/
+!inventories/group_vars/demo/**
+
+# Except for demo host vars
+!inventories/host_vars/demo-VM1-Ingress.yml
+!inventories/host_vars/demo-VM2-Metrics.yml
+!inventories/host_vars/demo-VM3-Application-1.yml
+
 ## macOS ##
 .DS_Store
 .AppleDouble
