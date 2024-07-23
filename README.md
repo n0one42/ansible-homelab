@@ -46,6 +46,58 @@ Our setup consists of three main Virtual Machines, each with its own Traefik ins
 
 The main Traefik instance on demo-VM1-Ingress acts as the entrypoint for external traffic, routing requests to the appropriate VM based on the application. Each VM's local Traefik instance then handles internal routing to the specific services within that VM.
 
+```mermaid
+graph TD
+    subgraph "Internet"
+        CF[Cloudflare]
+    end
+    subgraph "demo-VM1-Ingress"
+        A[Main Traefik]
+        B[CrowdSec]
+        C[CrowdSec-Traefik-Bouncer]
+        D[Authelia]
+        E[Postgres]
+        F[Redis]
+        G[Authentik]
+        H[AdGuard / PowerDNS]
+        I[Promtail Agent]
+    end
+    subgraph "demo-VM2-Metrics"
+        J[Loki]
+        K[Grafana]
+        L[Other Metrics Tools]
+        M[Traefik VM2]
+        R[Promtail Agent]
+    end
+    subgraph "demo-VM3-Application-1"
+        N[Vaultwarden]
+        O[WikiJS]
+        P[Other Tools]
+        Q[Traefik VM3]
+        T[Promtail Agent]
+    end
+    CF -->|External Traffic| A
+    A -->|Ingress Traffic| B
+    B --> C
+    A --> D
+    D --> E
+    D --> F
+    A --> G
+    A --> H
+    I -->|Logs| J
+    R -->|Logs| J
+    T -->|Logs| J
+    J --> K
+    A -->|Internal Traffic| M
+    A -->|Internal Traffic| Q
+    M --> J
+    M --> K
+    M --> L
+    Q --> N
+    Q --> O
+    Q --> P
+```
+
 ## Security Measures
 - All Docker containers run as non-root users with specific UID:GID mappings
 - User namespace remapping (userns-remap) is implemented for additional container isolation
