@@ -1,0 +1,3 @@
+---
+# defaults file for roles/template_to_vm
+template_to_vm_new_hostname: "MyNewHostname"

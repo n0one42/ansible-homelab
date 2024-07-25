@@ -1,0 +1,21 @@
+# ! ######################## VMs ######################## * #
+dc_demo_net_base: 10.0.0
+dc_demo_net_address: "{{ dc_demo_net_base }}.0"
+dc_demo_net_prefix_length: 24
+dc_demo_net_cidr: "{{ dc_demo_net_address }}/{{ dc_demo_net_prefix_length }}"
+
+dc_demo_net_ubuntu-2404-template_ip: "{{ dc_demo_net_base }}.100"  # "10.0.100.100"
+dc_demo_net_vm1_ingress_ip: "{{ dc_demo_net_base }}.110"  # "10.0.100.110"
+dc_demo_net_vm2_metrics_ip: "{{ dc_demo_net_base }}.120"  # "10.0.100.120"
+dc_demo_net_vm3_application_1_ip: "{{ dc_demo_net_base }}.131"  # "10.0.100.131"
+
+
+# ! ######################## Apps ######################## * #
+# * ----------------- Traefik ----------------- ! #
+
+
+# * ----------------- Authelia ----------------- ! #
+
+
+# ! ################### Socket Proxyies ################### * #
+# * ----------------- Traefik ----------------- ! #

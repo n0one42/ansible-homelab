@@ -1,0 +1,4 @@
+---
+# defaults file for roles/pve_vm
+pve_vm_image_url: "https://cloud-images.ubuntu.com/releases/22.04/release/ubuntu-22.04-server-cloudimg-amd64.img"
+pve_vm_image_destination: "/var/lib/vz/template/iso"

@@ -1,0 +1,75 @@
+---
+# tasks file for roles/template_to_vm
+
+- name: Execute and display initial system information
+  ansible.builtin.shell: |
+    echo "Contents of the first 3 lines of /etc/hosts:"
+    head -n 3 /etc/hosts
+
+    echo "Contents of hostname"
+    hostname
+
+    echo "Contents of /etc/machine-id:"
+    cat /etc/machine-id
+
+    echo "Contents of /var/lib/dbus/machine-id:"
+    cat /var/lib/dbus/machine-id
+  register: system_info
+  changed_when: false
+
+- name: Display initial system information
+  ansible.builtin.debug:
+    msg: "{{ system_info.stdout }}"
+
+- name: Set new hostname
+  ansible.builtin.hostname:
+    name: "{{ template_to_vm_new_hostname }}"
+  notify: Reboot server
+
+- name: Update /etc/hosts file
+  ansible.builtin.lineinfile:
+    path: /etc/hosts
+    regexp: '^127\.0\.1\.1'
+    line: "127.0.1.1 {{ template_to_vm_new_hostname }}"
+  notify: Reboot server
+
+- name: Remove existing machine-id files
+  ansible.builtin.file:
+    path: "{{ item }}"
+    state: absent
+  loop:
+    - /etc/machine-id
+    - /var/lib/dbus/machine-id
+
+- name: Generate new machine-id in /etc
+  ansible.builtin.command: dbus-uuidgen --ensure=/etc/machine-id
+  changed_when: true
+
+- name: Generate new machine-id in /var/lib/dbus
+  ansible.builtin.command: dbus-uuidgen --ensure
+  changed_when: true
+
+- name: Restart systemd-hostnamed
+  ansible.builtin.systemd:
+    name: systemd-hostnamed
+    state: restarted
+
+- name: Execute and display updated system information
+  ansible.builtin.shell: |
+    echo "Contents of the first 3 lines of /etc/hosts:"
+    head -n 3 /etc/hosts
+
+    echo "Contents of hostname"
+    hostname
+
+    echo "Contents of /etc/machine-id:"
+    cat /etc/machine-id
+
+    echo "Contents of /var/lib/dbus/machine-id:"
+    cat /var/lib/dbus/machine-id
+  register: system_info
+  changed_when: false
+
+- name: Display updated system information
+  ansible.builtin.debug:
+    msg: "{{ system_info.stdout }}"

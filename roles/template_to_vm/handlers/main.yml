@@ -1,0 +1,15 @@
+---
+# handlers file for roles/template_to_vm
+
+- name: Reboot server
+  block:
+    - name: Reboot without waiting
+      ansible.builtin.command: /sbin/shutdown -r now
+      async: 1
+      poll: 0
+      changed_when: false
+      when: not template_to_vm_wait_for_reboot | default(false)
+
+    - name: Reboot and wait
+      ansible.builtin.reboot:
+      when: template_to_vm_wait_for_reboot | default(false)

@@ -1,0 +1,71 @@
+---
+- name: Check if Docker is installed
+  ansible.builtin.command:
+    cmd: docker --version
+  register: docker_installed_result
+  failed_when: false
+  changed_when: false
+
+- name: Install Docker if not installed
+  when: docker_installed_result.rc != 0
+  block:
+    - name: Install required system packages
+      ansible.builtin.apt:
+        name: "{{ item }}"
+        state: present
+      loop:
+        - ca-certificates
+        - curl
+
+    - name: Create keyring directory and download docker gpg key
+      block:
+        - name: Create keyring directory
+          ansible.builtin.file:
+            path: /etc/apt/keyrings
+            state: directory
+            mode: "0755"
+        - name: Download docker gpg key
+          ansible.builtin.get_url:
+            url: https://download.docker.com/linux/ubuntu/gpg
+            dest: /tmp/docker.asc
+            mode: "0644"
+        - name: Dearmor docker gpg key
+          ansible.builtin.command:
+            cmd: gpg --dearmor -o /etc/apt/keyrings/docker.gpg /tmp/docker.asc
+            creates: /etc/apt/keyrings/docker.gpg
+
+    - name: Add Docker repository to apt sources
+      ansible.builtin.shell: |
+        set -o pipefail
+        echo \
+          "deb [arch="$(dpkg --print-architecture)" signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/ubuntu \
+          "$(. /etc/os-release && echo "$VERSION_CODENAME")" stable" | \
+          sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
+      args:
+        executable: /bin/bash
+      register: add_repo_result
+      changed_when: add_repo_result.stdout != ""
+
+    - name: Update apt cache
+      ansible.builtin.apt:
+        update_cache: true
+      changed_when: false
+
+    - name: Install docker
+      ansible.builtin.apt:
+        name:
+          - docker-ce
+          - docker-ce-cli
+          - containerd.io
+        state: present
+
+    - name: Install optional docker plugins (docker compose)
+      ansible.builtin.apt:
+        name:
+          - docker-buildx-plugin
+          - docker-compose-plugin
+        state: present
+
+    # # add the current user to the docker group (prefer sudoing)
+    # - name: add user permissions
+    #   shell: "usermod -aG docker {{ ansible_env.SUDO_USER }}"

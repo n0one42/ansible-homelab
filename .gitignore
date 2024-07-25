@@ -1,6 +1,9 @@
 ## Custom ##
 # Ignore everything in the inventories folder
-inventories/*
+inventories/group_vars/*
+inventories/host_vars/*
+hosts.yml
+NOTES.md
 
 # Except for demo group vars
 !inventories/group_vars/demo/

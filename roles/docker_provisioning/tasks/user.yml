@@ -1,0 +1,67 @@
+---
+- name: "Ensure group exists: {{ docker_provisioning_dockerino_user_name }}"
+  ansible.builtin.group:
+    name: "{{ docker_provisioning_dockerino_user_name }}"
+    gid: "{{ docker_provisioning_dockerino_user_gid }}"
+    state: present
+
+- name: "Ensure user exists: {{ docker_provisioning_dockerino_user_name }}"
+  ansible.builtin.user:
+    name: "{{ docker_provisioning_dockerino_user_name }}"
+    uid: "{{ docker_provisioning_dockerino_user_uid }}"
+    group: "{{ docker_provisioning_dockerino_user_name }}"
+    password: "!" # Pub key auth only; pw disabled
+    create_home: false
+    system: true
+    shell: /usr/sbin/nologin
+    state: present
+
+- name: "Lock the password for {{ docker_provisioning_dockerino_user_name }}"
+  ansible.builtin.command:
+    cmd: "passwd -l {{ docker_provisioning_dockerino_user_name }}"
+    creates: "/etc/shadow.locked.{{ docker_provisioning_dockerino_user_name }}"
+  args:
+    creates: "/etc/shadow.locked.{{ docker_provisioning_dockerino_user_name }}"
+
+- name: "Add admin user to group {{ docker_provisioning_dockerino_user_name }}"
+  ansible.builtin.user:
+    name: "{{ docker_provisioning_primary_user_name }}"
+    groups: "{{ docker_provisioning_dockerino_user_name }}"
+    append: true
+
+- name: "Set subuid 100000:65536 for the user {{ docker_provisioning_dockerino_user_name }}"
+  ansible.builtin.copy:
+    content: "{{ docker_provisioning_dockerino_user_name }}:100000:65536\n"
+    dest: /etc/subuid
+    owner: root
+    group: root
+    mode: '0644'
+
+- name: "Set subgid 100000:65536 for the user {{ docker_provisioning_dockerino_user_name }}"
+  ansible.builtin.copy:
+    content: "{{ docker_provisioning_dockerino_user_name }}:100000:65536\n"
+    dest: /etc/subgid
+    owner: root
+    group: root
+    mode: '0644'
+
+- name: "Configure Docker daemon"
+  vars:
+    docker_daemon_config:
+      storage-driver: "overlay2"
+      userns-remap: "{{ docker_provisioning_dockerino_user_name }}"
+      log-driver: "json-file"
+      log-opts:
+        max-size: "10m"
+        max-file: "3"
+  ansible.builtin.copy:
+    dest: /etc/docker/daemon.json
+    content: "{{ docker_daemon_config | to_nice_json }}"
+    owner: root
+    group: root
+    mode: '0644'
+  notify: Restart docker
+
+- name: Add Infos to console
+  ansible.builtin.debug:
+    msg: "NOTE: if using --user param for a container eg 1200 it means on host uid 101200!"

@@ -1,0 +1,19 @@
+---
+# defaults file for roles/docker_provisioning
+
+docker_provisioning_timezone: 'America/New_York'
+
+docker_provisioning_primary_user_name: "myprimuser"
+
+docker_provisioning_dockerino_user_name: "dockerino"
+docker_provisioning_dockerino_user_uid: 12000
+docker_provisioning_dockerino_user_gid: 12000
+
+docker_provisioning_docker_home: "/opt/docker"
+# Subdirectories for specific types of Docker-related files
+docker_provisioning_docker_appdata: "{{ docker_home }}/appdata"  # Application data
+docker_provisioning_docker_custom: "{{ docker_home }}/custom"    # Custom configurations
+docker_provisioning_docker_logs: "{{ docker_home }}/logs"        # Log files
+docker_provisioning_docker_scripts: "{{ docker_home }}/scripts"  # Utility scripts
+docker_provisioning_docker_secrets: "{{ docker_home }}/secrets"  # Sensitive data
+docker_provisioning_docker_compose: "{{ docker_home }}/compose"  # compose datafiles

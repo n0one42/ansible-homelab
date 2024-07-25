@@ -1,0 +1,5 @@
+skip_list:
+  - placeholderifempty
+  - meta-incorrect
+  # - name[template]
+  # - var-naming[no-role-prefix]

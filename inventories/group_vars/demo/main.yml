@@ -1,0 +1,57 @@
+pve_storage: "local-zfs"
+ssh_port: 2222
+domain_1: 'mydom.net'
+
+primary_user_name: "qwertz"
+primary_user_uid: 1022
+primary_user_gid: 1022
+
+dockerino_user_name: "dockerino"
+dockerino_user_uid: 1200
+dockerino_user_gid: 1200
+
+docker_home: "/opt/docker"
+# Subdirectories for specific types of Docker-related files
+docker_appdata: "{{ docker_home }}/appdata"  # Application data
+docker_custom: "{{ docker_home }}/custom"    # Custom configurations
+docker_logs: "{{ docker_home }}/logs"        # Log files
+docker_scripts: "{{ docker_home }}/scripts"  # Utility scripts
+docker_secrets: "{{ docker_home }}/secrets"  # Sensitive data
+docker_compose: "{{ docker_home }}/compose"  # compose datafiles
+
+# Container IDs
+
+
+################################################################################################################################
+
+# Template
+# * ----------------- Container Configuration -------------------- * #
+## * Container variables
+
+## * Users configuration (like authelia users or such specific groups). Only if needed
+
+## * Network settings
+
+
+# * --------------------- DB Configuration ------------------------ * #
+## * Container variables
+
+## * Users configuration (like authelia users or such specific groups). Only if needed
+
+## * Network settings
+
+
+# * ------------------- Redis Configuration ---------------------- * #
+## * Container variables
+
+## * Users configuration (like authelia users or such specific groups). Only if needed
+
+## * Network settings
+
+
+# * ------------------- SocketProxy Configuration ---------------------- * #
+## * Container variables
+
+## * Users configuration (like authelia users or such specific groups). Only if needed
+
+## * Network settings

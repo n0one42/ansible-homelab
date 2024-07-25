@@ -1,0 +1,47 @@
+---
+- name: Ensure destination directory exists
+  ansible.builtin.file:
+    path: "{{ pve_vm_image_destination }}"
+    state: directory
+    mode: '0755'
+
+- name: Check if the ISO already exists
+  ansible.builtin.stat:
+    path: "{{ pve_vm_image_destination }}/{{ pve_vm_image_url | basename }}"
+  register: pve_vm_image_file
+
+- name: Download the cloud image if it does not exist
+  ansible.builtin.get_url:
+    url: "{{ pve_vm_image_url }}"
+    dest: "{{ pve_vm_image_destination }}/{{ pve_vm_image_url | basename }}"
+    mode: '0644'
+  when: not pve_vm_image_file.stat.exists
+
+
+# # ? Use either template_id or template_by_name as a variable
+
+# - name: Check - VM exists
+#   ansible.builtin.shell: |
+#     set -o pipefail
+#     qm list | grep -w {{ vm_id }}
+#   args:
+#     executable: /bin/bash
+#   register: vm_check
+#   changed_when: false
+#   failed_when: vm_check.rc not in [0, 1]
+
+# - name: Download Image if VM not exists
+#   when: vm_check.rc == 1
+#   block:
+#     - name: Check if the image already exists {{ image_fullpath }}
+#       ansible.builtin.stat:
+#         path: "{{ image_fullpath }}"
+#       register: image_stat
+
+#     - name: Download the image {{ image_url }}
+#       ansible.builtin.get_url:
+#         url: "{{ image_url }}"
+#         dest: "{{ image_fullpath }}"
+#         mode: "0644"
+#         # checksum: "{{ image_checksum }}"
+#       when: (not image_stat.islnk is defined)
