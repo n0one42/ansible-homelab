@@ -2,12 +2,14 @@
 # Ignore everything in the inventories folder
 inventories/group_vars/*
 inventories/host_vars/*
-hosts.yml
+dev_hosts.yml
+prod_hosts.yml
 NOTES.md
 
 # Except for demo group vars
 !inventories/group_vars/demo/
 !inventories/group_vars/demo/**
+inventories/group_vars/demo/z_me.yml
 
 # Except for demo host vars
 !inventories/host_vars/demo-VM1-Ingress.yml

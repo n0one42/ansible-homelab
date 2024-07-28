@@ -1,14 +1,14 @@
 ---
 - name: PVE VM
-  hosts: sdfgds
+  hosts: pve-qotom
   become: true
   gather_facts: false
   vars:
-    pve_vm_id: "demo-VM1-Ingress"
-    pve_vm_name: "demo-VM1-Ingress"
-    vm_primary_user_pub_key: ""
-    pve_vm_memory: "{{ pve_vm_memory | default(2048) }}"
-    pve_vm_disk_size: "{{ pve_vm_disk_size | default(20) }}"
+    pve_vm_primary_user_name: "qwertz"
+    pve_vm_primary_user_uid: 1022
+    pve_vm_primary_user_gid: 1022
+    pve_vm_id: 9999
+    pve_vm_ssh_port: 2222
   roles:
     - role: pve_vm
 
