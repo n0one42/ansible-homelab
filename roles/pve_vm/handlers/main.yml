@@ -1,2 +1,7 @@
 ---
 # handlers file for roles/pve_vm
+- name: Set file permissions
+  ansible.builtin.file:
+    path: "{{ pve_vm_image_destination }}/{{ pve_vm_image_url | basename }}"
+    mode: '0644'
+  when: download_result.changed

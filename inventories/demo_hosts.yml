@@ -1,40 +1,25 @@
 all:
   children:
-    # ! DEMO  
+    # ! DEMO
     demo:
       hosts:
-        pve-demo:
-          ansible_host: 10.0.100.51
-          ansible_port: 2222
+        demo-pve:
+          ansible_host: 10.0.5.10
           ansible_user: root
-          # ansible_ssh_private_key_file: ~/.ssh/id_ed25519
-          ansible_ssh_private_key_file: ~/.ssh/id_ecdsa_sk # works also with yubikey ~/.ssh/id_ecdsa_sk (needs touch)
           ansible_ssh_common_args: '-o IdentitiesOnly=yes'
-        demo-ubuntu-2404-template:
-          ansible_host: 10.0.100.100
-          ansible_user: qwertz
-          ansible_port: 2222
-          # ansible_ssh_private_key_file: ~/.ssh/id_ed25519
-          ansible_ssh_private_key_file: ~/.ssh/id_ecdsa_sk # works also with yubikey ~/.ssh/id_ecdsa_sk (needs touch)
+        demo-vm1-ingress:
+          ansible_host: 10.0.90.10
+          ansible_user: wasd
           ansible_ssh_common_args: '-o IdentitiesOnly=yes'
-        demo-VM1-Ingress:
-          ansible_host: 10.0.100.110
-          ansible_user: qwertz
-          ansible_port: 2222
-          # ansible_ssh_private_key_file: ~/.ssh/id_ed25519
-          ansible_ssh_private_key_file: ~/.ssh/id_ecdsa_sk # works also with yubikey ~/.ssh/id_ecdsa_sk (needs touch)
+        demo-vm2-metrics:
+          ansible_host: 10.0.90.20
+          ansible_user: wasd
           ansible_ssh_common_args: '-o IdentitiesOnly=yes'
-        demo-VM2-Metrics:
-          ansible_host: 10.0.100.120
-          ansible_user: qwertz
-          ansible_port: 2222
-          # ansible_ssh_private_key_file: ~/.ssh/id_ed25519
-          ansible_ssh_private_key_file: ~/.ssh/id_ecdsa_sk # works also with yubikey ~/.ssh/id_ecdsa_sk (needs touch)
-          ansible_ssh_common_args: '-o IdentitiesOnly=yes'          
-        demo-VM3-Application-1:
-          ansible_host: 10.0.100.131
-          ansible_user: qwertz
-          ansible_port: 2222
-          # ansible_ssh_private_key_file: ~/.ssh/id_ed25519
-          ansible_ssh_private_key_file: ~/.ssh/id_ecdsa_sk # works also with yubikey ~/.ssh/id_ecdsa_sk (needs touch)
+        demo-vm3-application-1:
+          ansible_host: 10.0.90.31
+          ansible_user: wasd
           ansible_ssh_common_args: '-o IdentitiesOnly=yes'
+
+# ! Notes:
+# The private_key will be set through variables. Therefore, set it there.
+# Also as a Hint: id_ecdsa_sk like yubikey requires touch!

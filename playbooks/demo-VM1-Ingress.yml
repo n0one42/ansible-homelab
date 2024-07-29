@@ -1,41 +1,20 @@
 ---
-- name: PVE VM
-  hosts: sdfgds
+- name: Create VM => demo-vm1-ingress
+  hosts: demo-pve
   become: true
   gather_facts: false
-  vars:
-    pve_vm_id: "demo-VM1-Ingress"
-    pve_vm_name: "demo-VM1-Ingress"
-    vm_primary_user_pub_key: ""
-    pve_vm_memory: "{{ pve_vm_memory | default(2048) }}"
-    pve_vm_disk_size: "{{ pve_vm_disk_size | default(20) }}"
   roles:
     - role: pve_vm
+      vars:
+        # pve_vm_prune: true  # testing purposes
+        pve_vm_id: 110
+        pve_vm_name: "demo-vm1-ingress"
+        pve_vm_hostname: "demo-vm1-ingress"
+        pve_vm_ipv4_address_0: "{{ dc_demo_net_vm1_ingress_ip }}"
 
 
 # - name: Docker Provisioning
-#   hosts: demo-ubuntu-2404-template
-#   become: true
-#   gather_facts: false
-#   vars:
-#     domain: "demo.net"
-#   tasks:
-#     - name: Ping host
-#       ansible.builtin.ping:
-#       register: ping_result
-
-#     - name: Apply template_to_vm role
-#       ansible.builtin.include_role:
-#         name: template_to_vm
-#       vars:
-#         template_to_vm_new_hostname: "demo-VM1-Ingress"
-#         template_to_vm_new_ip_address: "{{ dc_demo_net_vm1_ingress_ip }}" # "10.0.100.110"
-#         template_to_vm_wait_for_reboot: true
-#       when: ping_result is succeeded
-
-
-# - name: Docker Provisioning
-#   hosts: dockthemall-dev1
+#   hosts: demo-vm1-ingress
 #   become: true
 #   gather_facts: false
 #   roles:

@@ -1,8 +1,21 @@
+---
 pve_storage: "local-zfs"
-ssh_port: 2222
-domain_1: 'mydom.net'
+domain_1: "mydom.net"
+ssh_port: "2222"
+timezone: "America/New_York"
+config_system_locale: "en_US.UTF-8"
+config_system_language: "en_US.UTF-8"
+keyboard_layout: "us"
+alpha2code: "us"
+# ssh_key_type: "ecdsa-sk"  # comment out for ed25519
+primary_user_name: "wasd"
+# primary_user_pub_key: # Add your public key content here
+vm_default_bridge: "vmbr90"
 
-primary_user_name: "qwertz"
+ansible_ssh_private_key_file: "{{ '~/.ssh/id_ecdsa_sk' if ssh_key_type is defined and ssh_key_type == 'ecdsa-sk' else '~/.ssh/id_ed25519' }}"
+ansible_port: "{{ ssh_port }}"
+ansible_ssh_common_args: '-o IdentitiesOnly=yes'
+
 primary_user_uid: 1022
 primary_user_gid: 1022
 

@@ -1,0 +1,22 @@
+#cloud-config
+network:
+  version: 2
+  ethernets:
+    eth0:
+      match:
+        name: "en*"
+      # set-name: eth0
+      dhcp4: no
+      gateway4: {{ pve_vm_gateway_ip }}
+      addresses:
+       - "{{ pve_vm_ipv4_address_0 }}/{{ pve_vm_net_prefix_length_0 }}"
+      nameservers:
+        addresses: [{{ pve_vm_dns_server }}]
+      # routes:
+      #   - to: 192.168.99.0/24
+      #     via: 192.168.99.1
+      #     metric: 3
+    # eth0:
+    #   match:
+    #     name: "en*"
+    #   dhcp4: true

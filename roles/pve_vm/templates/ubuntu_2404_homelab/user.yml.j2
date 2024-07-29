@@ -1,0 +1,49 @@
+#cloud-config
+hostname: {{ pve_vm_hostname }}
+fqdn: {{ pve_vm_fqdn }}
+manage_etc_hosts: true
+locale: {{ pve_vm_locale }}
+timezone: {{ pve_vm_timezone }}
+user: {{ pve_vm_primary_user_name }}
+password: {{ pve_vm_primary_user_hashed_pw }}
+lock_passwd: false  # Defaults to true. If true, it disables any type of authentication with password, also serial.
+ssh_authorized_keys:
+  - {{ pve_vm_primary_user_pub_key }}
+chpasswd:
+  expire: False
+
+write_files:
+  - path: /etc/ssh/sshd_config.d/99-custom-settings.conf
+    content: |
+      # Disable all authentication methods except public key
+      PubkeyAuthentication yes
+      PasswordAuthentication no
+      ChallengeResponseAuthentication no
+      KerberosAuthentication no
+      GSSAPIAuthentication no
+      PermitRootLogin no
+      PermitEmptyPasswords no
+      X11Forwarding no
+      UseDNS no
+      AllowUsers {{ pve_vm_primary_user_name }}
+      Port {{ pve_vm_ssh_port }}
+
+package_update: true
+package_upgrade: true
+package_reboot_if_required: false # I want to ensure it restarts also for the sshd to take effect despite the reboot
+# packages:
+#   - qemu-guest-agent
+
+runcmd:
+  - usermod -u {{ pve_vm_primary_user_uid }} {{ pve_vm_primary_user_name }}
+  - groupmod -g {{ pve_vm_primary_user_uid }} {{ pve_vm_primary_user_name }}
+  - apt install -y qemu-guest-agent
+  - systemctl enable qemu-guest-agent
+  - systemctl start qemu-guest-agent
+  - reboot
+  # - systemctl restart sshd  # ! this will fail so do not use it!
+
+
+# ? Notes:
+# sudo sshd -T | sort
+# sudo sshd -T | grep -i passwordauthentication

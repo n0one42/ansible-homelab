@@ -2,10 +2,6 @@
 # tasks file for roles/pve_vm
 - name: Download ISO
   ansible.builtin.import_tasks: download_iso.yml
-  tags:
-    - download_iso
 
 - name: Create VM
-  ansible.builtin.import_tasks: create_vm_template.yml
-  tags:
-    - create_vm_template
+  ansible.builtin.import_tasks: create_vm.yml
