@@ -84,6 +84,11 @@
             cmd: qm set {{ pve_vm_id }} --cicustom {{ pve_vm_cicustom }}
           become: true
           changed_when: false
+
+        - name: Start VM
+          when: pve_vm_start_after_create
+          ansible.builtin.command: qm start {{ pve_vm_id }}
+          changed_when: false
   always:
     - name: Display create vm output stderr_lines if fails
       ansible.builtin.debug:

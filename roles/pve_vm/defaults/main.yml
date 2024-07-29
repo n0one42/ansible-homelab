@@ -5,7 +5,8 @@
   # vars:
   #   vm_primary_user_pub_key: => "ssh-rsa AAAAB..."  # Your public SSH key
 
-pve_vm_prune: false # This will completely remove the VM! Mostly for testing purposes
+pve_vm_start_after_create: true
+pve_vm_prune: false # ! This will completely remove the VM! Mostly for testing purposes
 pve_vm_primary_user_name: "{{ primary_user_name | default('wasd') }}"
 pve_vm_primary_user_hashed_pw: "{{ primary_user_hashed_pw | default('$6$LCOTQrP6OD6fFxR5$okd0.2iW9bRxICAmFRM47o9nKJh7f9GdrGXNj/WTNR9QyssYrpsV07cBFxkIxg83.X9M0xyqL31c9st4BShW61') }}" # 404PasswordNotFound
 pve_vm_primary_user_uid: "{{ primary_user_uid | default(1022) }}"

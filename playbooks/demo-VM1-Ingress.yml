@@ -7,6 +7,7 @@
     - role: pve_vm
       vars:
         # pve_vm_prune: true  # testing purposes
+        # pve_vm_start_after_create: false
         pve_vm_id: 110
         pve_vm_name: "demo-vm1-ingress"
         pve_vm_hostname: "demo-vm1-ingress"
