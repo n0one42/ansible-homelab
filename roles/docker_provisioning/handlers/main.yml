@@ -5,3 +5,4 @@
   ansible.builtin.service:
     name: docker
     state: restarted
+  failed_when: false

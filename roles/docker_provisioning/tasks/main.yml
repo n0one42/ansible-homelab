@@ -1,8 +1,8 @@
 ---
 # tasks file for roles/docker_provisioning
-- name: "Install docker"
-  ansible.builtin.import_tasks: install.yml
 - name: "Create and configure docker user"
   ansible.builtin.import_tasks: user.yml
 - name: "Set docker permissions"
   ansible.builtin.import_tasks: permissions.yml
+- name: "Install docker"
+  ansible.builtin.import_tasks: install.yml

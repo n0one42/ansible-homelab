@@ -1,36 +1,15 @@
 ---
-pve_storage: "local-zfs"
-domain_1: "mydom.net"
-ssh_port: "2222"
-timezone: "America/New_York"
-config_system_locale: "en_US.UTF-8"
-config_system_language: "en_US.UTF-8"
-keyboard_layout: "us"
-alpha2code: "us"
+# # system_language: "en_US.UTF-8"
+# # keyboard_layout: "us"
+# # alpha2code: "us"
+
 # ssh_key_type: "ecdsa-sk"  # comment out for ed25519
-primary_user_name: "wasd"
 # primary_user_pub_key: # Add your public key content here
-vm_default_bridge: "vmbr90"
 
 ansible_ssh_private_key_file: "{{ '~/.ssh/id_ecdsa_sk' if ssh_key_type is defined and ssh_key_type == 'ecdsa-sk' else '~/.ssh/id_ed25519' }}"
-ansible_port: "{{ ssh_port }}"
+ansible_port: "{{ ssh_port | default(2222) }}"
 ansible_ssh_common_args: '-o IdentitiesOnly=yes'
 
-primary_user_uid: 1022
-primary_user_gid: 1022
-
-dockerino_user_name: "dockerino"
-dockerino_user_uid: 1200
-dockerino_user_gid: 1200
-
-docker_home: "/opt/docker"
-# Subdirectories for specific types of Docker-related files
-docker_appdata: "{{ docker_home }}/appdata"  # Application data
-docker_custom: "{{ docker_home }}/custom"    # Custom configurations
-docker_logs: "{{ docker_home }}/logs"        # Log files
-docker_scripts: "{{ docker_home }}/scripts"  # Utility scripts
-docker_secrets: "{{ docker_home }}/secrets"  # Sensitive data
-docker_compose: "{{ docker_home }}/compose"  # compose datafiles
 
 # Container IDs
 

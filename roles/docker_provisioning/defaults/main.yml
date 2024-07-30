@@ -1,19 +1,26 @@
 ---
 # defaults file for roles/docker_provisioning
 
-docker_provisioning_timezone: 'America/New_York'
+docker_provisioning_timezone: "{{ timezone | default('America/New_York') }}"
 
-docker_provisioning_primary_user_name: "myprimuser"
+docker_provisioning_primary_user_name: "{{ primary_user_name | default('wasd') }}"
 
-docker_provisioning_dockerino_user_name: "dockerino"
-docker_provisioning_dockerino_user_uid: 12000
-docker_provisioning_dockerino_user_gid: 12000
+docker_provisioning_dockerino_user_name: "{{ docker_user_name | default('dockerino') }}"
+docker_provisioning_dockerino_user_uid: "{{ docker_user_uid | default(1200) }}"
+docker_provisioning_dockerino_user_gid: "{{ docker_user_gid | default(1200) }}"
+
+docker_provisioning_docker_net_base: 10.250.0
+docker_provisioning_docker_net_address: "{{ docker_provisioning_docker_net_base }}.0"
+docker_provisioning_docker_net_prefix_length: 24
+docker_provisioning_docker_net_cidr: "{{ docker_provisioning_docker_net_address }}/{{ docker_provisioning_docker_net_prefix_length }}"
+docker_provisioning_docker_net_gateway: "{{ docker_provisioning_docker_net_base }}.1"
+# docker_provisioning_docker_net_dns_server: "{{ docker_provisioning_docker_net_gateway }}"
 
 docker_provisioning_docker_home: "/opt/docker"
 # Subdirectories for specific types of Docker-related files
-docker_provisioning_docker_appdata: "{{ docker_home }}/appdata"  # Application data
-docker_provisioning_docker_custom: "{{ docker_home }}/custom"    # Custom configurations
-docker_provisioning_docker_logs: "{{ docker_home }}/logs"        # Log files
-docker_provisioning_docker_scripts: "{{ docker_home }}/scripts"  # Utility scripts
-docker_provisioning_docker_secrets: "{{ docker_home }}/secrets"  # Sensitive data
-docker_provisioning_docker_compose: "{{ docker_home }}/compose"  # compose datafiles
+docker_provisioning_docker_appdata: "{{ docker_provisioning_docker_home }}/appdata"  # Application data
+docker_provisioning_docker_custom: "{{ docker_provisioning_docker_home }}/custom"    # Custom configurations
+docker_provisioning_docker_logs: "{{ docker_provisioning_docker_home }}/logs"        # Log files
+docker_provisioning_docker_scripts: "{{ docker_provisioning_docker_home }}/scripts"  # Utility scripts
+docker_provisioning_docker_secrets: "{{ docker_provisioning_docker_home }}/secrets"  # Sensitive data
+# docker_provisioning_docker_compose: "{{ docker_provisioning_docker_home }}/compose"  # compose datafiles

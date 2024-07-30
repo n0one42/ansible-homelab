@@ -14,14 +14,9 @@
         pve_vm_ipv4_address_0: "{{ dc_demo_net_vm1_ingress_ip }}"
 
 
-# - name: Docker Provisioning
-#   hosts: demo-vm1-ingress
-#   become: true
-#   gather_facts: false
-#   roles:
-#     - role: docker_provisioning
-#       vars:
-#         docker_provisioning_timezone: "{{ timezone }}"
-#         docker_provisioning_primary_user_name: "{{ primary_user_name }}"
-#         docker_provisioning_dockerino_user_uid: "{{ dockerino_user_uid }}"
-#         docker_provisioning_dockerino_user_gid: "{{ dockerino_user_gid }}"
+- name: Docker Provisioning
+  hosts: demo-vm1-ingress
+  become: true
+  gather_facts: false
+  roles:
+    - role: docker_provisioning

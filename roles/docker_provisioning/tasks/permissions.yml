@@ -13,7 +13,7 @@
     - { path: "{{ docker_provisioning_docker_logs }}", mode: '0750', owner: "{{ docker_provisioning_dockerino_user_name }}", group: "{{ docker_provisioning_dockerino_user_name }}" }
     - { path: "{{ docker_provisioning_docker_scripts }}", mode: '0750', owner: "{{ docker_provisioning_dockerino_user_name }}", group: "{{ docker_provisioning_dockerino_user_name }}" }
     - { path: "{{ docker_provisioning_docker_secrets }}", mode: '0700', owner: "{{ docker_provisioning_dockerino_user_name }}", group: "{{ docker_provisioning_dockerino_user_name }}" }
-    - { path: "{{ docker_provisioning_docker_compose }}", mode: '0750', owner: "{{ docker_provisioning_dockerino_user_name }}", group: "{{ docker_provisioning_dockerino_user_name }}" }
+    # - { path: "{{ docker_provisioning_docker_compose }}", mode: '0750', owner: "{{ docker_provisioning_dockerino_user_name }}", group: "{{ docker_provisioning_dockerino_user_name }}" }
   # loop_control:
   #   label: "{{ item.path }}"
 
@@ -35,4 +35,4 @@
     - { key: "LOGS_DIR", value: "{{ docker_provisioning_docker_logs }}" }
     - { key: "SCRIPTS_DIR", value: "{{ docker_provisioning_docker_scripts }}" }
     - { key: "SECRETS_DIR", value: "{{ docker_provisioning_docker_secrets }}" }
-    - { key: "COMPOSE_DIR", value: "{{ docker_provisioning_docker_compose }}" }
+    # - { key: "COMPOSE_DIR", value: "{{ docker_provisioning_docker_compose }}" }

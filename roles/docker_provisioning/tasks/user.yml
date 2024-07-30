@@ -45,22 +45,40 @@
     group: root
     mode: '0644'
 
-- name: "Configure Docker daemon"
-  vars:
-    docker_daemon_config:
-      storage-driver: "overlay2"
-      userns-remap: "{{ docker_provisioning_dockerino_user_name }}"
-      log-driver: "json-file"
-      log-opts:
-        max-size: "10m"
-        max-file: "3"
-  ansible.builtin.copy:
+# - name: "Configure Docker daemon"
+#   vars:
+#     docker_daemon_config:
+#       storage-driver: "overlay2"
+#       userns-remap: "{{ docker_provisioning_dockerino_user_name }}"
+#       log-driver: "json-file"
+#       log-opts:
+#         max-size: "10m"
+#         max-file: "3"
+#   ansible.builtin.copy:
+#     dest: /etc/docker/daemon.json
+#     content: "{{ docker_daemon_config | to_nice_json }}"
+#     owner: root
+#     group: root
+#     mode: '0644'
+#   notify: Restart docker
+
+- name: Ensure docker directory exists
+  ansible.builtin.file:
+    path: "/etc/docker/"
+    state: directory
+    owner: root
+    group: root
+    mode: '0755'
+
+- name: Create Docker daemon.json
+  ansible.builtin.template:
+    src: daemon.json.j2
     dest: /etc/docker/daemon.json
-    content: "{{ docker_daemon_config | to_nice_json }}"
     owner: root
     group: root
     mode: '0644'
-  notify: Restart docker
+  notify:
+    - Restart docker
 
 - name: Add Infos to console
   ansible.builtin.debug:
