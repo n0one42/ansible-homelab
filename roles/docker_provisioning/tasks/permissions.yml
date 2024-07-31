@@ -7,32 +7,12 @@
     owner: "{{ item.owner }}"
     group: "{{ item.group }}"
   loop:
-    - { path: "{{ docker_provisioning_docker_home }}", mode: '0750', owner: "{{ docker_provisioning_dockerino_user_name }}", group: "{{ docker_provisioning_dockerino_user_name }}" }
-    - { path: "{{ docker_provisioning_docker_appdata }}", mode: '0750', owner: "{{ docker_provisioning_dockerino_user_name }}", group: "{{ docker_provisioning_dockerino_user_name }}" }
-    - { path: "{{ docker_provisioning_docker_custom }}", mode: '0750', owner: "{{ docker_provisioning_dockerino_user_name }}", group: "{{ docker_provisioning_dockerino_user_name }}" }
-    - { path: "{{ docker_provisioning_docker_logs }}", mode: '0750', owner: "{{ docker_provisioning_dockerino_user_name }}", group: "{{ docker_provisioning_dockerino_user_name }}" }
-    - { path: "{{ docker_provisioning_docker_scripts }}", mode: '0750', owner: "{{ docker_provisioning_dockerino_user_name }}", group: "{{ docker_provisioning_dockerino_user_name }}" }
-    - { path: "{{ docker_provisioning_docker_secrets }}", mode: '0700', owner: "{{ docker_provisioning_dockerino_user_name }}", group: "{{ docker_provisioning_dockerino_user_name }}" }
-    # - { path: "{{ docker_provisioning_docker_compose }}", mode: '0750', owner: "{{ docker_provisioning_dockerino_user_name }}", group: "{{ docker_provisioning_dockerino_user_name }}" }
+    - { path: "{{ docker_home }}", mode: '0750', owner: "{{ docker_provisioning_dockerino_user_name }}", group: "{{ docker_provisioning_dockerino_user_name }}" }
+    - { path: "{{ docker_appdata }}", mode: '0750', owner: "{{ docker_provisioning_dockerino_user_name }}", group: "{{ docker_provisioning_dockerino_user_name }}" }
+    - { path: "{{ docker_custom }}", mode: '0750', owner: "{{ docker_provisioning_dockerino_user_name }}", group: "{{ docker_provisioning_dockerino_user_name }}" }
+    - { path: "{{ docker_logs }}", mode: '0750', owner: "{{ docker_provisioning_dockerino_user_name }}", group: "{{ docker_provisioning_dockerino_user_name }}" }
+    - { path: "{{ docker_scripts }}", mode: '0750', owner: "{{ docker_provisioning_dockerino_user_name }}", group: "{{ docker_provisioning_dockerino_user_name }}" }
+    - { path: "{{ docker_secrets }}", mode: '0700', owner: "{{ docker_provisioning_dockerino_user_name }}", group: "{{ docker_provisioning_dockerino_user_name }}" }
+    # - { path: "{{ docker_compose }}", mode: '0750', owner: "{{ docker_provisioning_dockerino_user_name }}", group: "{{ docker_provisioning_dockerino_user_name }}" }
   # loop_control:
   #   label: "{{ item.path }}"
-
-- name: Set environment variables in /etc/environment
-  ansible.builtin.lineinfile:
-    path: /etc/environment
-    regexp: "^{{ item.key }}="
-    line: "{{ item.key }}={{ item.value }}"
-    mode: '0644'
-    owner: 'root'
-    group: 'root'
-  loop:
-    - { key: "PUID", value: "{{ docker_provisioning_dockerino_user_uid }}" }
-    - { key: "PGID", value: "{{ docker_provisioning_dockerino_user_gid }}" }
-    - { key: "TZ", value: "{{ docker_provisioning_timezone }}" }
-    - { key: "DOCKER_DIR", value: "{{ docker_provisioning_docker_home }}" }
-    - { key: "APPDATA_DIR", value: "{{ docker_provisioning_docker_appdata }}" }
-    - { key: "CUSTOM_DIR", value: "{{ docker_provisioning_docker_custom }}" }
-    - { key: "LOGS_DIR", value: "{{ docker_provisioning_docker_logs }}" }
-    - { key: "SCRIPTS_DIR", value: "{{ docker_provisioning_docker_scripts }}" }
-    - { key: "SECRETS_DIR", value: "{{ docker_provisioning_docker_secrets }}" }
-    # - { key: "COMPOSE_DIR", value: "{{ docker_provisioning_docker_compose }}" }

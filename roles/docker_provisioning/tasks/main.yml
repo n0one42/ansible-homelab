@@ -4,5 +4,7 @@
   ansible.builtin.import_tasks: user.yml
 - name: "Set docker permissions"
   ansible.builtin.import_tasks: permissions.yml
+- name: "Misc settings"
+  ansible.builtin.import_tasks: misc.yml
 - name: "Install docker"
   ansible.builtin.import_tasks: install.yml

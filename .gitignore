@@ -2,22 +2,17 @@
 # Ignore everything in the inventories folder
 **dev**
 **prod**
+**z_**
 
-inventories/group_vars/*
-inventories/host_vars/*
 NOTES.md
 
-# Except for demo group vars
-!inventories/group_vars/demo/
-!inventories/group_vars/demo/**
-inventories/group_vars/demo/z_me.yml
-
+inventories/host_vars/**
 # Except for demo host vars
 !inventories/host_vars/demo-VM1-Ingress.yml
 !inventories/host_vars/demo-VM2-Metrics.yml
 !inventories/host_vars/demo-VM3-Application-1.yml
 
-## macOS ##
+## macOS ##¨
 .DS_Store
 .AppleDouble
 .LSOverride

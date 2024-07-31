@@ -1,0 +1,19 @@
+- name: Set environment variables in /etc/environment
+  ansible.builtin.lineinfile:
+    path: /etc/environment
+    regexp: "^{{ item.key }}="
+    line: "{{ item.key }}={{ item.value }}"
+    mode: '0644'
+    owner: 'root'
+    group: 'root'
+  loop:
+    - { key: "PUID", value: "{{ docker_provisioning_dockerino_user_uid }}" }
+    - { key: "PGID", value: "{{ docker_provisioning_dockerino_user_gid }}" }
+    - { key: "TZ", value: "{{ docker_provisioning_timezone }}" }
+    - { key: "DOCKER_DIR", value: "{{ docker_home }}" }
+    - { key: "APPDATA_DIR", value: "{{ docker_appdata }}" }
+    - { key: "CUSTOM_DIR", value: "{{ docker_custom }}" }
+    - { key: "LOGS_DIR", value: "{{ docker_logs }}" }
+    - { key: "SCRIPTS_DIR", value: "{{ docker_scripts }}" }
+    - { key: "SECRETS_DIR", value: "{{ docker_secrets }}" }
+    # - { key: "COMPOSE_DIR", value: "{{ docker_compose }}" }

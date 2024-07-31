@@ -1,17 +1,17 @@
 ---
-- name: Create VM => demo-vm1-ingress
-  hosts: demo-pve
-  become: true
-  gather_facts: false
-  roles:
-    - role: pve_vm
-      vars:
-        # pve_vm_prune: true  # testing purposes
-        # pve_vm_start_after_create: false
-        pve_vm_id: 110
-        pve_vm_name: "demo-vm1-ingress"
-        pve_vm_hostname: "demo-vm1-ingress"
-        pve_vm_ipv4_address_0: "{{ dc_demo_net_vm1_ingress_ip }}"
+# - name: Create VM => demo-vm1-ingress
+#   hosts: demo-pve
+#   become: true
+#   gather_facts: false
+#   roles:
+#     - role: pve_vm
+#       vars:
+#         # pve_vm_prune: true  # testing purposes
+#         # pve_vm_start_after_create: false
+#         pve_vm_id: 110
+#         pve_vm_name: "demo-vm1-ingress"
+#         pve_vm_hostname: "demo-vm1-ingress"
+#         pve_vm_ipv4_address_0: "{{ dc_demo_net_vm1_ingress_ip }}"
 
 
 - name: Docker Provisioning
@@ -20,3 +20,7 @@
   gather_facts: false
   roles:
     - role: docker_provisioning
+    # - role: dc_socketproxy
+    # - role: dc_crowdsec
+    # - role: dc_traefik
+    # - role: dc_authelia
