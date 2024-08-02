@@ -1,0 +1,94 @@
+---
+# tasks file for roles/dc_secrets_manager
+- name: Handle password generation and storage
+  when: dc_secrets_manager_passwords_to_generate | default([]) | length > 0
+  # vars:
+  #   secrets_type_path: "{{ docker_secrets }}/{{ app_name }}/{{ container_type }}" # make it as a dependency
+  block:
+    - name: Ensure required directories exist
+      ansible.builtin.file:
+        path: "{{ item.path }}"
+        state: directory
+        owner: "{{ item.owner | default('root') }}"
+        group: "{{ item.group | default('root') }}"
+        mode: "{{ item.mode | default('0500') }}"
+      loop:
+        - path: "{{ docker_secrets }}/{{ app_name }}"
+          owner: root
+          group: root
+          mode: "0500"
+        - path: "{{ secrets_type_path }}"
+          owner: "{{ user }}"
+          group: "{{ group }}"
+          mode: "0550"
+
+    - name: Check if password files exist
+      ansible.builtin.stat:
+        path: "{{ secrets_type_path }}/{{ item.var_name }}"
+      register: password_file_stats
+      loop: "{{ dc_secrets_manager_passwords_to_generate }}"
+      no_log: true
+
+    - name: Generate or use provided passwords
+      ansible.builtin.set_fact:
+        generated_passwords: >-
+          {{ generated_passwords | default({}) | combine({
+            item.item.var_name: (item.item.content | default('') | trim != '') |
+            ternary(
+              item.item.content,
+              lookup('ansible.builtin.password', '/dev/null ' + password_types[item.item.type | default('default')])
+            )
+          }) }}
+      loop: "{{ password_file_stats.results }}"
+      vars:
+        password_types:
+          default: "chars=ascii_uppercase,ascii_lowercase,digits,punctuation length=24"
+          jwt_secret: "chars=ascii_uppercase,ascii_lowercase,digits,punctuation length=64"
+          storage_encryption_key: "chars=ascii_uppercase,ascii_lowercase,digits,punctuation length=64"
+          session_secret: "chars=ascii_uppercase,ascii_lowercase,digits,punctuation length=64"
+          crowdsec_bouncer_key: "chars=ascii_uppercase,ascii_lowercase,digits,-_#%&* length=64"
+          postgres_password: "chars=ascii_uppercase,ascii_lowercase,digits,punctuation length=32"
+          redis_password: "chars=ascii_uppercase,ascii_lowercase,digits,punctuation length=32"
+      no_log: true
+
+    - name: Create or update password files
+      ansible.builtin.copy:
+        content: "{{ generated_passwords[item.var_name] }}"
+        dest: "{{ secrets_type_path }}/{{ item.var_name }}"
+        owner: "{{ user | default('root') }}"
+        group: "{{ group | default('root') }}"
+        mode: "0400"
+      loop: "{{ dc_secrets_manager_passwords_to_generate }}"
+      when: >
+        not password_file_stats.results | selectattr("item.var_name", "equalto", item.var_name) | map(attribute="stat.exists") | first | bool
+        or (item.overide_existing is defined and item.overide_existing | bool)
+        or (item.overide_existing is not defined and item.content | default('') | trim != '')
+      no_log: true
+
+    - name: Create or update password files
+      ansible.builtin.copy:
+        content: "{{ generated_passwords[item.var_name] }}"
+        dest: "{{ secrets_type_path }}/{{ item.var_name }}"
+        owner: "{{ user | default('root') }}"
+        group: "{{ group | default('root') }}"
+        mode: "0400"
+      loop: "{{ dc_secrets_manager_passwords_to_generate }}"
+      when: >
+        not password_file_stats.results | selectattr("item.var_name", "equalto", item.var_name) | map(attribute="stat.exists") | first | bool
+        or item.overide_existing | default(false)
+      no_log: true
+
+    - name: Read remote file contents
+      ansible.builtin.slurp:
+        src: "{{ secrets_type_path }}/{{ item.var_name }}"
+      register: remote_file_contents
+      loop: "{{ dc_secrets_manager_passwords_to_generate }}"
+      when: item.set_facts | default(false)
+      no_log: true
+
+    - name: Set facts for passwords if requested
+      ansible.builtin.set_fact: # noqa: var-naming[no-jinja]
+        "{{ item.item.var_name }}": "{{ item.content | b64decode }}"
+      loop: "{{ remote_file_contents.results }}"
+      when: item.item.set_facts | default(false)
+      no_log: true

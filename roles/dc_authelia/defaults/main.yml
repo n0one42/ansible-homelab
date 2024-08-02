@@ -1,0 +1,55 @@
+---
+# * ----------------- Container Configuration -------------------- * #
+## * Container variables
+dc_authelia_container_name: "authelia"
+dc_authelia_create_with_userns: true
+dc_authelia_image_version: "latest"
+dc_authelia_u_g_id: 22002 # with userns --> 122002
+dc_authelia_jwt_secret: ""  # Empty for generated password
+dc_authelia_storage_encryption_key: ""  # Empty for generated password
+dc_authelia_session_secret: ""  # Empty for generated password
+dc_authelia_port: 9091
+
+## * Users configuration
+# ? docker run authelia/authelia:latest authelia crypto hash generate argon2 --password 'password'
+dc_authelia_users:
+  john:
+    disabled: false
+    displayname: 'John Doe'
+    password: '$argon2id$v=19$m=65536,t=3,p=2$BpLnfgDsc2WD8F2q$o/vzA4myCqZZ36bUGsDY//8mKUYNZZaR0t4MFFSs+iM'
+    email: 'john.doe@authelia.com'
+    groups:
+      - 'admins'
+      - 'dev'
+  harry:
+    disabled: false
+    displayname: 'Harry Potter'
+    password: '$argon2id$v=19$m=65536,t=3,p=2$BpLnfgDsc2WD8F2q$o/vzA4myCqZZ36bUGsDY//8mKUYNZZaR0t4MFFSs+iM'
+    email: 'harry.potter@authelia.com'
+    groups: []
+  bob:
+    disabled: false
+    displayname: 'Bob Dylan'
+    password: '$argon2id$v=19$m=65536,t=3,p=2$BpLnfgDsc2WD8F2q$o/vzA4myCqZZ36bUGsDY//8mKUYNZZaR0t4MFFSs+iM'
+    email: 'bob.dylan@authelia.com'
+    groups:
+      - 'dev'
+
+
+# * ---------------- Authelia DB Configuration ------------------- * #
+## Environment variables
+dc_authelia_db_create_with_userns: true
+dc_authelia_db_image_version: "latest"
+dc_authelia_db_superuser_pw: ""  # Empty for generated password ; superuser name --> postgres
+dc_authelia_db_name: "authelia"
+dc_authelia_db_user_name: "authelia"
+dc_authelia_db_user_pw: ""  # Empty for generated password
+dc_authelia_db_port: 5432
+
+
+# * --------------- Authelia Redis Configuration ------------------ * #
+## Environment variables
+dc_authelia_redis_create_with_userns: true
+dc_authelia_redis_image_version: "latest"
+dc_authelia_redis_pw: ""  # Empty for generated password
+dc_authelia_redis_port: 6379

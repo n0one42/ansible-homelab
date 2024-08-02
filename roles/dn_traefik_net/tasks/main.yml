@@ -1,0 +1,11 @@
+---
+# tasks file for roles/dn_traefik_net
+- name: Create Traefik network
+  community.docker.docker_network:
+    name: "{{ dc_traefik_net_name }}"
+    driver: bridge
+    internal: false
+    ipam_config:
+      - subnet: "{{ dc_traefik_net_cidr }}"
+    state: present
+  become: true

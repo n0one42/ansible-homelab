@@ -1,0 +1,17 @@
+http:
+  middlewares:
+    middlewares-traefik-bouncer:
+      plugin:
+      # https://plugins.traefik.io/plugins/6335346ca4caa9ddeffda116/crowdsec-bouncer-traefik-plugin
+        crowdsec-bouncer-traefik-plugin:
+          enabled: "{{ dc_traefik_crowdsec_enabled | bool }}"
+          logLevel: "{{ dc_traefik_log_level | default('INFO') }}"
+          crowdsecMode: live
+          crowdsecLapiHost: "{{ dc_crowdsec_net_app_ip }}:{{ dc_crowdsec_port }}"
+          crowdsecLapiKeyFile: "/run/secrets/traefik_crowdsec_bouncer_key"
+
+
+# # * if using with traefik-bouncer standalone instead of traefik plugin
+#       forwardAuth:
+#         address: "http://crowdsec-traefik-bouncer:8080/api/v1/forwardAuth" # Make sure you have the traefik-bouncer service in docker-compose.yml
+#         trustForwardHeader: true

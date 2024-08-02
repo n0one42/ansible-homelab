@@ -1,0 +1,117 @@
+---
+# TODO: Variables which has to be passed through the playbook or on import of this task file
+# ! Mandatory variables
+  # vars:
+  #   app_name: => traefik, portainer, authelia, netbox
+  #   db_user_pw: => "" # Empty for generated password
+  #   db_superuser_pw: => "" # Empty for generated password
+# ? Optional variables
+
+
+  # * --------------------------- App --------------------------- *
+- name: Create postgresql db for --> {{ app_name }}
+  vars:
+    container_type: "db" # => app, db, redis
+    appdata_type_path: "{{ docker_appdata }}/{{ app_name }}/{{ container_type }}" # eg: authelia/db
+    secrets_type_path: "{{ docker_secrets }}/{{ app_name }}/{{ container_type }}"
+    logs_type_path: "{{ docker_logs }}/{{ app_name }}"
+    user: "{{ (dc_postgresql_bitnami_create_with_userns | bool) | ternary(1001 + 100000, 1001) }}"  # do not change for this container!
+    group: "{{ (dc_postgresql_bitnami_create_with_userns | bool) | ternary(1001 + 100000, 1001) }}" # do not change for this container!
+  block:
+    - name: '[Required] dc_secrets_manager role'
+      ansible.builtin.import_role:
+        name: dc_secrets_manager
+      vars:
+        dc_secrets_manager_passwords_to_generate:
+          - var_name: db_user_pw
+            content: "{{ db_user_pw | default('') }}"
+            type: postgres_password
+            set_facts: true  # optional - needed for the app
+            # overide_existing: true  # optional
+          - var_name: db_superuser_pw
+            content: "{{ dc_postgresql_bitnami_db_superuser_pw | default('') }}"
+            type: postgres_password
+            # set_facts: false  # optional
+            # overide_existing: false  # optional
+
+    - name: '[Required] container_init role'
+      ansible.builtin.import_role:
+        name: container_init
+      vars:
+        container_init_appdata_directories_to_create:
+          - "data"
+
+
+    - name: Install docker compose postgresql bitnami with inline definition
+      community.docker.docker_compose_v2:
+        project_name: "{{ app_name }}-postgresql" # eg: authelia-postgresql
+        definition:
+          # ! --------------------------- Networks --------------------------- ! #
+          networks:
+            app_net:
+              name: "{{ app_name }}_net"  # eg: authelia_net
+              external: true  # indicating that it's a pre-existing network not managed by this Docker Compose file.
+
+          # * ---------------------------- App ------------------------------ * #
+          services:
+            db:
+              image: bitnami/postgresql:{{ dc_postgresql_bitnami_image_version }}
+              container_name: "{{ app_name }}-postgresql"  # eg: authelia-postgresql
+              restart: always
+              security_opt:
+                - no-new-privileges:true
+              privileged: false
+              userns_mode: "{{ 'host' if dc_postgresql_bitnami_create_with_userns | bool == false else 'remap' }}"
+              # ! by default they uses already 1001 as non root user and this cant be changed!
+              healthcheck:
+                test: ["CMD-SHELL", "pg_isready -d {{ dc_postgresql_bitnami_db_name }} -U {{ dc_postgresql_bitnami_db_user_name }}"]
+                start_period: 20s
+                interval: 30s
+                retries: 5
+                timeout: 5s
+              networks:
+                app_net: "{{ {'ipv4_address': dc_postgresql_bitnami_net_ip} if dc_postgresql_bitnami_net_ip is defined and dc_postgresql_bitnami_net_ip | length > 0 else {} }}"
+                # app_net:  # Example: authelia_net
+                #   ipv4_address: "{{ dc_postgresql_bitnami_net_ip }}"  # eg: 10.100.0.6
+              # ports:
+              #     - "{{ dc_postgresql_bitnami_db_port }}:{{ dc_postgresql_bitnami_db_port }}"
+              volumes:
+                - "{{ appdata_type_path }}/data:/bitnami/postgresql/data"
+                # - "{{ appdata_type_path }}/conf:/opt/bitnami/postgresql/conf"
+                # - "{{ appdata_type_path }}/tmp:/opt/bitnami/postgresql/tmp"
+                - "{{ secrets_type_path }}:/run/secrets"
+              environment:
+                POSTGRESQL_TIMEZONE: "{{ timezone }}"
+                POSTGRESQL_LOG_TIMEZONE: "{{ timezone }}"
+                POSTGRESQL_PORT_NUMBER: "{{ dc_postgresql_bitnami_db_port }}"
+                POSTGRESQL_POSTGRES_PASSWORD_FILE: "/run/secrets/db_superuser_pw"  # postgres:password - superuser
+                POSTGRESQL_DATABASE: "{{ dc_postgresql_bitnami_db_name }}"
+                POSTGRESQL_USERNAME: "{{ dc_postgresql_bitnami_db_user_name }}"
+                POSTGRESQL_PASSWORD_FILE: "/run/secrets/db_user_pw"
+
+
+# ! --------------------------- Notes --------------------------- ! #
+# https://github.com/bitnami/containers/tree/main/bitnami/postgresql
+# ! Important:
+# performance equal to official alpine postgresql image
+# 1001 is already a non root user and cant be changed in bitnami
+
+# ! Notes:
+# When using Bitnami PostgreSQL container, create a restricted database user by
+# providing POSTGRESQL_USERNAME env variable. This user will have permissions for
+# the database specified by POSTGRESQL_DATABASE.
+#
+# Note: When POSTGRESQL_USERNAME is set, the default 'postgres' superuser is not
+# assigned a password, and you won't be able to log in remotely as 'postgres'.
+# To enable remote access for 'postgres' user, set POSTGRESQL_POSTGRES_PASSWORD
+# environment variable or provide the content of a file specified in
+# POSTGRESQL_POSTGRES_PASSWORD_FILE.
+
+# Also exists postgresql-repmgr.
+# [postgresql-repmgr](https://github.com/bitnami/containers/tree/main/bitnami/postgresql-repmgr)
+
+# ? Test if login works
+# # For the database user
+# sudo docker exec -it {{ app_name }}-postgresql psql -d {{ dc_postgresql_bitnami_db_name }} -U {{ dc_postgresql_bitnami_db_user_name }} -W
+# # For the superuser called postgres if password set in POSTGRESQL_POSTGRES_PASSWORD_FILE
+# sudo docker exec -it {{ app_name }}-postgresql psql -d {{ dc_postgresql_bitnami_db_name }} -U postgres -W

@@ -1,0 +1,27 @@
+# yamllint disable rule:comments-indentation
+---
+###############################################################
+#                         Users Database                      #
+###############################################################
+
+# This file can be used if you do not have an LDAP set up.
+# This file should be set with read/write permissions as it could be updated by users resetting their passwords.
+# docker run authelia/authelia:latest authelia crypto hash generate argon2 --password 'password'
+
+# List of users
+users:
+{% for user, details in dc_authelia_users.items() %}
+  {{ user }}:
+    disabled: {{ details.disabled | lower }}
+    displayname: '{{ details.displayname }}'
+    password: '{{ details.password }}'
+    email: '{{ details.email }}'
+    groups:
+{% if details.groups %}
+{% for group in details.groups %}
+      - '{{ group }}'
+{% endfor %}
+{% else %}
+      []
+{% endif %}
+{% endfor %}

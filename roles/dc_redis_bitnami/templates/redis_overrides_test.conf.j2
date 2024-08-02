@@ -1,0 +1,7 @@
+# https://github.com/redis/redis/blob/unstable/redis.conf
+# requirepass {{ redis_pw }}
+# appendonly yes # is the default
+maxmemory 512mb
+maxmemory-policy allkeys-lru
+save 60 1
+loglevel debug

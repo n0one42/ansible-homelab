@@ -1,0 +1,251 @@
+---
+- name: Create Traefik & Socket Proxy
+  vars:
+    app_name: "{{ dc_traefik_container_name }}" # "traefik"
+    traefik_crowdsec_bouncer_key: "{{ dc_traefik_crowdsec_bouncer_key }}" # ! MUST BE HERE BECAUSE SHARED !
+  block:
+  # * ------------------------ Traefik Network ------------------------ * #
+    - name: Include Traefik Network
+      ansible.builtin.import_role:
+        name: dn_traefik_net
+
+  # * ------------------------ CrowdSec ------------------------ * #
+    - name: Include crowdsec role
+      ansible.builtin.import_role:
+        name: dc_crowdsec
+      when: dc_traefik_crowdsec_enabled
+
+  # * ------------------------ Socket Proxy ------------------------ * #
+    - name: Include Socket Proxy role
+      ansible.builtin.import_role:
+        name: dc_socketproxy
+      vars:
+        dc_socketproxy_env_log_level: "{{ dc_traefik_socketproxy_env_log_level }}"
+        dc_socketproxy_env_containers: "{{ dc_traefik_socketproxy_env_containers }}"
+        dc_socketproxy_net_cidr: "{{ dc_traefik_socketproxy_net_cidr }}"
+        dc_socketproxy_net_ip: "{{ dc_traefik_socketproxy_net_ip }}"
+
+  # * ----------------------- Traefik App ------------------------- * #
+    - name: Create app
+      vars:
+        container_type: "app" # => app, db, redis
+        appdata_type_path: "{{ docker_appdata }}/{{ app_name }}/{{ container_type }}"
+        secrets_type_path: "{{ docker_secrets }}/{{ app_name }}/{{ container_type }}"
+        logs_type_path: "{{ docker_logs }}/{{ app_name }}/{{ container_type }}"
+        user: "{{ (dc_traefik_create_with_userns | bool) | ternary(dc_traefik_u_g_id + 100000, dc_traefik_u_g_id) }}"
+        group: "{{ (dc_traefik_create_with_userns | bool) | ternary(dc_traefik_u_g_id + 100000, dc_traefik_u_g_id) }}"
+      block:
+        - name: Include container_init role
+          ansible.builtin.import_role:
+            name: container_init
+          vars:
+            container_init_appdata_directories_to_create:
+              - "rules"
+              - "plugins-storage"
+            container_init_custom_directories_to_create:
+              - path: "{{ logs_type_path }}"
+                owner: "{{ user }}"
+                group: "{{ group }}"
+                mode: "0550"
+            container_init_templates_to_copy:
+              - src: "traefik/chain-authelia.yml.j2"
+                dest: "{{ appdata_type_path }}/rules/chain-authelia.yml"
+              - src: "traefik/chain-basic-auth.yml.j2"
+                dest: "{{ appdata_type_path }}/rules/chain-basic-auth.yml"
+              - src: "traefik/chain-no-auth-no-crowdsec.yml.j2"
+                dest: "{{ appdata_type_path }}/rules/chain-no-auth-no-crowdsec.yml"
+              - src: "traefik/chain-no-auth.yml.j2"
+                dest: "{{ appdata_type_path }}/rules/chain-no-auth.yml"
+              - src: "traefik/middlewares-authelia.yml.j2"
+                dest: "{{ appdata_type_path }}/rules/middlewares-authelia.yml"
+              - src: "traefik/middlewares-basic-auth.yml.j2"
+                dest: "{{ appdata_type_path }}/rules/middlewares-basic-auth.yml"
+              - src: "traefik/middlewares-rate-limit.yml.j2"
+                dest: "{{ appdata_type_path }}/rules/middlewares-rate-limit.yml"
+              - src: "traefik/middlewares-secure-headers.yml.j2"
+                dest: "{{ appdata_type_path }}/rules/middlewares-secure-headers.yml"
+              - src: "traefik/middlewares-traefik-bouncer.yml.j2"
+                dest: "{{ appdata_type_path }}/rules/middlewares-traefik-bouncer.yml"
+              - src: "traefik/tls-opts.yml.j2"
+                dest: "{{ appdata_type_path }}/rules/tls-opts.yml"
+            container_init_files_to_create:
+              - { dest: "{{ logs_type_path }}/traefik.log", owner: "{{ user }}", group: "{{ group }}", mode: "0660" }
+              - { dest: "{{ logs_type_path }}/access.log", owner: "{{ user }}", group: "{{ group }}", mode: "0660" }
+            container_init_secret_files_to_create:
+              - filename: "acme.json"
+                content: ""
+                mode: "0600"
+              - filename: "basic_auth_credentials"
+                content: "{{ dc_traefik_basic_auth_user }}:{{ dc_traefik_basic_auth_password_hashed }}"
+                mode: "0440"
+              - filename: "cf_dns_api_token"
+                content: "{{ cf_dns_api_token }}" # pass it from the ansible vault
+                mode: "0440"
+
+        - name: '[Required] dc_secrets_manager role'
+          ansible.builtin.import_role:
+            name: dc_secrets_manager
+          vars:
+            dc_secrets_manager_passwords_to_generate:
+              - var_name: traefik_crowdsec_bouncer_key
+                content: "{{ traefik_crowdsec_bouncer_key | default('') }}"
+                type: crowdsec_bouncer_key
+                set_facts: true  # optional - needed for the app
+                # overide_existing: true  # optional
+          when: dc_traefik_crowdsec_enabled | bool
+
+
+        - name: Docker compose traefik network generation for inline definition
+          vars:
+            docker_networks: >-
+              {{
+                {
+                  "traefik_net": {
+                    "name": dc_traefik_net_name,
+                    "external": true
+                  },
+                  "socketproxy_net": {
+                    "name": app_name ~ "_socketproxy_net",
+                    "external": true
+                  }
+                }
+                | combine(
+                  {
+                    "crowdsec_net": {
+                      "name": "crowdsec_net",
+                      "external": true
+                    }
+                  }
+                  if dc_traefik_crowdsec_enabled else {}
+                )
+              }}
+
+          community.docker.docker_compose_v2:
+            project_name: "{{ app_name }}"
+            definition:
+              # ! --------------------------- Networks --------------------------- ! #
+              networks: "{{ docker_networks }}"
+
+
+              # * ---------------------------- App ------------------------------ * #
+              services:
+                traefik:
+                  container_name: "{{ app_name }}"  # eg: traefik
+                  image: traefik:{{ dc_traefik_image_version }}
+                  # profiles: ["core", "all"] # ! seams not to work here
+                  restart: always
+                  # read_only: true # needs to rewrite the acme and such
+                  security_opt:
+                    - no-new-privileges:true
+                  privileged: false
+                  userns_mode: "{{ 'host' if dc_traefik_create_with_userns | bool == false else 'remap' }}"
+                  user: "{{ dc_traefik_u_g_id }}:{{ dc_traefik_u_g_id }}"
+                  command: # CLI arguments
+                    - --global.checkNewVersion=true
+                    - --global.sendAnonymousUsage=false
+                    - --entrypoints.web.address=:80
+                    - --entrypoints.websecure.address=:443
+                    - --entrypoints.traefik.address=:8080
+                    # - --entrypoints.ping.address=:8081
+                    - --entrypoints.web.http.redirections.entrypoint.to=websecure
+                    - --entrypoints.web.http.redirections.entrypoint.scheme=https
+                    - --entrypoints.web.http.redirections.entrypoint.permanent=true
+                    - --api=true
+                    - --api.dashboard=true
+                    - --api.insecure=true # http://ip:8080/dashboard/#/
+                    # - --ping=true
+                    - --serversTransport.insecureSkipVerify=true  # uncomment with https containers internally
+                    # Allow these IPs to set the X-Forwarded-* headers - Cloudflare IPs: https://www.cloudflare.com/ips/
+                    - --entrypoints.websecure.forwardedHeaders.trustedIPs={{ dc_traefik_cloudflare_ip_ranges }}{{ ',' + dc_traefik_local_ip_ranges if dc_traefik_local_ip_ranges is defined and dc_traefik_local_ip_ranges | length > 0 }}
+                    - --log=true
+                    - --log.filePath=/logs/traefik.log  # (Default: stdout) # temp disabled for portainer output
+                    - --log.level=DEBUG # (Default: error) DEBUG, INFO, WARN, ERROR, FATAL, PANIC
+                    - --accessLog=true
+                    - --accessLog.filePath=/logs/access.log # (Default: stdout) # temp disabled for portainer output
+                    - --accessLog.bufferingSize=100 # Configuring a buffer of 100 lines
+                    - --accessLog.filters.statusCodes=204-299,400-499,500-599
+                    - --providers.docker=true
+                    # - --providers.docker.endpoint=unix:///var/run/docker.sock # Use Docker Socket Proxy instead for improved security
+                    - --providers.docker.endpoint=tcp://{{ app_name }}-socketproxy:2375 # Enable for Socket Proxy. Disable otherwise.  # eg: traefik-socketproxy:2375
+                    - --providers.docker.exposedByDefault=false
+                    - --providers.docker.network={{ dc_traefik_net_name }}
+                    # - --providers.docker.swarmMode=false # Traefik v2 Swarm
+                    # - --providers.swarm.endpoint=tcp://127.0.0.1:2377 # Traefik v3 Swarm
+                    - --entrypoints.websecure.http.tls=true
+                    - --entrypoints.websecure.http.tls.options=tls-opts@file
+                    # * ------------------- Cloudflare with ACME ------------------- * #
+                    # Add dns-cloudflare as default certresolver for all services. Also enables TLS and no need to specify on individual services
+                    - --entrypoints.websecure.http.tls.certresolver=dns-cloudflare
+                    - --entrypoints.websecure.http.tls.domains[0].main={{ domain_1 }}
+                    - --entrypoints.websecure.http.tls.domains[0].sans=*.{{ domain_1 }}
+                    # - --entrypoints.websecure.http.tls.domains[1].main=$DOMAINNAME_KHUB # Pulls main cert for second domain
+                    # - --entrypoints.websecure.http.tls.domains[1].sans=*.$DOMAINNAME_KHUB # Pulls wildcard cert for second domain
+                    - --providers.file.directory=/rules # Load dynamic configuration from one or more .toml or .yml files in a directory
+                    - --providers.file.watch=true # Only works on top level files in the rules folder
+                    - "{{ '--certificatesResolvers.dns-cloudflare.acme.caServer=https://acme-staging-v02.api.letsencrypt.org/directory' if dc_traefik_acme_staging_mode | bool else omit }}" # ? LetsEncrypt Staging Server - uncomment when testing
+                    - --certificatesResolvers.dns-cloudflare.acme.storage=/acme.json
+                    - --certificatesResolvers.dns-cloudflare.acme.dnsChallenge.provider=cloudflare
+                    - --certificatesResolvers.dns-cloudflare.acme.dnsChallenge.resolvers=1.1.1.1:53,1.0.0.1:53
+                    - --certificatesResolvers.dns-cloudflare.acme.dnsChallenge.delayBeforeCheck=60 # 90 # To delay DNS check and reduce LE hitrate
+                    # - --metrics.prometheus=true
+                    # - --metrics.prometheus.buckets=0.1,0.3,1.2,5.0
+                    # - --metrics.prometheus.addEntryPointsLabels=true
+                    # - --metrics.prometheus.addrouterslabels=true
+                    # - --metrics.prometheus.addServicesLabels=true
+                    # - --metrics.influxdb2=true
+                    # - --metrics.influxdb2.address=http://192.168.10.111:8086
+                    # - --metrics.influxdb2.token=$INFLUXDB_TOKEN
+                    # - --metrics.influxdb2.org=zHome
+                    # - --metrics.influxdb2.bucket=traefik-ws
+                    # - --metrics.influxdb2.addEntryPointsLabels=true
+                    # - --metrics.influxdb2.addrouterslabels=true
+                    # - --metrics.influxdb2.addServicesLabels=true
+                    # - --metrics.influxdb2.pushInterval=30s
+                    # - --metrics.influxdb2.additionallabels.host=$DOMAINNAME_1
+                    # * ------------------- Plugins ------------------- * #
+                    - "{{ '--experimental.plugins.crowdsec-bouncer-traefik-plugin.modulename=github.com/maxlerebourg/crowdsec-bouncer-traefik-plugin' if dc_traefik_crowdsec_enabled | bool else omit }}"
+                    - "{{ '--experimental.plugins.crowdsec-bouncer-traefik-plugin.version=v1.3.3' if dc_traefik_crowdsec_enabled | bool else omit }}"
+                  networks:
+                    traefik_net: "{{ {'ipv4_address': dc_traefik_net_ip} if dc_traefik_net_ip is defined and dc_traefik_net_ip | length > 0 else {} }}"
+                    socketproxy_net: "{{ {'ipv4_address': dc_traefik_socketproxy_net_app_ip} if dc_traefik_socketproxy_net_app_ip is defined and dc_traefik_socketproxy_net_app_ip | length > 0 else {} }}"
+                    crowdsec_net: "{{ {'ipv4_address': dc_crowdsec_net_traefik_ip} if dc_crowdsec_net_traefik_ip is defined and dc_crowdsec_net_traefik_ip | length > 0 and dc_traefik_crowdsec_enabled | default(false) | bool else omit }}"
+                  ports:
+                    - target: 80
+                      published: 80
+                      protocol: tcp
+                      mode: host
+                    - target: 443
+                      published: 443
+                      protocol: tcp
+                      mode: host
+                    - target: 8080 # need to enable --api.insecure=true
+                      published: 8080
+                      protocol: tcp
+                      mode: host
+                  volumes:
+                    # - /var/run/docker.sock:/var/run/docker.sock:ro # Enable if not using Socket Proxy
+                    - "{{ appdata_type_path }}/rules:/rules" # Dynamic File Provider directory
+                    - "{{ appdata_type_path }}/plugins-storage:/plugins-storage"
+                    - "{{ logs_type_path }}:/logs" # Traefik logs
+                    - "{{ secrets_type_path }}:/run/secrets"
+                    - "{{ secrets_type_path }}/acme.json:/acme.json" # Certs File
+                  environment:
+                    TZ: "{{ timezone }}"
+                    CF_DNS_API_TOKEN_FILE: /run/secrets/cf_dns_api_token
+                  labels:
+                    # - autoheal: "true"
+                    traefik.enable: "true"
+                    # * Healthcheck/ping
+                    # - "traefik.http.routers.ping.rule=Host(`traefik.$DOMAINNAME_HS`) && Path(`/ping`)"
+                    # - "traefik.http.routers.ping.tls=true"
+                    # - "traefik.http.routers.ping.service=ping@internal"
+                    # * HTTP Routers
+                    traefik.http.routers.traefik-rtr.entrypoints: "websecure"
+                    traefik.http.routers.traefik-rtr.rule: "Host(`{{ app_name }}.{{ domain_1 }}`)"
+                    # * Services - API
+                    traefik.http.routers.traefik-rtr.service: "api@internal"
+                    # * Middlewares
+                    # traefik.http.routers.traefik-rtr.middlewares: "chain-no-auth@file" # For No Authentication
+                    # traefik.http.routers.traefik-rtr.middlewares: "chain-basic-auth@file" # For Basic HTTP Authentication
+                    # traefik.http.routers.traefik-rtr.middlewares: "chain-oauth@file" # For Google OAuth
+                    traefik.http.routers.traefik-rtr.middlewares: "chain-authelia@file" # For Authelia Authentication

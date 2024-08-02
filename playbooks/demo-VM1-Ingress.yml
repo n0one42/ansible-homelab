@@ -19,8 +19,6 @@
   become: true
   gather_facts: false
   roles:
-    - role: docker_provisioning
-    # - role: dc_socketproxy
-    # - role: dc_crowdsec
-    # - role: dc_traefik
-    # - role: dc_authelia
+    # - role: docker_provisioning
+    - role: dc_traefik
+    - role: dc_authelia

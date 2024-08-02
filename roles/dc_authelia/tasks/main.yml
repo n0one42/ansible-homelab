@@ -1,0 +1,153 @@
+---
+# tasks file for roles/dc_authelia
+- name: Create Authelia with PostgreSQL and Redis
+  vars:
+    app_name: "{{ dc_authelia_container_name }}" # "authelia"
+    db_name: "{{ dc_authelia_db_name }}" # "authelia"
+    db_user_name: "{{ dc_authelia_db_user_name }}" # "authelia"
+    db_user_pw: "{{ dc_authelia_db_user_pw }}"  # ! MUST BE HERE BECAUSE SHARED !
+    db_port: "{{ dc_authelia_db_port }}" # "5432"
+    redis_pw: "{{ dc_authelia_redis_pw }}"  # ! MUST BE HERE BECAUSE SHARED!
+    redis_port: "{{ dc_authelia_redis_port }}" # "6379"
+  block:
+  # ! --------------------------- Networks --------------------------- ! #
+    - name: Create network for --> {{ app_name }}
+      community.docker.docker_network:
+        name: "{{ app_name }}_net"
+        driver: bridge
+        internal: true
+        ipam_config:
+          - subnet: "{{ dc_authelia_net_cidr }}"
+
+
+  # * ------------------------ Authelia DB ------------------------ * #
+    - name: Include postgresql role
+      ansible.builtin.import_role:
+        name: dc_postgresql_bitnami
+      vars:
+        dc_postgresql_bitnami_create_with_userns: "{{ dc_authelia_db_create_with_userns }}"
+        dc_postgresql_bitnami_image_version: "{{ dc_authelia_db_image_version }}"
+        dc_postgresql_bitnami_db_superuser_pw: "{{ dc_authelia_db_superuser_pw }}"
+        dc_postgresql_bitnami_db_name: "{{ dc_authelia_db_name }}"
+        dc_postgresql_bitnami_db_user_name: "{{ dc_authelia_db_user_name }}"
+        dc_postgresql_bitnami_db_port: "{{ dc_authelia_db_port }}"
+        dc_postgresql_bitnami_net_ip: "{{ dc_authelia_net_db_ip }}"
+
+
+  # * ------------------------ Authelia Redis ------------------------ * #
+    - name: Include redis role
+      ansible.builtin.import_role:
+        name: dc_redis_bitnami
+      vars:
+        dc_redis_bitnami_create_with_userns: "{{ dc_authelia_redis_create_with_userns }}"
+        dc_redis_bitnami_image_version: "{{ dc_authelia_db_image_version }}"
+        dc_redis_bitnami_redis_port: "{{ dc_authelia_redis_port }}"
+        dc_redis_bitnami_net_ip: "{{ dc_authelia_net_redis_ip }}"
+
+
+  # * ----------------------- Authelia App ------------------------- *
+    - name: Create app --> {{ app_name }}
+      vars:
+        container_type: "app" # => app, db, redis
+        appdata_type_path: "{{ docker_appdata }}/{{ app_name }}/{{ container_type }}"
+        secrets_type_path: "{{ docker_secrets }}/{{ app_name }}/{{ container_type }}"
+        logs_type_path: "{{ docker_logs }}/{{ app_name }}/{{ container_type }}"
+        user: "{{ (dc_authelia_create_with_userns | bool) | ternary(dc_authelia_u_g_id + 100000, dc_authelia_u_g_id) }}"
+        group: "{{ (dc_authelia_create_with_userns | bool) | ternary(dc_authelia_u_g_id + 100000, dc_authelia_u_g_id) }}"
+      block:
+        - name: '[Required] dc_secrets_manager role'
+          ansible.builtin.import_role:
+            name: dc_secrets_manager
+          vars:
+            dc_secrets_manager_passwords_to_generate:
+              - var_name: redis_pw
+                content: "{{ redis_pw }}"
+              - var_name: db_user_pw
+                content: "{{ db_user_pw }}"
+              - var_name: authelia_jwt_secret
+                content: "{{ dc_authelia_jwt_secret }}"
+                type: jwt_secret
+              - var_name: authelia_storage_encryption_key
+                content: "{{ dc_authelia_storage_encryption_key }}"
+                type: storage_encryption_key
+              - var_name: authelia_session_secret
+                content: "{{ dc_authelia_session_secret }}"
+                type: session_secret
+
+        - name: Include container_init role
+          ansible.builtin.import_role:
+            name: container_init
+          vars:
+            container_init_appdata_directories_to_create:
+              - "config"
+            # container_init_custom_directories_to_create:
+            #   - path: "{{ logs_type_path }}"
+            #     owner: "{{ user }}"
+            #     group: "{{ group }}"
+            #     mode: "0550"
+            container_init_templates_to_copy:
+              - src: "configuration.yml.j2"
+                dest: "{{ appdata_type_path }}/config/configuration.yml"
+                mode: "0400"
+              - src: "users.yml.j2"
+                dest: "{{ appdata_type_path }}/config/users.yml"
+                mode: "0400"
+
+
+        - name: Install docker compose authelia with inline definition
+          community.docker.docker_compose_v2:
+            project_name: "{{ app_name }}"  # eg: authelia
+            definition:
+              # ! --------------------------- Networks --------------------------- ! #
+              networks:
+                traefik_net:
+                  name: "{{ dc_traefik_net_name }}"  # eg: traefik_net
+                  external: true  # indicating that it's a pre-existing network not managed by this Docker Compose file.
+                app_net:
+                  name: "{{ app_name }}_net"  # eg: authelia_net
+                  external: true  # indicating that it's a pre-existing network not managed by this Docker Compose file.
+
+              # * ---------------------------- App ------------------------------ * #
+              services:
+                authelia:
+                  image: authelia/authelia:{{ dc_authelia_image_version }}
+                  container_name: "{{ app_name }}"  # eg: authelia
+                  restart: always
+                  security_opt:
+                    - no-new-privileges:true
+                  privileged: false
+                  userns_mode: "{{ 'host' if dc_authelia_create_with_userns | bool == false else 'remap' }}"
+                  user: "{{ dc_authelia_u_g_id }}:{{ dc_authelia_u_g_id }}"
+                  networks:
+                    # default: # testing only
+                    traefik_net: "{{ {'ipv4_address': dc_authelia_traefik_net_ip} if dc_authelia_traefik_net_ip is defined and dc_authelia_traefik_net_ip | length > 0 else {} }}"
+                    app_net: "{{ {'ipv4_address': dc_authelia_net_app_ip} if dc_authelia_net_app_ip is defined and dc_authelia_net_app_ip | length > 0 else {} }}"
+                  # ports:
+                  #   - "{{ dc_authelia_port }}:9091"
+                  volumes:
+                    - "{{ appdata_type_path }}/config:/config"
+                    # - "{{ logs_type_path }}:/config/logs"
+                    - "{{ secrets_type_path }}:/run/secrets"
+                  environment:
+                    TZ: "{{ timezone }}"
+                    AUTHELIA_IDENTITY_VALIDATION_RESET_PASSWORD_JWT_SECRET_FILE: /run/secrets/authelia_jwt_secret
+                    AUTHELIA_SESSION_SECRET_FILE: /run/secrets/authelia_session_secret
+                    AUTHELIA_STORAGE_ENCRYPTION_KEY_FILE: /run/secrets/authelia_storage_encryption_key
+                    AUTHELIA_SESSION_REDIS_PASSWORD_FILE: /run/secrets/redis_pw
+                    AUTHELIA_STORAGE_POSTGRES_PASSWORD_FILE: /run/secrets/db_user_pw
+                  labels:
+                    traefik.enable: "true"
+                    ## HTTP Routers
+                    traefik.http.routers.authelia-rtr.entrypoints: "websecure"
+                    traefik.http.routers.authelia-rtr.rule: "Host(`{{ app_name }}.{{ domain_1 }}`)"
+                    ## Middlewares
+                    traefik.http.routers.authelia-rtr.middlewares: "chain-no-auth@file" # Should be chain-no-auth and not chain-authelia
+                    ## HTTP Services
+                    traefik.http.routers.authelia-rtr.service: "authelia-svc"
+                    traefik.http.services.authelia-svc.loadbalancer.server.port: "{{ dc_authelia_port }}"
+
+
+# https://www.smarthomebeginner.com/authelia-docker-compose-guide-2024-v2/
+
+# Cleaning
+# sudo docker container rm -f authelia authelia-redis authelia-postgresql && sudo docker network rm authelia_net && sudo rm -r $APPDATA_DIR/authelia && sudo rm -r $SECRETS_DIR/authelia

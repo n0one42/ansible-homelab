@@ -1,0 +1,63 @@
+---
+# tasks file for roles/socketproxy
+- name: Install docker compose socketproxy with inline definition
+  community.docker.docker_compose_v2:
+    project_name: "{{ app_name }}-socketproxy"
+    definition:
+      # ! --------------------------- Networks --------------------------- ! #
+      networks:
+        app_socketproxy_net:
+          name: "{{ app_name }}_socketproxy_net"  # eg: traefik_socketproxy_net
+          driver: bridge
+          internal: true
+          ipam:
+            config:
+              - subnet: "{{ dc_socketproxy_net_cidr }}"
+
+      # * ---------------------------- App ------------------------------ * #
+      services:
+        socketproxy:
+          image: tecnativa/docker-socket-proxy:{{ dc_socketproxy_image_version }}
+          container_name: "{{ app_name }}-socketproxy"  # eg: traefik-socketproxy
+          restart: always
+          security_opt:
+            - no-new-privileges:true
+          privileged: false
+          userns_mode: "{{ 'host' if dc_socketproxy_create_with_userns | bool == false else 'remap' }}"
+          # read_only: true # uncomment after first start if wanted
+          networks:
+            app_socketproxy_net: "{{ {'ipv4_address': dc_socketproxy_net_ip} if dc_socketproxy_net_ip is defined and dc_socketproxy_net_ip | length > 0 else {} }}"
+          volumes:
+            - /var/run/docker.sock:/var/run/docker.sock:ro
+          environment:
+            LOG_LEVEL: "{{ dc_socketproxy_env_log_level }}"  # debug, info, notice, warning, err, crit, alert and emerg
+            # * Variables match the URL prefix (i.e. AUTH blocks access to /auth/* parts of the API, etc.).
+            # 0 to revoke access.
+            # 1 to grant access.
+            ## Granted by Default
+            EVENTS: "{{ dc_socketproxy_env_events }}"
+            PING: "{{ dc_socketproxy_env_ping }}"
+            VERSION: "{{ dc_socketproxy_env_version }}"
+            # ! Revoked by Default
+            # ! Security critical - Maximum caution when enabling these.
+            AUTH: "{{ dc_socketproxy_env_auth }}"
+            SECRETS: "{{ dc_socketproxy_env_secrets }}"
+            POST: "{{ dc_socketproxy_env_post }}" # Portainer, Watchtower
+            # * Not always needed - Can expose some information that your service does not need.
+            BUILD: "{{ dc_socketproxy_env_build }}"
+            COMMIT: "{{ dc_socketproxy_env_commit }}"
+            CONFIGS: "{{ dc_socketproxy_env_configs }}"
+            CONTAINERS: "{{ dc_socketproxy_env_containers }}" # Traefik, portainer, etc.
+            DISTRIBUTION: "{{ dc_socketproxy_env_distribution }}"
+            EXEC: "{{ dc_socketproxy_env_exec }}"
+            IMAGES: "{{ dc_socketproxy_env_images }}" # Portainer
+            INFO: "{{ dc_socketproxy_env_info }}" # Portainer
+            NETWORKS: "{{ dc_socketproxy_env_networks }}" # Portainer
+            NODES: "{{ dc_socketproxy_env_nodes }}"
+            PLUGINS: "{{ dc_socketproxy_env_plugins }}"
+            SERVICES: "{{ dc_socketproxy_env_services }}" # Portainer
+            SESSION: "{{ dc_socketproxy_env_session }}"
+            SWARM: "{{ dc_socketproxy_env_swarm }}"
+            SYSTEM: "{{ dc_socketproxy_env_system }}"
+            TASKS: "{{ dc_socketproxy_env_tasks }}" # Portainer
+            VOLUMES: "{{ dc_socketproxy_env_volumes }}" # Portainer

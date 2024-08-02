@@ -1,0 +1,36 @@
+---
+# * ----------------- Container Configuration -------------------- * #
+## * Container variables
+# app_name: "my_container"  # !Dependency! eg: traefik which means at the end traefik-socketproxy
+dc_socketproxy_create_with_userns: false
+dc_socketproxy_image_version: "latest"
+
+## ? Environment variables for socketproxy
+dc_socketproxy_env_log_level: "info"  # debug, info, notice, warning, err, crit, alert and emerg
+dc_socketproxy_env_events: "1"  # Granted by default
+dc_socketproxy_env_ping: "1"  # Granted by default
+dc_socketproxy_env_version: "1"  # Granted by default
+
+# ! Revoked by default - Security critical
+dc_socketproxy_env_auth: "0"  # 0 to revoke access, 1 to grant access
+dc_socketproxy_env_secrets: "0"  # 0 to revoke access, 1 to grant access
+dc_socketproxy_env_post: "0"  # Portainer, Watchtower - 0 to revoke access, 1 to grant access
+
+# * Not always needed - Can expose some information that your service does not need
+dc_socketproxy_env_build: "0"  # 0 to revoke access, 1 to grant access
+dc_socketproxy_env_commit: "0"  # 0 to revoke access, 1 to grant access
+dc_socketproxy_env_configs: "0"  # 0 to revoke access, 1 to grant access
+dc_socketproxy_env_containers: "0"  # Traefik, portainer, etc. - 0 to revoke access, 1 to grant access
+dc_socketproxy_env_distribution: "0"  # 0 to revoke access, 1 to grant access
+dc_socketproxy_env_exec: "0"  # 0 to revoke access, 1 to grant access
+dc_socketproxy_env_images: "0"  # Portainer - 0 to revoke access, 1 to grant access
+dc_socketproxy_env_info: "0"  # Portainer - 0 to revoke access, 1 to grant access/
+dc_socketproxy_env_networks: "0"  # Portainer - 0 to revoke access, 1 to grant access
+dc_socketproxy_env_nodes: "0"  # 0 to revoke access, 1 to grant access
+dc_socketproxy_env_plugins: "0"  # 0 to revoke access, 1 to grant access
+dc_socketproxy_env_services: "0"  # Portainer - 0 to revoke access, 1 to grant access
+dc_socketproxy_env_session: "0"  # 0 to revoke access, 1 to grant access
+dc_socketproxy_env_swarm: "0"  # 0 to revoke access, 1 to grant access
+dc_socketproxy_env_system: "0"  # 0 to revoke access, 1 to grant access
+dc_socketproxy_env_tasks: "0"  # Portainer - 0 to revoke access, 1 to grant access
+dc_socketproxy_env_volumes: "0"  # Portainer - 0 to revoke access, 1 to grant access

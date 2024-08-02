@@ -1,0 +1,101 @@
+---
+# TODO: Variables which has to be passed through the playbook or on import of this task file
+# ! Mandatory variables
+  # vars:
+  #   app_name: => traefik, portainer, authelia, netbox
+  #   redis_pw: => "" # Empty for generated password
+# ? Optional variables
+
+
+# * ----------------------- App ------------------------- *
+- name: Create redis for --> {{ app_name }}
+  vars:
+    container_type: "redis" # => app, db, redis
+    appdata_type_path: "{{ docker_appdata }}/{{ app_name }}/{{ container_type }}" # eg: authelia/db
+    secrets_type_path: "{{ docker_secrets }}/{{ app_name }}/{{ container_type }}"
+    logs_type_path: "{{ docker_logs }}/{{ app_name }}"
+    user: "{{ (dc_redis_bitnami_create_with_userns | bool) | ternary(1001 + 100000, 1001) }}"  # do not change for this container!
+    group: "{{ (dc_redis_bitnami_create_with_userns | bool) | ternary(1001 + 100000, 1001) }}" # do not change for this container!
+  block:
+    - name: '[Required] dc_secrets_manager role'
+      ansible.builtin.import_role:
+        name: dc_secrets_manager
+      vars:
+        dc_secrets_manager_passwords_to_generate:
+          - var_name: redis_pw
+            content: "{{ redis_pw | default('') }}"
+            type: redis_password
+            set_facts: true  # optional - needed for the app
+            # overide_existing: true  # optional
+
+    - name: '[Required] container_init role'
+      ansible.builtin.import_role:
+        name: container_init
+      vars:
+        container_init_appdata_directories_to_create:
+          - "data"
+        container_init_secret_templates_to_copy:
+          - src: "redis/mydefault_redis.conf.j2"
+            dest: "overrides.conf"
+
+
+    - name: Install docker compose redis bitnami with inline definition
+      community.docker.docker_compose_v2:
+        project_name: "{{ app_name }}-redis"  # eg: authelia-redis
+        definition:
+          # ! --------------------------- Networks --------------------------- ! #
+          networks:
+            app_net:
+              name: "{{ app_name }}_net"  # eg: authelia_net
+              external: true  # indicating that it's a pre-existing network not managed by this Docker Compose file.
+
+          # * ---------------------------- App ------------------------------ * #
+          services:
+            redis:
+              image: bitnami/redis:{{ dc_redis_bitnami_image_version }}
+              container_name: "{{ app_name }}-redis"  # eg: authelia-redis
+              restart: always
+              security_opt:
+                - no-new-privileges:true
+              privileged: false
+              userns_mode: "{{ 'host' if dc_redis_bitnami_create_with_userns | bool == false else 'remap' }}"
+              # ! by default they uses already 1001 as non root user and this cant be changed!
+              healthcheck:
+                test: ["CMD-SHELL", "export REDISCLI_AUTH=$(cat /run/secrets/redis_pw) && redis-cli ping | grep PONG"]
+                start_period: 15s
+                interval: 30s
+                retries: 5
+                timeout: 3s
+              networks:
+                app_net: "{{ {'ipv4_address': dc_redis_bitnami_net_ip} if dc_redis_bitnami_net_ip is defined and dc_redis_bitnami_net_ip | length > 0 else {} }}"
+              # ports:
+              #   - "6379:6379"
+              volumes:
+                - "{{ appdata_type_path }}/data:/bitnami/redis/data"
+                - "{{ secrets_type_path }}:/run/secrets"
+                # - "{{ secrets_type_path }}/overrides.conf:/opt/bitnami/redis/mounted-etc/overrides.conf"
+              environment:
+                REDIS_PASSWORD_FILE: "/run/secrets/redis_pw"
+                ALLOW_EMPTY_PASSWORD: "no"
+                REDIS_PORT_NUMBER: "{{ dc_redis_bitnami_redis_port }}"
+
+
+# ! --------------------------- Notes --------------------------- ! #
+# https://github.com/bitnami/containers/tree/main/bitnami/redis
+# ! Notes:
+# The envs like REDIS_PASSWORD will be set inside /opt/bitnami/redis/etc/redis.conf directly. If this is set and also a
+# custom redis.conf or .../overrides.conf is provided, the envs will be set but the custom redis.conf /overrides.conf will be used.
+# Also I tested it and the overrides rly works at it should. It overrides only the settings which are set in the overrides.conf and the rest will be taken from
+# /opt/bitnami/redis/etc/redis.conf
+# ! Also to mention. Sadly, using a own user does not give the default redis.conf and override part.
+# ! I should use the bitnami images as they are without setting a custom user for now...
+# redis bitnami is even smaller lol
+# Also exists redis-cluster and redis-sentinel. The redis-cluster seams to bea nearly the same as the normal redis Container
+# [redis-sentinel](https://github.com/bitnami/containers/tree/main/bitnami/redis-sentinel)
+# [redis-cluster](https://github.com/bitnami/containers/tree/main/bitnami/redis-cluster)
+
+# ? Test if login works
+# sudo docker exec -it {{ app_name }}-redis redis-cli -a {{ redis_pw }} ping
+# Or the safe way
+# sudo docker exec -it {{ app_name }}-redis redis-cli
+# auth {{ redis_pw }}

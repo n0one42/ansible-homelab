@@ -1,0 +1,22 @@
+---
+# ! Dependencies
+# ? Has to be set by vars
+# db_user_pw: "" # Empty for generated password ; superuser name --> postgres
+# db_superuser_pw # Empty for generated password
+
+# * ----------------- Container Configuration -------------------- * #
+## * Container variables
+dc_postgresql_bitnami_create_with_userns: true
+dc_postgresql_bitnami_image_version: "latest"
+
+dc_postgresql_bitnami_db_name: "MyDbName"
+dc_postgresql_bitnami_db_user_name: "MyUserName"
+dc_postgresql_bitnami_db_port: 5432
+
+# ## * Network settings
+# # ? Recommended to add this to the group_vars/all/main.yml or better to the group_vars/all/network.yml
+# dc_postgresql_bitnami_net_base: 10.100.0
+# dc_postgresql_bitnami_net_address: "{{ dc_postgresql_bitnami_net_base }}.0"
+# dc_postgresql_bitnami_net_prefix_length: 29
+# dc_postgresql_bitnami_net_cidr: "{{ dc_postgresql_bitnami_net_address }}/{{ dc_postgresql_bitnami_net_prefix_length }}"  # 10.100.0.0/29
+# dc_postgresql_bitnami_net_ip: "{{ dc_postgresql_bitnami_net_base }}.6"  # 10.100.0.6/29

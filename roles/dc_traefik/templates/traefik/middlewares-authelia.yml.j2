@@ -1,0 +1,9 @@
+http:
+  middlewares:
+    middlewares-authelia:
+      forwardAuth:
+        address: "http://{{ dc_traefik_authelia_container_name }}:{{ dc_traefik_authelia_port }}/api/verify?rd=https://{{ dc_traefik_authelia_container_name }}.{{ domain_1 }}"
+        trustForwardHeader: true
+        authResponseHeaders:
+          - "Remote-User"
+          - "Remote-Groups"

@@ -1,0 +1,182 @@
+---
+# tasks file for roles/dc_crowdsec
+# tasks file for roles/dc_authelia
+- name: Create crowdsec
+  vars:
+    app_name: "{{ dc_crowdsec_container_name }}"
+  block:
+  # * ------------------ Traefik Network ------------------ * #
+    - name: Include Traefik Network
+      ansible.builtin.import_role:
+        name: dn_traefik_net
+
+  # * ----------------------- App ------------------------- * #
+    - name: Create app --> {{ app_name }}
+      vars:
+        container_type: "app" # => app, db, redis
+        appdata_type_path: "{{ docker_appdata }}/{{ app_name }}/{{ container_type }}" # eg: crowdsec/app
+        secrets_type_path: "{{ docker_secrets }}/{{ app_name }}/{{ container_type }}"
+        logs_type_path: "{{ docker_logs }}/{{ app_name }}"
+        user: 9999  # !  such an odd container...
+        group: 9999 # !  such an odd container...
+      block:
+        - name: '[Required] dc_secrets_manager role'
+          ansible.builtin.import_role:
+            name: dc_secrets_manager
+          vars:
+            dc_secrets_manager_passwords_to_generate:
+              - var_name: traefik_crowdsec_bouncer_key
+                content: "{{ traefik_crowdsec_bouncer_key | default('') }}"
+                type: crowdsec_bouncer_key
+                set_facts: true  # optional - needed for the app
+                # overide_existing: true  # optional
+          when: dc_traefik_crowdsec_enabled is defined and dc_traefik_crowdsec_enabled | bool
+
+        - name: '[Required] container_init role'
+          ansible.builtin.import_role:
+            name: container_init
+          vars:
+            container_init_appdata_directories_to_create:
+              - "config"
+              - "data"
+
+            container_init_custom_directories_to_create:
+              - path: "{{ logs_type_path }}"
+                owner: "{{ user }}"
+                group: "{{ group }}"
+                mode: "0550"
+
+
+        - name: Gather only the hostname fact
+          ansible.builtin.setup:
+            filter: ansible_hostname
+
+        - name: Install docker compose crowdsec with inline definition
+          community.docker.docker_compose_v2:
+            project_name: "{{ app_name }}"  # eg: crowdsec
+            definition:
+              # ! --------------------------- Networks --------------------------- ! #
+              networks:
+                traefik_net:
+                  name: "{{ dc_traefik_net_name }}"  # eg: traefik_net
+                  external: true  # indicating that it's a pre-existing network not managed by this Docker Compose file.
+
+                app_net:
+                  name: "{{ app_name }}_net"
+                  driver: bridge
+                  internal: true # true for a private network without internet access
+                  ipam:
+                    config:
+                      - subnet: "{{ dc_crowdsec_net_cidr }}"
+
+
+              # * ---------------------------- App ------------------------------ * #
+              services:
+                crowdsec:
+                  image: crowdsecurity/crowdsec:{{ dc_crowdsec_image_version }}
+                  container_name: "{{ app_name }}"  # eg: crowdsec
+                  restart: unless-stopped
+                  security_opt:
+                    - no-new-privileges:true
+                  privileged: false
+                  userns_mode: "host" # !  such an odd container...
+                  networks:
+                    app_net: "{{ {'ipv4_address': dc_crowdsec_net_app_ip} if dc_crowdsec_net_app_ip is defined and dc_crowdsec_net_app_ip | length > 0 else {} }}"
+                    traefik_net: "{{ {'ipv4_address': dc_traefik_net_crowdsec_ip} if dc_traefik_net_crowdsec_ip is defined and dc_traefik_net_crowdsec_ip | length > 0 else {} }}"
+                  # ports:
+                  #   - "{{ dc_crowdsec_port }}:8080"
+                  volumes:
+                    - "{{ appdata_type_path }}/data:/var/lib/crowdsec/data"
+                    - "{{ appdata_type_path }}/config:/etc/crowdsec"
+                    - "{{ docker_logs }}:/logs/{{ ansible_hostname }}:ro"
+                    - "/var/log:/var/log:ro"
+                  environment:
+                    TZ: "{{ timezone }}"
+                    COLLECTIONS: "crowdsecurity/traefik crowdsecurity/http-cve crowdsecurity/whitelist-good-actors crowdsecurity/iptables crowdsecurity/linux fulljackz/proxmox"
+                    CUSTOM_HOSTNAME: "{{ ansible_hostname }}"
+                    BOUNCER_KEY_TRAEFIK: "{{ traefik_crowdsec_bouncer_key | default(omit) }}"
+                    # # DISABLE_LOCAL_API: "true" # Only after successfully registering and validating remote agent below.
+                    # # For the following, check local_api_credentials.yaml after cscli lapi register (secondary machine) and cscli machine validate (on primary machine)
+                    # AGENT_USERNAME: $CROWDSEC_AGENT_USERNAME
+                    # AGENT_PASSWORD: $CROWDSEC_AGENT_PASSWORD
+                    LOCAL_API_URL: "http://{{ dc_crowdsec_net_app_ip }}:{{ dc_crowdsec_port }}"
+
+
+                # ? Legacy - Using Traefik Plugin for Bouncer instead
+                # # CrowdSec Bouncer - Traefik
+                # traefik-bouncer:
+                #   image: fbonalair/traefik-crowdsec-bouncer:{{ dc_crowdsec_bouncer_image_version }}
+                #   container_name: "{{ app_name }}-traefik-bouncer"
+                #   restart: unless-stopped
+                #   security_opt:
+                #     - no-new-privileges:true
+                #   privileged: false
+                #   # userns_mode: "{{ 'host' if dc_crowdsec_bouncer_create_with_userns | bool == false else 'remap' }}"
+                #   # user: "{{ dc_crowdsec_bouncer_u_g_id }}:{{ dc_crowdsec_bouncer_u_g_id }}"
+                #   userns_mode: "host" # ! Testing
+                #   depends_on:
+                #     - crowdsec
+                #   networks:
+                #     app_net: "{{ {'ipv4_address': dc_crowdsec_net_bouncer_ip} if dc_crowdsec_net_bouncer_ip is defined and dc_crowdsec_net_bouncer_ip | length > 0 else {} }}"
+                #   environment:
+                #     # GIN_MODE: release # default is debug (more logs)
+                #     CROWDSEC_BOUNCER_API_KEY: "nqq8WvZqLMBuQkmuCcDVGi1/xQlH1428BR1kc8ZqJZk" # CROWDSEC_BOUNCER_TRAEFIK_API_KEY
+                #     CROWDSEC_AGENT_HOST: "{{ app_name }}:{{ dc_crowdsec_port }}" # CROWDSEC_LAPI_HOST:CROWDSEC_LAPI_PORT # CrowdSec host and port
+
+# ! --------------------------- Notes --------------------------- ! #
+# https://hub.docker.com/r/crowdsecurity/crowdsec
+# ! Notes:
+# sudo docker exec {{ app_name }} cscli bouncers add {{ app_name }}-traefik-bouncer
+# sudo docker exec crowdsec cscli bouncers add crowdsec-traefik-bouncer
+# sudo docker exec crowdsec cscli bouncers list
+# sudo docker logs -f crowdsec
+# sudo docker exec -it crowdsec /bin/bash
+
+# cscli decisions list: See a list of decisions made by CrowdSec.
+# cscli alerts list: See a list of alerts.
+# cscli alerts inspect -d: See details of a specific alert, using its ID from the alerts list.
+# cscli hub list: See a list of hubs (collections, parsers, scenarios, etc.).
+# cscli parsers list: See a list of parsers. You could also use the hub list command above, instead.
+# cscli metrics: See cool nerdy CrowdSec stats.
+# cscli machines list: See a list of all CrowdSec machines. At this point, there should be only one.
+# cscli bouncers list: See a list of enabled bouncers. At this point, we have enabled none.
+# cscli bouncers delete BOUNCER-NAME: Delete a bouncer.
+# credits: https://www.smarthomebeginner.com/crowdsec-docker-compose-1-fw-bouncer/
+
+# ? Testing if the bouncer works
+# sudo docker exec crowdsec cscli decisions add --ip YourClientIP
+# sudo docker exec crowdsec cscli decisions list
+# # Try to access containers like your traefik site --> https://traefik.mydom.com and it should be Forbidden
+# sudo docker logs -f crowdsec-traefik-bouncer # See the logs
+# sudo docker exec crowdsec cscli decisions delete --ip YourClientIP
+
+# Cleaning
+# sudo docker container rm -f crowdsec crowdsec-traefik-bouncer && sudo docker network rm crowdsec_net
+# sudo rm -r $APPDATA_DIR/crowdsec $SECRETS_DIR/crowdsec
+
+# ? Informations:
+# The CrowdSec Traefik bouncer does not need a direct internet connection to function.
+# It only requires an internal network connection to communicate with the CrowdSec instance.
+# Here are the key points:
+
+# The bouncer communicates directly with the CrowdSec Local API (LAPI) to get decisions about IP addresses
+# The CrowdSec instance itself needs an internet connection to fetch updates and share data with the CrowdSec network, but the bouncer does not require this
+# In a typical setup, the bouncer and CrowdSec instance are on the same internal Docker network, allowing them to communicate without direct internet access for the bouncer
+# The bouncer queries the CrowdSec LAPI to check if an IP should be blocked or allowed
+# All the decision-making happens locally within your infrastructure between the CrowdSec instance and the bouncer
+
+# Role of the Traefik bouncer:
+#     It acts as a middleware for Traefik
+#     It evaluates incoming requests by querying the CrowdSec instance
+#     It doesn't need to perform actions that require elevated permissions
+# Permissions and security:
+#     The bouncer doesn't need root privileges or extensive system access
+#     It primarily needs network access to communicate with Traefik and the CrowdSec instance
+# Using userns_mode: remap:
+#     Yes, you can use userns_mode: remap for the Traefik bouncer
+#     This setting remaps the user namespace inside the container, enhancing security
+#     It's a good practice for reducing the potential impact of container breakouts
+# Benefits of using userns_mode: remap:
+#     Improves container isolation
+#     Reduces the risk if the container is compromised
+#     Aligns with the principle of least privilege

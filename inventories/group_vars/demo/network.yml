@@ -50,12 +50,13 @@ dc_traefik_socketproxy_net_ip: "{{ dc_traefik_socketproxy_net_base }}.5"  # 10.1
 
 # ! ######################## Apps ######################## * #
 # * ----------------- Traefik ----------------- ! #
-dc_traefik_net_name: "t3_proxy_net"
+dc_traefik_net_name: "traefik_net"
 dc_traefik_net_base: 10.100.90
 dc_traefik_net_address: "{{ dc_traefik_net_base }}.0"
 dc_traefik_net_prefix_length: 24  # usable => 10.100.90.2 - 10.100.90.254
 dc_traefik_net_cidr: "{{ dc_traefik_net_address }}/{{ dc_traefik_net_prefix_length }}"  # 10.100.90.0/24
 
+dc_traefik_net_crowdsec_ip: "{{ dc_traefik_net_base }}.253"  # 10.100.90.253
 dc_traefik_net_ip: "{{ dc_traefik_net_base }}.254"  # 10.100.90.254
 
 

@@ -1,0 +1,19 @@
+---
+# ! Dependencies
+# ? Has to be set by vars
+# redis_pw  # Empty for generated password
+
+# * ----------------- Container Configuration -------------------- * #
+## * Container variables
+dc_redis_bitnami_create_with_userns: true
+dc_redis_bitnami_image_version: "latest"
+
+dc_redis_bitnami_redis_port: 6379
+
+# ## * Network settings
+# # ? Recommended to add this to the group_vars/all/main.yml or better to the group_vars/all/network.yml
+# dc_redis_bitnami_net_base: 10.100.0
+# dc_redis_bitnami_net_address: "{{ dc_redis_bitnami_net_base }}.0"
+# dc_redis_bitnami_net_prefix_length: 29
+# dc_redis_bitnami_net_cidr: "{{ dc_redis_bitnami_net_address }}/{{ dc_redis_bitnami_net_prefix_length }}"  # 10.100.0.0/29
+# dc_redis_bitnami_net_ip: "{{ dc_redis_bitnami_net_base }}.5"  # 10.100.0.6/29
