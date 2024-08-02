@@ -1,0 +1,9 @@
+---
+# defaults file for roles/dc_adguard
+# * ----------------- Container Configuration -------------------- * #
+## * Container variables
+dc_adguard_container_name: "adguard"
+dc_adguard_create_with_userns: true
+dc_adguard_image_version: "latest"
+dc_adguard_u_g_id: 22007 # with userns --> 122007
+# dc_adguard_port: 9091

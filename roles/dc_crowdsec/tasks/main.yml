@@ -1,6 +1,5 @@
 ---
 # tasks file for roles/dc_crowdsec
-# tasks file for roles/dc_authelia
 - name: Create crowdsec
   vars:
     app_name: "{{ dc_crowdsec_container_name }}"
@@ -95,11 +94,11 @@
                     COLLECTIONS: "crowdsecurity/traefik crowdsecurity/http-cve crowdsecurity/whitelist-good-actors crowdsecurity/iptables crowdsecurity/linux fulljackz/proxmox"
                     CUSTOM_HOSTNAME: "{{ ansible_hostname }}"
                     BOUNCER_KEY_TRAEFIK: "{{ traefik_crowdsec_bouncer_key | default(omit) }}"
+                    LOCAL_API_URL: "http://{{ dc_crowdsec_net_app_ip }}:{{ dc_crowdsec_port }}"
                     # # DISABLE_LOCAL_API: "true" # Only after successfully registering and validating remote agent below.
                     # # For the following, check local_api_credentials.yaml after cscli lapi register (secondary machine) and cscli machine validate (on primary machine)
                     # AGENT_USERNAME: $CROWDSEC_AGENT_USERNAME
                     # AGENT_PASSWORD: $CROWDSEC_AGENT_PASSWORD
-                    LOCAL_API_URL: "http://{{ dc_crowdsec_net_app_ip }}:{{ dc_crowdsec_port }}"
 
 
                 # ? Legacy - Using Traefik Plugin for Bouncer instead

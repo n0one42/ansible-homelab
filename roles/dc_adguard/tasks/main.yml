@@ -1,0 +1,130 @@
+---
+# tasks file for roles/dc_adguard
+- name: Create adguard
+  vars:
+    app_name: "{{ dc_adguard_container_name }}"
+  block:
+  # * ------------------ Traefik Network ------------------ * #
+    - name: Include Traefik Network
+      ansible.builtin.import_role:
+        name: dn_traefik_net
+
+  # * ------------------ Server Settings ------------------ * #
+    - name: Disable DNSStubListener
+      ansible.builtin.lineinfile:
+        dest: "/etc/systemd/resolved.conf"
+        regexp: "{{ item.regexp }}"
+        line: "{{ item.line }}"
+        state: present
+        mode: "0644"
+      become: true
+      with_items:
+        - regexp: "^DNSStubListener"
+          line: "DNSStubListener=no"
+      notify:
+        - Restart systemd-resolved
+        # - Restart docker  # not needed
+
+    - name: Flush handlers
+      ansible.builtin.meta: flush_handlers
+
+  # * ----------------------- App ------------------------- * #
+    - name: Create app --> {{ app_name }}
+      vars:
+        container_type: "app" # => app, db, redis
+        appdata_type_path: "{{ docker_appdata }}/{{ app_name }}/{{ container_type }}"
+        secrets_type_path: "{{ docker_secrets }}/{{ app_name }}/{{ container_type }}"
+        logs_type_path: "{{ docker_logs }}/{{ app_name }}"
+        user: "{{ (dc_adguard_create_with_userns | bool) | ternary(dc_adguard_u_g_id + 100000, dc_adguard_u_g_id) }}"
+        group: "{{ (dc_adguard_create_with_userns | bool) | ternary(dc_adguard_u_g_id + 100000, dc_adguard_u_g_id) }}"
+      block:
+        - name: '[Required] container_init role'
+          ansible.builtin.import_role:
+            name: container_init
+          vars:
+            container_init_appdata_directories_to_create:
+              - "config"
+              - "data"
+            container_init_templates_to_copy:
+              - src: "AdGuardHome.yaml.j2"
+                dest: "{{ appdata_type_path }}/config/AdGuardHome.yaml"
+                mode: "0600"
+
+
+        - name: Install docker compose adguard with inline definition
+          community.docker.docker_compose_v2:
+            project_name: "{{ app_name }}"  # eg: adguard
+            definition:
+              # ! --------------------------- Networks --------------------------- ! #
+              networks:
+                traefik_net:
+                  name: "{{ dc_traefik_net_name }}"  # eg: traefik_net
+                  external: true  # indicating that it's a pre-existing network not managed by this Docker Compose file.
+
+
+              # * ---------------------------- App ------------------------------ * #
+              services:
+                adguard:
+                  image: adguard/adguardhome:{{ dc_adguard_image_version }}
+                  container_name: "{{ app_name }}"
+                  restart: unless-stopped
+                  security_opt:
+                    - no-new-privileges:true
+                  privileged: false
+                  userns_mode: "{{ 'host' if dc_adguard_create_with_userns | bool == false else 'remap' }}"
+                  user: "{{ dc_adguard_u_g_id }}:{{ dc_adguard_u_g_id }}"
+                  # user: "root"
+                  networks:
+                    traefik_net: "{{ {'ipv4_address': dc_traefik_net_adguard_ip} if dc_traefik_net_adguard_ip is defined and dc_traefik_net_adguard_ip | length > 0 else {} }}"
+                  ports:
+                    # DNS Ports
+                    - "53:53/tcp"
+                    - "53:53/udp"
+                    # DNS over TLS
+                    - "853:853/tcp"
+                    - "8853:8853/udp"
+                    # DNS over QUIC
+                    - "784:784/udp"
+                    # DNS Crypt
+                    - "5443:5443/tcp"
+                    - "5443:5443/udp"
+                    # DHCP Ports
+                    - "67:67/udp"
+                    - "68:68/tcp"
+                    - "68:68/udp"
+                    # DNS over HTTPs
+                    - "1543:443/tcp"
+                    - "1543:443/udp"
+                    # # Dashboard
+                    # - "3000:3000/tcp"
+                    # - "1080:80/tcp"
+                  cap_add:
+                    # - "NET_ADMIN"
+                    - "NET_BIND_SERVICE"
+                  cap_drop:
+                    - "ALL"
+                  volumes:
+                    - "{{ appdata_type_path }}/data:/opt/adguardhome/work/data"
+                    - "{{ appdata_type_path }}/config:/opt/adguardhome/conf"
+                    # - "{{ docker_secrets }}/cert_key_pair/cert-mycert.crt:/etc/ssl/certs/ca.crt"
+                    # - "{{ docker_secrets }}/cert_key_pair/cert-mycert.key:/etc/ssl/private/ca.key"
+                    # # - "{{ myhome_docker_logs }}/{{ container_name }}:/var/log"
+                  environment:  # https://github.com/AdguardTeam/AdGuardDNS/blob/master/doc/environment.md
+                    VERBOSE: "0"  # default 0 ; set to 1 for debug messages
+                  labels:
+                    traefik.enable: "true"
+                    ## HTTP Routers
+                    traefik.http.routers.adguard-rtr.entrypoints: "websecure"
+                    traefik.http.routers.adguard-rtr.rule: "Host(`{{ app_name }}.{{ domain_1 }}`)"
+                    ## Middlewares
+                    traefik.http.routers.adguard-rtr.middlewares: "chain-no-auth@file" # Should be chain-no-auth and not chain-adguard
+                    ## HTTP Services
+                    traefik.http.routers.adguard-rtr.service: "adguard-svc"
+                    traefik.http.services.adguard-svc.loadbalancer.server.port: "80" # "{{ dc_adguard_port }}"
+
+
+# ! --------------------------- Notes --------------------------- ! #
+# https://github.com/AdguardTeam/AdGuardDNS/
+# ! Notes:
+# Sadly, there is a big "bug / problem" with this container if using a custom user instead of the root. There are many tickets about cap_add and such. Sadly it does not work if it is
+# a "fresh" installation. To avoid this, we will use a template configuration file which avoids this.
