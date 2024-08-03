@@ -68,7 +68,7 @@ The network configuration for this setup involves both simple and advanced VLAN-
 - **demo-VM2-Metrics**: Connected to `vmbr0` or `vmbr90`
 - **demo-VM3-Application-1**: Connected to `vmbr0` or `vmbr90`
 
-![Network Diagram]()
+![Untitled Diagram](https://github.com/user-attachments/assets/3a1688e8-79ac-415a-9725-d5856f4f6127)
 
 This guide uses the advanced method, ensuring efficient management, security, and isolation of different types of network traffic across the virtual machines.
 
