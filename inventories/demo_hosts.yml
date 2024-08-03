@@ -7,15 +7,15 @@ all:
           ansible_host: 10.0.5.10
           ansible_user: root
           ansible_ssh_common_args: '-o IdentitiesOnly=yes'
-        demo-vm1-ingress:
+        demo-vm10-ingress:
           ansible_host: 10.0.90.10
           ansible_user: wasd
           ansible_ssh_common_args: '-o IdentitiesOnly=yes'
-        demo-vm2-metrics:
+        demo-vm20-metrics:
           ansible_host: 10.0.90.20
           ansible_user: wasd
           ansible_ssh_common_args: '-o IdentitiesOnly=yes'
-        demo-vm3-application-1:
+        demo-vm31-application:
           ansible_host: 10.0.90.31
           ansible_user: wasd
           ansible_ssh_common_args: '-o IdentitiesOnly=yes'

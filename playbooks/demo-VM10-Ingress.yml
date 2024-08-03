@@ -15,7 +15,7 @@
 
 
 - name: Docker Provisioning
-  hosts: demo-vm1-ingress
+  hosts: demo-vm10-ingress
   become: true
   gather_facts: false
   roles:
