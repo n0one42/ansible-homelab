@@ -1,5 +1,22 @@
 # 🏠 Ansible-Powered Secure Docker Compose Environment
 
+## 📚 Table of Contents
+
+- [Overview](#-overview)
+- [Purpose](#-purpose)
+- [Key Features](#-key-features)
+- [Network Configuration](#-network-configuration)
+- [Architecture](#-architecture)
+- [Security Measures](#-security-measures)
+- [Logging and Monitoring](#-logging-and-monitoring)
+- [Traffic Flow](#-traffic-flow)
+- [Technologies Used](#-technologies-used)
+- [Prerequisites](#-prerequisites)
+- [Setup Guide](#-setup-guide)
+- [Contributing](#-contributing)
+- [License](#-license)
+- [Acknowledgments](#-acknowledgments)
+
 ## 🌟 Overview
 
 This project provides a comprehensive, Ansible-automated setup for deploying a multi-VM environment with various containerized services. It's designed to create a robust, secure, and monitored infrastructure suitable for small to medium-sized applications, with a focus on flexible routing, independent operation of each VM, enhanced security, and unified logging.
@@ -25,6 +42,35 @@ The main goals of this project are:
 - **Highly Customizable**: Ready to use out-of-the-box with predefined defaults that can be overridden at any time
 - **Comprehensive Documentation**: Each role includes its own configuration and extensive comments for ease of customization and understanding
 - **Modular Design**: Easily extendable for future services and applications
+
+## 🌐 Network Configuration
+
+The network configuration for this setup involves both simple and advanced VLAN-based segmentation to ensure proper management and isolation of traffic.
+
+### Router Configuration
+
+- **Default Network**: 192.168.1.1/24
+- **VLAN 5 (Management)**: 10.0.5.0/24
+  - DHCP Range: 10.0.5.200 - 10.0.5.250
+- **VLAN 90 (DMZ)**: 10.0.90.0/24
+  - DHCP Range: 10.0.90.200 - 10.0.90.250
+
+### Proxmox Network Setup
+
+- **Simple Network**: Uses `eno1` with IP range 192.168.1.1/24.
+- **Advanced Network**: Utilizes VLAN Trunk (5, 90) through `bond0`.
+  - **Management VLAN (VLAN5MGMT)**: `vmbr5` with IP range 10.0.5.10/24
+  - **DMZ VLAN (VLAN90DMZ)**: `vmbr90` with IP range 10.0.90.10/24
+
+### Virtual Machines
+
+- **demo-VM1-Ingress**: Connected to `vmbr0` or `vmbr90`
+- **demo-VM2-Metrics**: Connected to `vmbr0` or `vmbr90`
+- **demo-VM3-Application-1**: Connected to `vmbr0` or `vmbr90`
+
+![Network Diagram]()
+
+This guide uses the advanced method, ensuring efficient management, security, and isolation of different types of network traffic across the virtual machines.
 
 ## 🏗 Architecture
 
