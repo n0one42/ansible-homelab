@@ -58,25 +58,25 @@ graph TD
     subgraph "Internet"
         CF[Cloudflare]
     end
-    subgraph "demo-vm10-ingress"
+    subgraph "demo-VM1-Ingress"
         A[Main Traefik]
         B[CrowdSec]
-        C[CrowdSec-Traefik-Bouncer(Traefik-Plugin)]
+        C[CrowdSec-Traefik-Bouncer]
         D[Authelia]
         E[Postgres]
         F[Redis]
         G[Authentik]
-        H[AdGuard DNS]
+        H[AdGuard / PowerDNS]
         I[Promtail Agent]
     end
-    subgraph "demo-vm20-metrics"
+    subgraph "demo-VM2-Metrics"
         J[Loki]
         K[Grafana]
         L[Other Metrics Tools]
         M[Traefik VM2]
         R[Promtail Agent]
     end
-    subgraph "demo-vm31-application"
+    subgraph "demo-VM3-Application-1"
         N[Vaultwarden]
         O[WikiJS]
         P[Other Tools]
