@@ -1,5 +1,5 @@
 # ! ######################## VMs ######################## * #
-dc_demo_net_domain_name: "demo.net"
+dc_demo_net_internal_domain_name: "demo.net"
 dc_demo_net_base: 10.0.7
 dc_demo_net_address: "{{ dc_demo_net_base }}.0"
 dc_demo_net_prefix_length: 24

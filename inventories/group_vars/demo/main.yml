@@ -15,7 +15,7 @@ demo_auth_pw_argon2id: "" # 404PasswordNotFound
 ansible_ssh_private_key_file: "{{ '~/.ssh/id_ecdsa_sk' if ssh_key_type is defined and ssh_key_type == 'ecdsa-sk' else '~/.ssh/id_ed25519' }}"
 ansible_port: "{{ ssh_port | default(2222) }}"
 ansible_ssh_common_args: '-o IdentitiesOnly=yes'
-domain_1: 'demo.net'  # ! Not the same as dc_demo_net_domain_name !
+domain_1: 'demo.net'
 
 docker_home: "/opt/docker"
 # Subdirectories for specific types of Docker-related files

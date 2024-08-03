@@ -10,17 +10,15 @@
         name: dn_traefik_net
 
   # * ------------------ Server Settings ------------------ * #
-    - name: Disable DNSStubListener
+    - name: Configure resolved.conf
       ansible.builtin.lineinfile:
-        dest: "/etc/systemd/resolved.conf"
-        regexp: "{{ item.regexp }}"
-        line: "{{ item.line }}"
-        state: present
-        mode: "0644"
-      become: true
-      with_items:
-        - regexp: "^DNSStubListener"
-          line: "DNSStubListener=no"
+        path: /etc/systemd/resolved.conf
+        regexp: '^#?({{ item.key }}=).*'
+        line: '{{ item.key }}={{ item.value }}'
+        insertafter: EOF
+      loop:
+        - { key: 'DNS', value: '127.0.0.1' }
+        - { key: 'DNSStubListener', value: 'no' }
       notify:
         - Restart systemd-resolved
         # - Restart docker  # not needed

@@ -31,11 +31,11 @@ pve_vm_sockets: 1
 pve_vm_cores: 2
 # pve_vm_j2templates_dir: "{{ pve_vm_automation_files_dir }}/templates"
 pve_vm_hostname: "ubuntu-2404-template"
-pve_vm_fqdn: "{{ pve_vm_hostname }}.{{ domain_1 | default(dc_demo_net_domain_name) }}"
+pve_vm_fqdn: "{{ pve_vm_hostname }}.{{ domain_1 | default(dc_demo_net_internal_domain_name) }}"
 pve_vm_ssh_port: "{{ ssh_port | default(2222) }}"
 pve_vm_disk_size: "16G"
 pve_vm_gateway_ip: "{{ dc_demo_net_gateway }}"
-pve_vm_domain_name: "{{ domain_1 | default({{dc_demo_net_domain_name}}) }}"
+pve_vm_domain_name: "{{ domain_1 | default({{dc_demo_net_internal_domain_name}}) }}"
 pve_vm_dns_server: "{{ dc_demo_net_dns_server }}"
 # pve_vm_mac_address_0: ""
 pve_vm_net_prefix_length_0: "{{ dc_demo_net_prefix_length }}"
