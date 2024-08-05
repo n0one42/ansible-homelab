@@ -200,7 +200,7 @@ This setup allows for:
 
 ## 🚀 Setup Guide
 
-1. [Install and Configure Proxmox](Proxmox-Installation-Guide)
+1. [Install and Configure Proxmox](https://github.com/n0one42/ansible-homelab/wiki/Install-and-Configure-Proxmox)
 2. [Create Required VMs](VM-Creation-Guide)
 3. [Configure Cloudflare](Cloudflare-Configuration)
 4. [Clone and Prepare the Repository](Repository-Setup)
