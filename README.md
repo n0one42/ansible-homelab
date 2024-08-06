@@ -200,18 +200,18 @@ This setup allows for:
 
 ## 🚀 Setup Guide
 
-1. [Install and Configure Proxmox](https://github.com/n0one42/ansible-homelab/wiki/Install-and-Configure-Proxmox)
-2. [Create Required VMs](VM-Creation-Guide)
-3. [Configure Cloudflare](Cloudflare-Configuration)
-4. [Clone and Prepare the Repository](Repository-Setup)
-5. [Modify Ansible Inventory and Variables](Ansible-Configuration)
-6. [Run Ansible Playbooks](Deployment-Guide)
+1. [Install and Configure Proxmox](https://github.com/n0one42/ansible-homelab/wiki/Proxmox-Installation-and-Configuration-Guide)
+2. [Create Required VMs]
+3. [Configure Cloudflare]
+4. [Clone and Prepare the Repository]
+5. [Modify Ansible Inventory and Variables]
+6. [Run Ansible Playbooks]
 
 For detailed instructions on each step, click the links above to visit the respective wiki pages.
 
 ## 🤝 Contributing
 
-Contributions are welcome! Please read the [Contributing Guide](Contributing-Guide) for guidelines on how to submit changes.
+Contributions are welcome! Please read the [Contributing Guide] for guidelines on how to submit changes.
 
 ## 📄 License
 
