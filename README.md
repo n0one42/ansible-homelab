@@ -198,16 +198,9 @@ This setup allows for:
 - SSH key pair for secure communication
 - Cloudflare account for DNS management and additional security, including your own domain
 
-## 🚀 Setup Guide
+## 🚀 Getting Started
 
-1. [Install and Configure Proxmox](https://github.com/n0one42/ansible-homelab/wiki/Proxmox-Installation-and-Configuration-Guide)
-2. [Create Required VMs]
-3. [Configure Cloudflare]
-4. [Clone and Prepare the Repository]
-5. [Modify Ansible Inventory and Variables]
-6. [Run Ansible Playbooks]
-
-For detailed instructions on each step, click the links above to visit the respective wiki pages.
+For detailed setup instructions, please visit the [Wiki](https://github.com/n0one42/ansible-homelab/wiki).
 
 ## 🤝 Contributing
 
