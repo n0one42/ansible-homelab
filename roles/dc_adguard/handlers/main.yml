@@ -13,3 +13,9 @@
     state: restarted
     daemon_reload: true
   become: true
+
+- name: Restart container
+  community.docker.docker_container:
+    name: "{{ dc_adguard_container_name }}"
+    state: started
+    restart: true

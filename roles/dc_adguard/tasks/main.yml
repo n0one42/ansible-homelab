@@ -47,6 +47,8 @@
               - src: "AdGuardHome.yaml.j2"
                 dest: "{{ appdata_type_path }}/config/AdGuardHome.yaml"
                 mode: "0600"
+                force: "{{ dc_adguard_override_config_file }}"
+          notify: Restart container
 
 
         - name: Install docker compose adguard with inline definition

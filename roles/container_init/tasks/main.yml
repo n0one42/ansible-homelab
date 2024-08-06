@@ -64,6 +64,7 @@
         owner: "{{ user }}"
         group: "{{ group }}"
         mode: "{{ item.mode | default('0440') }}"  # 0550 for executable
+        force: "{{ item.force | default(true) }}"
       loop: "{{ container_init_templates_to_copy | default([]) }}"
 
 # ? gets under /run/secrets mounted

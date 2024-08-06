@@ -24,3 +24,4 @@
     # - role: dc_authelia
 
     - role: dc_adguard
+    - role: dc_it-tools

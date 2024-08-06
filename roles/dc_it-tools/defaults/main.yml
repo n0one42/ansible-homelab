@@ -1,0 +1,7 @@
+---
+# * ----------------- Container Configuration -------------------- * #
+## * Container variables
+dc_it_tools_container_name: "it-tools"
+dc_it_tools_create_with_userns: true
+dc_it_tools_image_version: "latest"
+dc_it_tools_u_g_id: 22003 # with userns --> 122003

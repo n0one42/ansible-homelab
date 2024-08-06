@@ -1,0 +1,36 @@
+---
+# tasks file for roles/dc_it-tools
+- name: Install docker compose it-tools with inline definition
+  community.docker.docker_compose_v2:
+    project_name: "{{ dc_it_tools_container_name }}"
+    definition:
+      # ! --------------------------- Networks --------------------------- ! #
+      networks:
+        traefik_net:
+          name: "{{ dc_traefik_net_name }}"  # eg: traefik_net
+          external: true  # indicating that it's a pre-existing network not managed by this Docker Compose file.
+
+
+      # * ---------------------------- App ------------------------------ * #
+      services:
+        it-tools:
+          image: corentinth/it-tools:{{ dc_it_tools_image_version }}
+          container_name: "{{ dc_it_tools_container_name }}"
+          restart: unless-stopped
+          security_opt:
+            - no-new-privileges:true
+          privileged: false
+          userns_mode: "{{ 'host' if dc_it_tools_create_with_userns | bool == false else 'remap' }}"
+          # user: "{{ dc_it_tools_u_g_id }}:{{ dc_it_tools_u_g_id }}"
+          networks:
+            traefik_net: "{{ {'ipv4_address': dc_traefik_net_it_tools_ip} if dc_traefik_net_it_tools_ip is defined and dc_traefik_net_it_tools_ip | length > 0 else {} }}"
+          labels:
+            traefik.enable: "true"
+            ## HTTP Routers
+            traefik.http.routers.it-tools-rtr.entrypoints: "websecure"
+            traefik.http.routers.it-tools-rtr.rule: "Host(`{{ dc_it_tools_container_name }}.{{ domain_1 }}`)"
+            ## Middlewares
+            traefik.http.routers.it-tools-rtr.middlewares: "chain-authelia@file"
+            ## HTTP Services
+            traefik.http.routers.it-tools-rtr.service: "it-tools-svc"
+            traefik.http.services.it-tools-svc.loadbalancer.server.port: "80"
