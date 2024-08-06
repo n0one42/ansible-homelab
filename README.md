@@ -12,7 +12,7 @@
 - [Traffic Flow](#-traffic-flow)
 - [Technologies Used](#-technologies-used)
 - [Prerequisites](#-prerequisites)
-- [Setup Guide](#-setup-guide)
+- [Getting Started](#-getting-started)
 - [Contributing](#-contributing)
 - [License](#-license)
 - [Acknowledgments](#-acknowledgments)
