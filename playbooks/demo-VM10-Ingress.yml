@@ -20,8 +20,8 @@
   gather_facts: false
   roles:
     # - role: docker_provisioning
-    # - role: dc_traefik
+    - role: dc_traefik
     # - role: dc_authelia
     # - role: dc_adguard
-    # - role: dc_it-tools
+    - role: dc_it-tools
     - role: dc_authentik

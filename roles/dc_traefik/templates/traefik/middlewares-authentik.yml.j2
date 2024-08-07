@@ -2,7 +2,7 @@ http:
   middlewares:
     middlewares-authentik:
       forwardAuth:
-        address: "http://{{ dc_traefik_authentik_container_name }}:{{ dc_traefik_authentik_port }}/outpost.goauthentik.io/auth/traefik
+        address: "http://{{ dc_authentik_container_name }}_server:{{ dc_authentik_http_port }}/outpost.goauthentik.io/auth/traefik"
         trustForwardHeader: true
         authResponseHeaders:
           - X-authentik-username

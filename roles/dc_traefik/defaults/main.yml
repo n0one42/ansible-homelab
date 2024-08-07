@@ -58,8 +58,3 @@ dc_traefik_socketproxy_env_containers: "1"
 ## Environment variables
 dc_traefik_authelia_container_name: "authelia"
 dc_traefik_authelia_port: 9091
-
-# * ---------------- Authentik Configuration ------------------- * #
-## Environment variables
-dc_traefik_authentik_container_name: "authentik"
-dc_traefik_authentik_port: 9000

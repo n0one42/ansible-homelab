@@ -130,19 +130,18 @@
                     AUTHENTIK_LOG_LEVEL: "info" # default: info  # debug, info, warning, error, trace # ! trace also includes sensitive data in logs
                     COMPOSE_PORT_HTTP: "{{ dc_authentik_http_port }}"
                     COMPOSE_PORT_HTTPS: "{{ dc_authentik_https_port }}"
+                    AUTHENTIK_HOST: https://{{ app_name }}.{{ domain_1 }} # ? duno if needed here
+                    AUTHENTIK_INSECURE: "false"
                   labels:
                     traefik.enable: "true"
                     ## HTTP Routers
-                    traefik.http.routers.authentik-rtr.tls: "true"
                     traefik.http.routers.authentik-rtr.entrypoints: "websecure"
-                    traefik.http.routers.authentik-rtr.rule: "Host(`{{ app_name }}.{{ domain_1 }}`)"
-                    # traefik.http.routers.authentik-rtr.rule: "Host(`{{ app_name }}.{{ domain_1 }}`) && PathPrefix(`/outpost.goauthentik.io/`)"
+                    traefik.http.routers.authentik-rtr.rule: "Host(`{{ app_name }}.{{ domain_1 }}`) && PathPrefix(`/outpost.goauthentik.io/`) || Host(`{{ app_name }}.{{ domain_1 }}`)"
                     ## Middlewares
                     traefik.http.routers.authentik-rtr.middlewares: "chain-no-auth@file"  # Has to be chain-no-auth
                     ## HTTP Services
                     traefik.http.routers.authentik-rtr.service: "authentik-svc"
-                    # traefik.http.services.authentik-svc.loadbalancer.healthcheck.path: "/outpost.goauthentik.io/ping"
-                    # traefik.http.services.authentik-svc.loadbalancer.healthcheck.port: "{{ dc_authentik_healthcheck_port }}"
+                    traefik.http.services.authentik-svc.loadbalancer.healthcheck.path: "/outpost.goauthentik.io/ping"
                     traefik.http.services.authentik-svc.loadbalancer.server.port: "{{ dc_authentik_http_port }}"
 
 
@@ -179,6 +178,21 @@
                     # * Worker only for sure
                     # ! file:/// does not seams to work for bootstrap therefore better to use a temp password
                     AUTHENTIK_BOOTSTRAP_PASSWORD: "{{ dc_authentik_bootstrap_pw }}" # Configure the default password for the akadmin user. Only read on the first startup.
+
+                nginx:
+                  image: nginx:latest
+                  container_name: nginx-eval-1
+                  networks:
+                    traefik_net:
+                  labels:
+                    traefik.enable: "true"
+                    traefik.http.routers.nginx-https.entrypoints: "websecure"
+                    traefik.http.routers.nginx-https.rule: "Host(`nginx.casalex.de`)"
+                    traefik.http.routers.nginx-https.service: "nginx-https-svc"
+                    traefik.http.services.nginx-https-svc.loadbalancer.server.port: "80"
+                    traefik.http.routers.nginx-https.middlewares: "middlewares-authentik@file"
+
+                  restart: unless-stopped
 
 
 # https://docs.goauthentik.io/docs/installation/automated-install
@@ -219,3 +233,4 @@
 # ? Other stuff
 # https://github.com/erkenes/docker-authentik
 # https://github.com/brokenscripts/authentik_traefik
+# https://docs.goauthentik.io/integrations/
