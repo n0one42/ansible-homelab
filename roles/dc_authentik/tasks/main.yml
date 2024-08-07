@@ -133,15 +133,17 @@
                   labels:
                     traefik.enable: "true"
                     ## HTTP Routers
+                    traefik.http.routers.authentik-rtr.tls: "true"
                     traefik.http.routers.authentik-rtr.entrypoints: "websecure"
                     traefik.http.routers.authentik-rtr.rule: "Host(`{{ app_name }}.{{ domain_1 }}`)"
+                    # traefik.http.routers.authentik-rtr.rule: "Host(`{{ app_name }}.{{ domain_1 }}`) && PathPrefix(`/outpost.goauthentik.io/`)"
                     ## Middlewares
-                    traefik.http.routers.authentik-rtr.middlewares: "chain-no-auth@file"
+                    traefik.http.routers.authentik-rtr.middlewares: "chain-no-auth@file"  # Has to be chain-no-auth
                     ## HTTP Services
                     traefik.http.routers.authentik-rtr.service: "authentik-svc"
+                    # traefik.http.services.authentik-svc.loadbalancer.healthcheck.path: "/outpost.goauthentik.io/ping"
+                    # traefik.http.services.authentik-svc.loadbalancer.healthcheck.port: "{{ dc_authentik_healthcheck_port }}"
                     traefik.http.services.authentik-svc.loadbalancer.server.port: "{{ dc_authentik_http_port }}"
-                    traefik.http.services.authentik-svc.loadbalancer.healthcheck.path: "/outpost.goauthentik.io/ping"
-                    traefik.http.services.authentik-svc.loadbalancer.healthcheck.port: "{{ dc_authentik_healthcheck_port }}"
 
 
                 authentik_worker:
@@ -157,6 +159,7 @@
                   networks:
                     app_net: "{{ {'ipv4_address': dc_authentik_net_app_worker_ip} if dc_authentik_net_app_worker_ip is defined and dc_authentik_net_app_worker_ip | length > 0 else {} }}"
                   volumes:
+                    # ? https://docs.goauthentik.io/docs/outposts/integrations/docker#permissions for socketproxy
                     # - /var/run/docker.sock:/var/run/docker.sock # Maybe later through socketproxy
                     - "{{ appdata_type_path }}/media:/media"
                     - "{{ appdata_type_path }}/certs:/certs"
@@ -212,3 +215,7 @@
 #         Sending emails
 #         Managing the event notification system
 #         Handling tasks visible on the System Tasks page in the frontend
+
+# ? Other stuff
+# https://github.com/erkenes/docker-authentik
+# https://github.com/brokenscripts/authentik_traefik

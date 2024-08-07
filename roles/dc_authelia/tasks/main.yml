@@ -141,7 +141,7 @@
                     traefik.http.routers.authelia-rtr.entrypoints: "websecure"
                     traefik.http.routers.authelia-rtr.rule: "Host(`{{ app_name }}.{{ domain_1 }}`)"
                     ## Middlewares
-                    traefik.http.routers.authelia-rtr.middlewares: "chain-no-auth@file" # Should be chain-no-auth and not chain-authelia
+                    traefik.http.routers.authelia-rtr.middlewares: "chain-no-auth@file" # Has to be chain-no-auth
                     ## HTTP Services
                     traefik.http.routers.authelia-rtr.service: "authelia-svc"
                     traefik.http.services.authelia-svc.loadbalancer.server.port: "{{ dc_authelia_port }}"
