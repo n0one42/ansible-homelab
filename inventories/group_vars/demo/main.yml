@@ -7,16 +7,18 @@
 # primary_user_pub_key: # Add your public key content here
 # cf_dns_api_token
 
-demo_auth_user: "AOAUserNotFound" # Eg: Logins for => authelia, traefik etc.
-# 404PasswordNotFound  # openssl passwd -6 ; Used for linux user hashed pw
-demo_auth_pw_hashed: '$6$LCOTQrP6OD6fFxR5$okd0.2iW9bRxICAmFRM47o9nKJh7f9GdrGXNj/WTNR9QyssYrpsV07cBFxkIxg83.X9M0xyqL31c9st4BShW61'
-demo_auth_pw_argon2id: "$argon2id$v=19$m=65536,t=3,p=4$lt66bWx+X/afiGpaSi1gug$XpFusSEhnv7/j83M8d8RoQmXM/L+uZxpSrMx4eJZkD8" # 404PasswordNotFound
-demo_auth_pw_bcrypt: "$2a$10$i2MGNwuNW9iq1R5HJz9SCOt/nPQuf/jvEo5wq5dR7MHnpMlWx9EGa" # 404PasswordNotFound
-
 ansible_ssh_private_key_file: "{{ '~/.ssh/id_ecdsa_sk' if ssh_key_type is defined and ssh_key_type == 'ecdsa-sk' else '~/.ssh/id_ed25519' }}"
 ansible_port: "{{ ssh_port | default(2222) }}"
 ansible_ssh_common_args: '-o IdentitiesOnly=yes'
 domain_1: 'demo.net'
+
+demo_auth_user: "AOAUserNotFound" # Eg: Logins for => authelia, traefik etc.
+demo_auth_user_email: "{{ demo_auth_user }}@{{ domain_1 }}" # eg: AOAUserNotFound@demo.net
+demo_auth_user_pw: "404PasswordNotFound"
+# 404PasswordNotFound  # openssl passwd -6 ; Used for linux user hashed pw
+demo_auth_pw_hashed: '$6$LCOTQrP6OD6fFxR5$okd0.2iW9bRxICAmFRM47o9nKJh7f9GdrGXNj/WTNR9QyssYrpsV07cBFxkIxg83.X9M0xyqL31c9st4BShW61'
+demo_auth_pw_argon2id: "$argon2id$v=19$m=65536,t=3,p=4$lt66bWx+X/afiGpaSi1gug$XpFusSEhnv7/j83M8d8RoQmXM/L+uZxpSrMx4eJZkD8" # 404PasswordNotFound
+demo_auth_pw_bcrypt: "$2a$10$i2MGNwuNW9iq1R5HJz9SCOt/nPQuf/jvEo5wq5dR7MHnpMlWx9EGa" # 404PasswordNotFound
 
 docker_home: "/opt/docker"
 # Subdirectories for specific types of Docker-related files

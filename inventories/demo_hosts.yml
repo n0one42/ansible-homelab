@@ -7,6 +7,10 @@ all:
           ansible_host: 10.0.5.10
           ansible_user: root
           ansible_ssh_common_args: '-o IdentitiesOnly=yes'
+        demo-vm09-aio:
+          ansible_host: 10.0.90.9
+          ansible_user: wasd
+          ansible_ssh_common_args: '-o IdentitiesOnly=yes'
         demo-vm10-ingress:
           ansible_host: 10.0.90.10
           ansible_user: wasd

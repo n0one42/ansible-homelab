@@ -5,8 +5,8 @@ http:
   address: 0.0.0.0:80
   session_ttl: 720h
 users:
-  - name: {{ demo_auth_user }}
-    password: {{ demo_auth_pw_bcrypt }}
+  - name: {{ dc_adguard_auth_user }}
+    password: {{ dc_adguard_auth_pw_bcrypt }}
 auth_attempts: 5
 block_auth_min: 15
 http_proxy: ""

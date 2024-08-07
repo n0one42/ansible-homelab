@@ -1,0 +1,32 @@
+---
+# defaults file for roles/dc_authentik
+# * ----------------- Container Configuration -------------------- * #
+## * Container variables
+dc_authentik_container_name: "authentik"
+dc_authentik_create_with_userns: true
+dc_authentik_image_version: "2024.6.3" # "latest"
+dc_authentik_u_g_id: 22017 # with userns --> 122xxx
+dc_authentik_secret_key: ""  # Empty for generated password
+dc_authentik_http_port: 9000 # Default: 9000
+dc_authentik_https_port: 9443 # Default: 9443
+dc_authentik_healthcheck_port: 9300 # Default: 9300
+# * Worker only for sure
+dc_authentik_bootstrap_pw: "{{ demo_auth_user_pw }}" # Empty for generated password # Configure the default password for the akadmin user. Only read on the first startup.
+
+# * ---------------- authentik DB Configuration ------------------- * #
+## Environment variables
+dc_authentik_db_create_with_userns: true
+dc_authentik_db_image_version: "latest"
+dc_authentik_db_superuser_pw: ""  # Empty for generated password ; superuser name --> postgres
+dc_authentik_db_name: "authentik"
+dc_authentik_db_user_name: "authentik"
+dc_authentik_db_user_pw: ""  # Empty for generated password
+dc_authentik_db_port: 5432
+
+
+# * --------------- authentik Redis Configuration ------------------ * #
+## Environment variables
+dc_authentik_redis_create_with_userns: true
+dc_authentik_redis_image_version: "latest"
+dc_authentik_redis_pw: ""  # Empty for generated password
+dc_authentik_redis_port: 6379

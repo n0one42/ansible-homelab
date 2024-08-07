@@ -58,6 +58,7 @@ dc_traefik_net_cidr: "{{ dc_traefik_net_address }}/{{ dc_traefik_net_prefix_leng
 
 dc_traefik_net_it_tools_ip: "{{ dc_traefik_net_base }}.249"  # 10.100.90.249
 dc_traefik_net_adguard_ip: "{{ dc_traefik_net_base }}.250"  # 10.100.90.250
+dc_traefik_net_authentik_ip: "{{ dc_traefik_net_base }}.251"  # 10.100.90.251
 dc_traefik_net_crowdsec_ip: "{{ dc_traefik_net_base }}.253"  # 10.100.90.253
 dc_traefik_net_ip: "{{ dc_traefik_net_base }}.254"  # 10.100.90.254
 
@@ -84,6 +85,18 @@ dc_crowdsec_net_bouncer_ip: "{{ dc_crowdsec_net_base }}.131"
 # dc_crowdsec_net_db_ip: "{{ dc_crowdsec_net_base }}.132"
 # dc_crowdsec_net_redis_ip: "{{ dc_crowdsec_net_base }}.133"
 dc_crowdsec_net_traefik_ip: "{{ dc_crowdsec_net_base }}.134"
+
+
+# * ----------------- Authentik ----------------- ! #
+dc_authentik_net_base: 10.100.50
+dc_authentik_net_address: "{{ dc_authentik_net_base }}.144"
+dc_authentik_net_prefix_length: 28
+dc_authentik_net_cidr: "{{ dc_authentik_net_address }}/{{ dc_authentik_net_prefix_length }}"
+dc_authentik_net_app_server_ip: "{{ dc_authentik_net_base }}.146"
+dc_authentik_net_app_worker_ip: "{{ dc_authentik_net_base }}.147"
+dc_authentik_net_db_ip: "{{ dc_authentik_net_base }}.148"
+dc_authentik_net_redis_ip: "{{ dc_authentik_net_base }}.149"
+
 
 # ? / 29
 # 10.100.50.0 - 10.100.50.7 # usable => 10.100.50.2 - 10.100.50.6

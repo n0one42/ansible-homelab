@@ -1,0 +1,214 @@
+---
+# tasks file for roles/dc_authentik
+- name: Create Authentik with PostgreSQL and Redis
+  vars:
+    app_name: "{{ dc_authentik_container_name }}" # "authentik"
+    db_name: "{{ dc_authentik_db_name }}" # "authentik"
+    db_user_name: "{{ dc_authentik_db_user_name }}" # "authentik"
+    db_user_pw: "{{ dc_authentik_db_user_pw }}"  # ! MUST BE HERE BECAUSE SHARED !
+    db_port: "{{ dc_authentik_db_port }}" # "5432"
+    redis_pw: "{{ dc_authentik_redis_pw }}"  # ! MUST BE HERE BECAUSE SHARED!
+    redis_port: "{{ dc_authentik_redis_port }}" # "6379"
+  block:
+  # ! --------------------------- Networks --------------------------- ! #
+    - name: Create network for --> {{ app_name }}
+      community.docker.docker_network:
+        name: "{{ app_name }}_net"
+        driver: bridge
+        internal: true
+        ipam_config:
+          - subnet: "{{ dc_authentik_net_cidr }}"
+
+
+  # * ------------------------ Authentik DB ------------------------ * #
+    - name: Include postgresql role
+      ansible.builtin.import_role:
+        name: dc_postgresql_bitnami
+      vars:
+        dc_postgresql_bitnami_create_with_userns: "{{ dc_authentik_db_create_with_userns }}"
+        dc_postgresql_bitnami_image_version: "{{ dc_authentik_db_image_version }}"
+        dc_postgresql_bitnami_db_superuser_pw: "{{ dc_authentik_db_superuser_pw }}"
+        dc_postgresql_bitnami_db_name: "{{ dc_authentik_db_name }}"
+        dc_postgresql_bitnami_db_user_name: "{{ dc_authentik_db_user_name }}"
+        dc_postgresql_bitnami_db_port: "{{ dc_authentik_db_port }}"
+        dc_postgresql_bitnami_net_ip: "{{ dc_authentik_net_db_ip }}"
+
+
+  # * ------------------------ Authentik Redis ------------------------ * #
+    - name: Include redis role
+      ansible.builtin.import_role:
+        name: dc_redis_bitnami
+      vars:
+        dc_redis_bitnami_create_with_userns: "{{ dc_authentik_redis_create_with_userns }}"
+        dc_redis_bitnami_image_version: "{{ dc_authentik_redis_image_version }}"
+        dc_redis_bitnami_redis_port: "{{ dc_authentik_redis_port }}"
+        dc_redis_bitnami_net_ip: "{{ dc_authentik_net_redis_ip }}"
+
+
+  # * ----------------------- Authentik App ------------------------- *
+    - name: Create app --> {{ app_name }}
+      vars:
+        container_type: "app" # => app, db, redis
+        appdata_type_path: "{{ docker_appdata }}/{{ app_name }}/{{ container_type }}"
+        secrets_type_path: "{{ docker_secrets }}/{{ app_name }}/{{ container_type }}"
+        logs_type_path: "{{ docker_logs }}/{{ app_name }}/{{ container_type }}"
+        user: "{{ (dc_authentik_create_with_userns | bool) | ternary(dc_authentik_u_g_id + 100000, dc_authentik_u_g_id) }}"
+        group: "{{ (dc_authentik_create_with_userns | bool) | ternary(dc_authentik_u_g_id + 100000, dc_authentik_u_g_id) }}"
+      block:
+        - name: '[Required] dc_secrets_manager role'
+          ansible.builtin.import_role:
+            name: dc_secrets_manager
+          vars:
+            dc_secrets_manager_passwords_to_generate:
+              - var_name: redis_pw
+                content: "{{ redis_pw }}"
+              - var_name: db_user_pw
+                content: "{{ db_user_pw }}"
+              - var_name: secret_key
+                content: "{{ dc_authentik_secret_key }}"
+                type: jwt_secret
+              - var_name: bootstrap_pw
+                content: "{{ dc_authentik_bootstrap_pw }}"
+
+        - name: Include container_init role
+          ansible.builtin.import_role:
+            name: container_init
+          vars:
+            container_init_appdata_directories_to_create:
+              - "media"
+              - "custom-templates"
+              - "certs"
+            # container_init_templates_to_copy:
+            #   - src: "configuration.yml.j2"
+            #     dest: "{{ appdata_type_path }}/config/configuration.yml"
+            #     mode: "0400"
+
+
+        - name: Install docker compose authentik with inline definition
+          community.docker.docker_compose_v2:
+            project_name: "{{ app_name }}"  # eg: authentik
+            definition:
+              # ! --------------------------- Networks --------------------------- ! #
+              networks:
+                traefik_net:
+                  name: "{{ dc_traefik_net_name }}"  # eg: traefik_net
+                  external: true  # indicating that it's a pre-existing network not managed by this Docker Compose file.
+                app_net:
+                  name: "{{ app_name }}_net"  # eg: authentik_net
+                  external: true  # indicating that it's a pre-existing network not managed by this Docker Compose file.
+
+              # * ---------------------------- App ------------------------------ * #
+              services:
+                authentik_server:
+                  image: ghcr.io/goauthentik/server:{{ dc_authentik_image_version }}
+                  container_name: "{{ app_name }}_server"
+                  restart: unless-stopped
+                  security_opt:
+                    - no-new-privileges:true
+                  privileged: false
+                  userns_mode: "{{ 'host' if dc_authentik_create_with_userns | bool == false else 'remap' }}"
+                  user: "{{ dc_authentik_u_g_id }}:{{ dc_authentik_u_g_id }}"
+                  command: server
+                  networks:
+                    traefik_net: "{{ {'ipv4_address': dc_traefik_net_authentik_ip} if dc_traefik_net_authentik_ip is defined and dc_traefik_net_authentik_ip | length > 0 else {} }}"
+                    app_net: "{{ {'ipv4_address': dc_authentik_net_app_server_ip} if dc_authentik_net_app_server_ip is defined and dc_authentik_net_app_server_ip | length > 0 else {} }}"
+                  ports:
+                    # - "{{ dc_authentik_http_port }}:9000"
+                    - "{{ dc_authentik_https_port }}:9443"
+                  volumes:
+                    - "{{ appdata_type_path }}/media:/media"
+                    - "{{ appdata_type_path }}/custom-templates:/templates"
+                    - "{{ secrets_type_path }}:/run/secrets"
+                  environment:
+                    AUTHENTIK_REDIS__HOST: "{{ dc_authentik_net_redis_ip }}"
+                    AUTHENTIK_REDIS__PASSWORD: "file:///run/secrets/redis_pw"
+                    AUTHENTIK_POSTGRESQL__HOST: "{{ dc_authentik_net_db_ip }}"
+                    AUTHENTIK_POSTGRESQL__NAME: "{{ db_name }}"
+                    AUTHENTIK_POSTGRESQL__USER: "{{ db_user_name }}"
+                    AUTHENTIK_POSTGRESQL__PASSWORD: "file:///run/secrets/db_user_pw"
+                    AUTHENTIK_SECRET_KEY: "file:///run/secrets/secret_key"
+                    AUTHENTIK_LOG_LEVEL: "info" # default: info  # debug, info, warning, error, trace # ! trace also includes sensitive data in logs
+                    COMPOSE_PORT_HTTP: "{{ dc_authentik_http_port }}"
+                    COMPOSE_PORT_HTTPS: "{{ dc_authentik_https_port }}"
+                  labels:
+                    traefik.enable: "true"
+                    ## HTTP Routers
+                    traefik.http.routers.authentik-rtr.entrypoints: "websecure"
+                    traefik.http.routers.authentik-rtr.rule: "Host(`{{ app_name }}.{{ domain_1 }}`)"
+                    ## Middlewares
+                    traefik.http.routers.authentik-rtr.middlewares: "chain-no-auth@file"
+                    ## HTTP Services
+                    traefik.http.routers.authentik-rtr.service: "authentik-svc"
+                    traefik.http.services.authentik-svc.loadbalancer.server.port: "{{ dc_authentik_http_port }}"
+                    traefik.http.services.authentik-svc.loadbalancer.healthcheck.path: "/outpost.goauthentik.io/ping"
+                    traefik.http.services.authentik-svc.loadbalancer.healthcheck.port: "{{ dc_authentik_healthcheck_port }}"
+
+
+                authentik_worker:
+                  image: ghcr.io/goauthentik/server:{{ dc_authentik_image_version }}
+                  container_name: "{{ app_name }}_worker"
+                  restart: unless-stopped
+                  security_opt:
+                    - no-new-privileges:true
+                  privileged: false
+                  userns_mode: "{{ 'host' if dc_authentik_create_with_userns | bool == false else 'remap' }}"
+                  user: "{{ dc_authentik_u_g_id }}:{{ dc_authentik_u_g_id }}"
+                  command: worker
+                  networks:
+                    app_net: "{{ {'ipv4_address': dc_authentik_net_app_worker_ip} if dc_authentik_net_app_worker_ip is defined and dc_authentik_net_app_worker_ip | length > 0 else {} }}"
+                  volumes:
+                    # - /var/run/docker.sock:/var/run/docker.sock # Maybe later through socketproxy
+                    - "{{ appdata_type_path }}/media:/media"
+                    - "{{ appdata_type_path }}/certs:/certs"
+                    - "{{ appdata_type_path }}/custom-templates:/templates"
+                    - "{{ secrets_type_path }}:/run/secrets"
+                  environment:
+                    AUTHENTIK_REDIS__HOST: "{{ dc_authentik_net_redis_ip }}"
+                    AUTHENTIK_REDIS__PASSWORD: "file:///run/secrets/redis_pw"
+                    AUTHENTIK_POSTGRESQL__HOST: "{{ dc_authentik_net_db_ip }}"
+                    AUTHENTIK_POSTGRESQL__USER: "{{ db_user_name }}"
+                    AUTHENTIK_POSTGRESQL__NAME: "{{ db_name }}"
+                    AUTHENTIK_POSTGRESQL__PASSWORD: "file:///run/secrets/db_user_pw"
+                    AUTHENTIK_SECRET_KEY: "file:///run/secrets/secret_key"
+                    AUTHENTIK_LOG_LEVEL: "info" # default: info  # debug, info, warning, error, trace # ! trace also includes sensitive data in logs
+                    COMPOSE_PORT_HTTP: "{{ dc_authentik_http_port }}"
+                    COMPOSE_PORT_HTTPS: "{{ dc_authentik_https_port }}"
+                    # * Worker only for sure
+                    # ! file:/// does not seams to work for bootstrap therefore better to use a temp password
+                    AUTHENTIK_BOOTSTRAP_PASSWORD: "{{ dc_authentik_bootstrap_pw }}" # Configure the default password for the akadmin user. Only read on the first startup.
+
+
+# https://docs.goauthentik.io/docs/installation/automated-install
+# https://docs.goauthentik.io/docs/installation/configuration
+# https://docs.goauthentik.io/docs/installation/docker-compose
+# To start the initial setup, navigate to http://<your server's IP or hostname>:9000/if/flow/initial-setup/.
+# https://10.0.90.10:9443/if/flow/initial-setup/  # Will not work if bootstrapped
+# http://10.0.90.10:9000/if/flow/initial-setup/
+# There you are prompted to set a password for the akadmin user (the default user).
+# https://docs.goauthentik.io/docs/core/architecture
+# https://docs.goauthentik.io/docs/terminology
+
+# sudo docker rm -f authentik_worker authentik_server authentik-redis authentik-postgresql
+# sudo rm -r $APPDATA_DIR/authentik
+# sudo rm -r $SECRETS_DIR/authentik
+
+# Authentik Server:
+
+#     The server container handles most of authentik's core logic and consists of two sub-components:
+#         Core: This handles the majority of authentik's functionality, including:
+#             API requests
+#             Flow executions
+#             SSO (Single Sign-On) requests
+#             Other primary authentication and identity management tasks
+
+# Embedded outpost: This allows the use of Proxy providers without deploying a separate outpost
+
+# The server component routes incoming requests to either the core or the embedded outpost using a lightweight router
+# It also handles requests for static assets like JavaScript and CSS files
+
+# Authentik Worker:
+
+#     The worker container is responsible for executing background tasks, such as:
+#         Sending emails
+#         Managing the event notification system
+#         Handling tasks visible on the System Tasks page in the frontend
