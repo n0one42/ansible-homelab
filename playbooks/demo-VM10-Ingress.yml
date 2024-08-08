@@ -11,7 +11,7 @@
 #         pve_vm_id: 110
 #         pve_vm_name: "demo-vm1-ingress"
 #         pve_vm_hostname: "demo-vm1-ingress"
-#         pve_vm_ipv4_address_0: "{{ dc_demo_net_vm1_ingress_ip }}"
+#         pve_vm_ipv4_address_0: "{{ dc_dmz_net_vm1_ingress_ip }}"
 
 
 - name: Docker Provisioning

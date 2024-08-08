@@ -4,23 +4,23 @@ all:
     demo:
       hosts:
         demo-pve:
-          ansible_host: 10.0.5.10
+          ansible_host: "{{ dc_mgmt_net_pve01_ip }}"
           ansible_user: root
           ansible_ssh_common_args: '-o IdentitiesOnly=yes'
         demo-vm09-aio:
-          ansible_host: 10.0.90.9
+          ansible_host: "{{ dc_dmz_net_vm09_aio_ip }}"
           ansible_user: wasd
           ansible_ssh_common_args: '-o IdentitiesOnly=yes'
         demo-vm10-ingress:
-          ansible_host: 10.0.90.10
+          ansible_host: "{{ dc_dmz_net_vm10_ingress_ip }}"
           ansible_user: wasd
           ansible_ssh_common_args: '-o IdentitiesOnly=yes'
         demo-vm20-metrics:
-          ansible_host: 10.0.90.20
+          ansible_host: "{{ dc_dmz_net_vm20_metrics_ip }}"
           ansible_user: wasd
           ansible_ssh_common_args: '-o IdentitiesOnly=yes'
         demo-vm31-application:
-          ansible_host: 10.0.90.31
+          ansible_host: "{{ dc_dmz_net_vm31_application_1_ip }}"
           ansible_user: wasd
           ansible_ssh_common_args: '-o IdentitiesOnly=yes'
 
