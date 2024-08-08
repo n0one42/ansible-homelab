@@ -19,7 +19,7 @@ all:
           ansible_host: "{{ dc_dmz_net_vm20_metrics_ip }}"
           ansible_user: wasd
           ansible_ssh_common_args: '-o IdentitiesOnly=yes'
-        demo-vm31-application:
+        demo-vm31-application-1:
           ansible_host: "{{ dc_dmz_net_vm31_application_1_ip }}"
           ansible_user: wasd
           ansible_ssh_common_args: '-o IdentitiesOnly=yes'

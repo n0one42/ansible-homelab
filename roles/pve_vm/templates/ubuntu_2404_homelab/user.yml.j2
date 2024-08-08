@@ -31,8 +31,9 @@ write_files:
 package_update: true
 package_upgrade: true
 package_reboot_if_required: false # I want to ensure it restarts also for the sshd to take effect despite the reboot
-# packages:
-#   - qemu-guest-agent
+packages:
+  - net-tools
+  # - qemu-guest-agent
 
 runcmd:
   - usermod -u {{ pve_vm_primary_user_uid }} {{ pve_vm_primary_user_name }}

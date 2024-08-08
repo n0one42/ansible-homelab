@@ -1,5 +1,5 @@
 ---
-# - name: Create VM => demo-vm1-ingress
+# - name: Create VM => demo-vm10-ingress
 #   hosts: demo-pve
 #   become: true
 #   gather_facts: false
@@ -9,9 +9,9 @@
 #         # pve_vm_prune: true  # testing purposes
 #         # pve_vm_start_after_create: false
 #         pve_vm_id: 110
-#         pve_vm_name: "demo-vm1-ingress"
-#         pve_vm_hostname: "demo-vm1-ingress"
-#         pve_vm_ipv4_address_0: "{{ dc_dmz_net_vm1_ingress_ip }}"
+#         pve_vm_name: "demo-vm10-ingress"
+#         pve_vm_hostname: "demo-vm10-ingress"
+#         pve_vm_ipv4_address_0: "{{ dc_dmz_net_vm10_ingress_ip }}"
 
 
 - name: Docker Provisioning
@@ -25,3 +25,7 @@
     - role: dc_adguard
     - role: dc_it-tools
     - role: dc_authentik
+
+# virtio0 ; ide2 (opencore) ; ide0 (Sonoma)
+# Ich glaube... Die Disk muss grösser als 64gb sein. Bei 200gb ging es
+# Rest war wie im Video. Ich musste aber fs0 und dann boot.efi starten

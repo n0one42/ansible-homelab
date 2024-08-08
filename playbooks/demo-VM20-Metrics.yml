@@ -1,1 +1,23 @@
+---
+# - name: Create VM => demo-vm20-metrics
+#   hosts: demo-pve
+#   become: true
+#   gather_facts: false
+#   roles:
+#     - role: pve_vm
+#       vars:
+#         # pve_vm_prune: true  # testing purposes
+#         # pve_vm_start_after_create: false
+#         pve_vm_id: 120
+#         pve_vm_name: "demo-vm20-metrics"
+#         pve_vm_hostname: "demo-vm20-metrics"
+#         pve_vm_ipv4_address_0: "{{ dc_dmz_net_vm20_metrics_ip }}"
 
+
+- name: Docker Provisioning
+  hosts: demo-vm20-metrics
+  become: true
+  gather_facts: false
+  roles:
+    - role: docker_provisioning
+    - role: dc_traefik

@@ -1,0 +1,22 @@
+---
+- name: Create VM => demo-vm31-application-1
+  hosts: demo-pve
+  become: true
+  gather_facts: false
+  roles:
+    - role: pve_vm
+      vars:
+        # pve_vm_prune: true  # testing purposes
+        # pve_vm_start_after_create: false
+        pve_vm_id: 131
+        pve_vm_name: "demo-vm31-application-1"
+        pve_vm_hostname: "demo-vm31-application-1"
+        pve_vm_ipv4_address_0: "{{ dc_dmz_net_vm31_application_1_ip }}"
+
+
+- name: Docker Provisioning
+  hosts: demo-vm31-application-1
+  become: true
+  gather_facts: false
+  roles:
+    - role: docker_provisioning
