@@ -78,10 +78,6 @@
               - "media"
               - "custom-templates"
               - "certs"
-            # container_init_templates_to_copy:
-            #   - src: "configuration.yml.j2"
-            #     dest: "{{ appdata_type_path }}/config/configuration.yml"
-            #     mode: "0400"
 
 
         - name: Install docker compose authentik with inline definition
@@ -141,7 +137,6 @@
                     traefik.http.routers.authentik-rtr.middlewares: "chain-no-auth@file"  # Has to be chain-no-auth
                     ## HTTP Services
                     traefik.http.routers.authentik-rtr.service: "authentik-svc"
-                    traefik.http.services.authentik-svc.loadbalancer.healthcheck.path: "/outpost.goauthentik.io/ping"
                     traefik.http.services.authentik-svc.loadbalancer.server.port: "{{ dc_authentik_http_port }}"
 
 
