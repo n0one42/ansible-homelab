@@ -3,7 +3,7 @@
 # ? Has to be set by vars
 # timezone
 # domain_1
-# cf_dns_api_token
+# dc_traefik_cf_dns_api_token
 
 
 # * ----------------- Container Configuration -------------------- * #
@@ -52,9 +52,3 @@ dc_traefik_socketproxy_env_containers: "1"
 # dc_traefik_socketproxy_net_cidr: "{{ dc_traefik_socketproxy_net_address }}/{{ dc_traefik_socketproxy_net_prefix_length }}"  # 10.100.50.0/29
 # dc_traefik_socketproxy_net_ip: "{{ dc_traefik_socketproxy_net_base }}.5"  # 10.100.50.5
 # dc_traefik_socketproxy_net_app_ip: "{{ dc_traefik_socketproxy_net_base }}.6"  # 10.100.50.6
-
-
-# * ---------------- Authelia  Configuration ------------------- * #
-## Environment variables
-dc_traefik_authelia_container_name: "authelia"
-dc_traefik_authelia_port: 9091

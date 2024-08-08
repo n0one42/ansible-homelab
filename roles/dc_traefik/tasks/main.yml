@@ -82,8 +82,8 @@
               - filename: "basic_auth_credentials"
                 content: "{{ dc_traefik_basic_auth_user }}:{{ dc_traefik_basic_auth_password_hashed }}"
                 mode: "0440"
-              - filename: "cf_dns_api_token"
-                content: "{{ cf_dns_api_token }}" # pass it from the ansible vault
+              - filename: "dc_traefik_cf_dns_api_token"
+                content: "{{ dc_traefik_cf_dns_api_token }}" # pass it from the ansible vault
                 mode: "0440"
 
         - name: '[Required] dc_secrets_manager role'
@@ -235,7 +235,7 @@
                     - "{{ secrets_type_path }}/acme.json:/acme.json" # Certs File
                   environment:
                     TZ: "{{ timezone }}"
-                    CF_DNS_API_TOKEN_FILE: /run/secrets/cf_dns_api_token
+                    CF_DNS_API_TOKEN_FILE: /run/secrets/dc_traefik_cf_dns_api_token
                   labels:
                     # - autoheal: "true"
                     traefik.enable: "true"
