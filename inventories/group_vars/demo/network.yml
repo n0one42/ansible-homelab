@@ -1,4 +1,7 @@
-# ! ######################## VMs ######################## * #
+# ? ######################################################################################## #
+# *                                           VMs                                            #
+# ? ######################################################################################## #
+
 dc_demo_net_internal_domain_name: "demo.net"
 dc_demo_net_base: 10.0.7
 dc_demo_net_address: "{{ dc_demo_net_base }}.0"
@@ -12,8 +15,9 @@ dc_demo_net_vm1_ingress_ip: "{{ dc_demo_net_base }}.10" # "10.0.7.10"
 dc_demo_net_vm2_metrics_ip: "{{ dc_demo_net_base }}.20" # "10.0.7.20"
 dc_demo_net_vm3_application_1_ip: "{{ dc_demo_net_base }}.31" # "10.0.7.31"
 
-
-# ! ################### Docker ################### * #
+# ? ######################################################################################## #
+# *                                  Docker bridge - docker0                                 #
+# ? ######################################################################################## #
 # The default bridge is named "docker0"
 docker_provisioning_docker_net_base: 10.250.0
 docker_provisioning_docker_net_address: "{{ docker_provisioning_docker_net_base }}.0"
@@ -24,32 +28,14 @@ docker_provisioning_docker_net_gateway: "{{ docker_provisioning_docker_net_base 
 docker_provisioning_docker_net_addr_pool_base_0: "10.252.0.0/16"
 docker_provisioning_docker_net_addr_pool_size_0: 24
 
+# ? ######################################################################################## #
+# !                                       Special cases                                      #
+# ? ######################################################################################## #
 
-# ! ################### Socket Proxyies ################### * #
-# * ----------------- Traefik ----------------- ! #
-dc_traefik_socketproxy_net_base: 10.100.20
-dc_traefik_socketproxy_net_address: "{{ dc_traefik_socketproxy_net_base }}.0"
-dc_traefik_socketproxy_net_prefix_length: 29 # 6 usable octets eg 10.100.20.2 - 10.100.20.6
-dc_traefik_socketproxy_net_cidr: "{{ dc_traefik_socketproxy_net_address }}/{{ dc_traefik_socketproxy_net_prefix_length }}"  # 10.100.20.0/29
+# ? -----------------------------------------------------------------------------
+# *                                   Traefik                                   *
+# ? -----------------------------------------------------------------------------
 
-dc_traefik_socketproxy_net_app_ip: "{{ dc_traefik_socketproxy_net_base }}.4"  # 10.100.20.4
-dc_traefik_socketproxy_net_ip: "{{ dc_traefik_socketproxy_net_base }}.5"  # 10.100.20.5
-
-
-# 10.100.20.0 - 10.100.20.7 # usable => 10.100.20.2 - 10.100.20.6
-# 10.100.20.8 - 10.100.20.15 # usable => 10.100.20.10 - 10.100.20.14
-# 10.100.20.16 - 10.100.20.23 # usable => 10.100.20.18 - 10.100.20.22
-# 10.100.20.24 - 10.100.20.31 # usable => 10.100.20.26 - 10.100.20.30
-# 10.100.20.32 - 10.100.20.39 # usable => 10.100.20.34 - 10.100.20.38
-# 10.100.20.40 - 10.100.20.47 # usable => 10.100.20.42 - 10.100.20.46
-# 10.100.20.48 - 10.100.20.55 # usable => 10.100.20.50 - 10.100.20.54
-# 10.100.20.56 - 10.100.20.63 # usable => 10.100.20.58 - 10.100.20.62
-# 10.100.20.64 - 10.100.20.71 # usable => 10.100.20.66 - 10.100.20.70
-# 10.100.20.72 - 10.100.20.79 # usable => 10.100.20.74 - 10.100.20.78
-
-
-# ! ######################## Apps ######################## * #
-# * ----------------- Traefik ----------------- ! #
 dc_traefik_net_name: "traefik_net"
 dc_traefik_net_base: 10.100.90
 dc_traefik_net_address: "{{ dc_traefik_net_base }}.0"
@@ -62,41 +48,35 @@ dc_traefik_net_authentik_ip: "{{ dc_traefik_net_base }}.251"  # 10.100.90.251
 dc_traefik_net_crowdsec_ip: "{{ dc_traefik_net_base }}.253"  # 10.100.90.253
 dc_traefik_net_ip: "{{ dc_traefik_net_base }}.254"  # 10.100.90.254
 
+# ? ######################################################################################## #
+# *                                      Socket Proxyies                                     #
+# ? ######################################################################################## #
 
-# * ----------------- Authelia ----------------- ! #
-dc_authelia_net_base: 10.100.50
-dc_authelia_net_address: "{{ dc_authelia_net_base }}.0"
-dc_authelia_net_prefix_length: 29  # 6 usable octets eg 10.100.50.2 - 10.100.50.6
-dc_authelia_net_cidr: "{{ dc_authelia_net_address }}/{{ dc_authelia_net_prefix_length }}"  # 10.100.50.0/29
-dc_authelia_net_app_ip: "{{ dc_authelia_net_base }}.2"  # 10.100.50.2/29
-dc_authelia_net_db_ip: "{{ dc_authelia_net_base }}.3"  # 10.100.50.3/29
-dc_authelia_net_redis_ip: "{{ dc_authelia_net_base }}.4"  # 10.100.50.4/29
+# 10.100.20.0 - 10.100.20.7 # usable => 10.100.20.2 - 10.100.20.6
+# 10.100.20.8 - 10.100.20.15 # usable => 10.100.20.10 - 10.100.20.14
+# 10.100.20.16 - 10.100.20.23 # usable => 10.100.20.18 - 10.100.20.22
+# 10.100.20.24 - 10.100.20.31 # usable => 10.100.20.26 - 10.100.20.30
+# 10.100.20.32 - 10.100.20.39 # usable => 10.100.20.34 - 10.100.20.38
+# 10.100.20.40 - 10.100.20.47 # usable => 10.100.20.42 - 10.100.20.46
+# 10.100.20.48 - 10.100.20.55 # usable => 10.100.20.50 - 10.100.20.54
+# 10.100.20.56 - 10.100.20.63 # usable => 10.100.20.58 - 10.100.20.62
+# 10.100.20.64 - 10.100.20.71 # usable => 10.100.20.66 - 10.100.20.70
+# 10.100.20.72 - 10.100.20.79 # usable => 10.100.20.74 - 10.100.20.78
 
+# ? -----------------------------------------------------------------------------
+# *                                   Traefik                                   *
+# ? -----------------------------------------------------------------------------
+dc_traefik_socketproxy_net_base: 10.100.20
+dc_traefik_socketproxy_net_address: "{{ dc_traefik_socketproxy_net_base }}.0"
+dc_traefik_socketproxy_net_prefix_length: 29 # 6 usable octets eg 10.100.20.2 - 10.100.20.6
+dc_traefik_socketproxy_net_cidr: "{{ dc_traefik_socketproxy_net_address }}/{{ dc_traefik_socketproxy_net_prefix_length }}"  # 10.100.20.0/29
 
-# * ----------------- Crowdsec ----------------- ! #
-dc_crowdsec_net_name: "crowdsec_net"
-dc_crowdsec_net_base: 10.100.50
-dc_crowdsec_net_address: "{{ dc_crowdsec_net_base }}.128"
-dc_crowdsec_net_prefix_length: 28
-dc_crowdsec_net_cidr: "{{ dc_crowdsec_net_address }}/{{ dc_crowdsec_net_prefix_length }}"
+dc_traefik_socketproxy_net_app_ip: "{{ dc_traefik_socketproxy_net_base }}.4"  # 10.100.20.4
+dc_traefik_socketproxy_net_ip: "{{ dc_traefik_socketproxy_net_base }}.5"  # 10.100.20.5
 
-dc_crowdsec_net_app_ip: "{{ dc_crowdsec_net_base }}.130"
-dc_crowdsec_net_bouncer_ip: "{{ dc_crowdsec_net_base }}.131"
-# dc_crowdsec_net_db_ip: "{{ dc_crowdsec_net_base }}.132"
-# dc_crowdsec_net_redis_ip: "{{ dc_crowdsec_net_base }}.133"
-dc_crowdsec_net_traefik_ip: "{{ dc_crowdsec_net_base }}.134"
-
-
-# * ----------------- Authentik ----------------- ! #
-dc_authentik_net_base: 10.100.50
-dc_authentik_net_address: "{{ dc_authentik_net_base }}.144"
-dc_authentik_net_prefix_length: 28
-dc_authentik_net_cidr: "{{ dc_authentik_net_address }}/{{ dc_authentik_net_prefix_length }}"
-dc_authentik_net_app_server_ip: "{{ dc_authentik_net_base }}.146"
-dc_authentik_net_app_worker_ip: "{{ dc_authentik_net_base }}.147"
-dc_authentik_net_db_ip: "{{ dc_authentik_net_base }}.148"
-dc_authentik_net_redis_ip: "{{ dc_authentik_net_base }}.149"
-
+# ? ######################################################################################## #
+# *                                            Apps                                          #
+# ? ######################################################################################## #
 
 # ? / 29
 # 10.100.50.0 - 10.100.50.7 # usable => 10.100.50.2 - 10.100.50.6
@@ -114,33 +94,83 @@ dc_authentik_net_redis_ip: "{{ dc_authentik_net_base }}.149"
 # 10.100.50.224 - 10.100.50.239 # usable => 10.100.50.226 - 10.100.50.238
 # 10.100.50.240 - 10.100.50.255 # usable => 10.100.50.242 - 10.100.50.254
 
+# ? -----------------------------------------------------------------------------
+# *                                  Authelia                                   *
+# ? -----------------------------------------------------------------------------
 
-# ! ######################### Special ######################### * #
+dc_authelia_net_base: 10.100.50
+dc_authelia_net_address: "{{ dc_authelia_net_base }}.0"
+dc_authelia_net_prefix_length: 29  # 6 usable octets eg 10.100.50.2 - 10.100.50.6
+dc_authelia_net_cidr: "{{ dc_authelia_net_address }}/{{ dc_authelia_net_prefix_length }}"  # 10.100.50.0/29
+dc_authelia_net_app_ip: "{{ dc_authelia_net_base }}.2"  # 10.100.50.2/29
+dc_authelia_net_db_ip: "{{ dc_authelia_net_base }}.3"  # 10.100.50.3/29
+dc_authelia_net_redis_ip: "{{ dc_authelia_net_base }}.4"  # 10.100.50.4/29
+
+# ? -----------------------------------------------------------------------------
+# *                                  Crowdsec                                   *
+# ? -----------------------------------------------------------------------------
+
+dc_crowdsec_net_name: "crowdsec_net"
+dc_crowdsec_net_base: 10.100.50
+dc_crowdsec_net_address: "{{ dc_crowdsec_net_base }}.128"
+dc_crowdsec_net_prefix_length: 28
+dc_crowdsec_net_cidr: "{{ dc_crowdsec_net_address }}/{{ dc_crowdsec_net_prefix_length }}"
+
+dc_crowdsec_net_app_ip: "{{ dc_crowdsec_net_base }}.130"
+dc_crowdsec_net_bouncer_ip: "{{ dc_crowdsec_net_base }}.131"
+# dc_crowdsec_net_db_ip: "{{ dc_crowdsec_net_base }}.132"
+# dc_crowdsec_net_redis_ip: "{{ dc_crowdsec_net_base }}.133"
+dc_crowdsec_net_traefik_ip: "{{ dc_crowdsec_net_base }}.134"
+
+# ? -----------------------------------------------------------------------------
+# *                                  Authentik                                   *
+# ? -----------------------------------------------------------------------------
+
+dc_authentik_net_base: 10.100.50
+dc_authentik_net_address: "{{ dc_authentik_net_base }}.144"
+dc_authentik_net_prefix_length: 28
+dc_authentik_net_cidr: "{{ dc_authentik_net_address }}/{{ dc_authentik_net_prefix_length }}"
+dc_authentik_net_app_server_ip: "{{ dc_authentik_net_base }}.146"
+dc_authentik_net_app_worker_ip: "{{ dc_authentik_net_base }}.147"
+dc_authentik_net_db_ip: "{{ dc_authentik_net_base }}.148"
+dc_authentik_net_redis_ip: "{{ dc_authentik_net_base }}.149"
+
+# ? ######################################################################################## #
+# !                                   Standalone containers                                  #
+# ? ######################################################################################## #
 # ? for external apps or for testing as a single container
-# * ----------------- Socket Proxy ----------------- ! #
+# 10.100.123.0 - 10.100.123.7 # usable => 10.100.123.2 - 10.100.123.6
+# 10.100.123.8 - 10.100.123.15 # usable => 10.100.123.10 - 10.100.123.14
+# 10.100.123.16 - 10.100.123.23 # usable => 10.100.123.18 - 10.100.123.22
+# 10.100.123.24 - 10.100.123.31 # usable => 10.100.123.26 - 10.100.123.30
+# 10.100.123.32 - 10.100.123.39 # usable => 10.100.123.34 - 10.100.123.38
+
+# ? -----------------------------------------------------------------------------
+# *                     Socket Proxy - standalone container                     *
+# ? -----------------------------------------------------------------------------
+
 dc_socketproxy_net_base: 10.100.123
 dc_socketproxy_net_address: "{{ dc_socketproxy_net_base }}.0"  # 10.100.123.0
 dc_socketproxy_net_prefix_length: 29  # 6 usable octets eg 10.100.123.2 - 10.100.123.6
 dc_socketproxy_net_cidr: "{{ dc_socketproxy_net_address }}/{{ dc_socketproxy_net_prefix_length }}"  # 10.100.123.0/29
 dc_socketproxy_net_ip: "{{ dc_socketproxy_net_base }}.5"  # 110.100.123.5
 
-# * -------------- PostgreSQL Bitnami -------------- ! #
+# ? -----------------------------------------------------------------------------
+# *                  PostgreSQL Bitnami - standalone container                  *
+# ? -----------------------------------------------------------------------------
+
 dc_postgresql_bitnami_net_base: 10.100.123
 dc_postgresql_bitnami_net_address: "{{ dc_postgresql_bitnami_net_base }}.8"  # 10.100.123.8
 dc_postgresql_bitnami_net_prefix_length: 29  # 6 usable octets eg 10.100.123.10 - 10.100.123.14
 dc_postgresql_bitnami_net_cidr: "{{ dc_postgresql_bitnami_net_address }}/{{ dc_postgresql_bitnami_net_prefix_length }}"  # 10.100.123.8/29
 dc_postgresql_bitnami_net_ip: "{{ dc_postgresql_bitnami_net_base }}.3"  # 10.100.123.3
 
-# * -------------- Redis Bitnami -------------- ! #
+# ? -----------------------------------------------------------------------------
+# *                     Redis Bitnami - standalone container                    *
+# ? -----------------------------------------------------------------------------
+
 dc_redis_bitnami_net_base: 10.100.123
 dc_redis_bitnami_net_address: "{{ dc_redis_bitnami_net_base }}.16"  # 10.100.123.16
 dc_redis_bitnami_net_prefix_length: 29  # 6 usable octets eg 10.100.123.18 - 10.100.123.22
 dc_redis_bitnami_net_cidr: "{{ dc_redis_bitnami_net_address }}/{{ dc_redis_bitnami_net_prefix_length }}"  # 10.100.123.16/29
 dc_redis_bitnami_net_ip: "{{ dc_redis_bitnami_net_base }}.4"  # 10.100.123.4
-
-
-# 10.100.123.0 - 10.100.123.7 # usable => 10.100.123.2 - 10.100.123.6
-# 10.100.123.8 - 10.100.123.15 # usable => 10.100.123.10 - 10.100.123.14
-# 10.100.123.16 - 10.100.123.23 # usable => 10.100.123.18 - 10.100.123.22
-# 10.100.123.24 - 10.100.123.31 # usable => 10.100.123.26 - 10.100.123.30
-# 10.100.123.32 - 10.100.123.39 # usable => 10.100.123.34 - 10.100.123.38

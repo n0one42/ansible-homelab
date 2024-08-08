@@ -19,13 +19,13 @@ dc_crowdsec_port: 8080
 # dc_crowdsec_net_redis_ip: "{{ dc_crowdsec_net_base }}.4"  # 10.100.0.4/29
 
 
-# * ---------------- crowdsec-bouncer Configuration ------------------- * #
-## Environment variables
-dc_crowdsec_bouncer_create_with_userns: true
-dc_crowdsec_bouncer_image_version: "latest"
-dc_crowdsec_bouncer_u_g_id: 22006 # with userns --> 122006
-# dc_crowdsec_db_superuser_pw: ""  # Empty for generated password ; superuser name --> postgres
-# dc_crowdsec_db_name: "authelia"
-# dc_crowdsec_db_user_name: "authelia"
-# dc_crowdsec_db_user_pw: ""  # Empty for generated password
-# dc_crowdsec_db_port: 5432
+# # * ---------------- crowdsec-bouncer Configuration ------------------- * #
+# ## Environment variables
+# dc_crowdsec_bouncer_create_with_userns: true
+# dc_crowdsec_bouncer_image_version: "latest"
+# dc_crowdsec_bouncer_u_g_id: 22006 # with userns --> 122006
+# # dc_crowdsec_db_superuser_pw: ""  # Empty for generated password ; superuser name --> postgres
+# # dc_crowdsec_db_name: "authelia"
+# # dc_crowdsec_db_user_name: "authelia"
+# # dc_crowdsec_db_user_pw: ""  # Empty for generated password
+# # dc_crowdsec_db_port: 5432

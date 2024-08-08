@@ -5,6 +5,7 @@
 # * Uncomment and set it accordingly
 
 # primary_user_pub_key: # Add your public key content here
+# domain_1: # Add your domain here eg: demo.net
 
 
 # ? ######################################################################################## #
@@ -16,7 +17,6 @@ system_locale: "en_US.UTF-8"
 system_language: "en_US.UTF-8"
 keyboard_layout: "us"
 alpha2code: "us"
-domain_1: 'demo.net'
 
 # ssh_key_type: "ecdsa-sk"  # comment out for ed25519
 ssh_port: 2222
@@ -26,7 +26,7 @@ demo_auth_user_email: "{{ demo_auth_user }}@{{ domain_1 }}" # eg: AOAUserNotFoun
 demo_auth_user_pw: "404PasswordNotFound"
 demo_auth_user_pw_htpasswd: "$apr1$z19bu7pc$F4eZc.lSBtThI29L366PS1" # "404PasswordNotFound" "404PasswordNotFound" # https://www.web2generators.com/apache-tools/htpasswd-generator
 demo_auth_pw_hashed: '$6$LCOTQrP6OD6fFxR5$okd0.2iW9bRxICAmFRM47o9nKJh7f9GdrGXNj/WTNR9QyssYrpsV07cBFxkIxg83.X9M0xyqL31c9st4BShW61' # 404PasswordNotFound # openssl passwd -6 ; Used for linux user hashed pw
-demo_auth_pw_argon2id: "$argon2id$v=19$m=65536,t=3,p=4$lt66bWx+X/afiGpaSi1gug$XpFusSEhnv7/j83M8d8RoQmXM/L+uZxpSrMx4eJZkD8" # 404PasswordNotFound
+demo_auth_pw_argon2id: "$argon2id$v=19$m=65536,t=3,p=4$QOywno04Z2XsMBPPI09CFQ$2pAn6Ez/0PQQV1ujUHBScRwAJNn7NlAcgreDlEdV7Nw" # 404PasswordNotFound
 demo_auth_pw_bcrypt: "$2a$10$i2MGNwuNW9iq1R5HJz9SCOt/nPQuf/jvEo5wq5dR7MHnpMlWx9EGa" # 404PasswordNotFound
 
 ansible_ssh_private_key_file: "{{ '~/.ssh/id_ecdsa_sk' if ssh_key_type is defined and ssh_key_type == 'ecdsa-sk' else '~/.ssh/id_ed25519' }}"
@@ -47,9 +47,10 @@ docker_compose: "{{ docker_home }}/compose"  # compose datafiles
 # !                              Mandatory Container Variables                               #
 # ? ######################################################################################## #
 # This are crucial variables for an operating container and has to be set
+# * Uncomment and set it accordingly
 
 # * >>>>>>>>>>>>>>>>>>> Traefik <<<<<<<<<<<<<<<<<<<
-dc_traefik_cf_dns_api_token: ""
+# dc_traefik_cf_dns_api_token: ""
 
 
 # ? ######################################################################################## #
@@ -57,59 +58,138 @@ dc_traefik_cf_dns_api_token: ""
 # ? ######################################################################################## #
 
 # ? -----------------------------------------------------------------------------
-# *                                Container IDs                                *
+# *                              Container U/G IDs                              *
 # ? -----------------------------------------------------------------------------
 
 dc_traefik_u_g_id: 22003 # with userns --> 122003
 dc_adguard_u_g_id: 22007 # with userns --> 122007
+dc_authentik_u_g_id: 22017 # with userns --> 122017
+dc_it_tools_u_g_id: 22022 # with userns --> 122022
 
 # ? -----------------------------------------------------------------------------
 # *                                  dc_adguard                                 *
 # ? -----------------------------------------------------------------------------
+# * ------------->>> Container Configuration <<<------------ * #
+# * >>> Container variables
+dc_adguard_container_name: "adguard"
+dc_adguard_create_with_userns: true
+dc_adguard_image_version: "latest"
+# dc_adguard_port: 9091
+dc_adguard_override_config_file: false  # ! Overrides the config file with the template one
+dc_adguard_auth_user: "{{ demo_auth_user }}"
+dc_adguard_auth_pw_bcrypt: "{{ demo_auth_pw_bcrypt }}"
 
 # ? -----------------------------------------------------------------------------
 # *                                 dc_authelia                                 *
 # ? -----------------------------------------------------------------------------
+# * ------------->>> Container Configuration <<<------------ * #
+# * >>> Container variables
+dc_authelia_container_name: "authelia"
+dc_authelia_create_with_userns: true
+dc_authelia_image_version: "latest"
+dc_authelia_u_g_id: 22002 # with userns --> 122002
+dc_authelia_jwt_secret: ""  # Empty for generated password
+dc_authelia_storage_encryption_key: ""  # Empty for generated password
+dc_authelia_session_secret: ""  # Empty for generated password
+dc_authelia_port: 9091
+
+## * Users configuration
+# ? docker run authelia/authelia:latest authelia crypto hash generate argon2 --password 'password'
+dc_authelia_users:
+  AOAUserNotFound:
+    disabled: false
+    displayname: '{{ demo_auth_user }}'
+    password: '{{ demo_auth_pw_argon2id }}'
+    email: '{{ demo_auth_user }}@{{ domain_1 }}'
+    groups:
+      - 'admins'
+      - 'dev'
+
+# * ---------------->>> DB Configuration <<<---------------- * #
+## Environment variables
+dc_authelia_db_create_with_userns: true
+dc_authelia_db_image_version: "latest"
+dc_authelia_db_superuser_pw: ""  # Empty for generated password ; superuser name --> postgres
+dc_authelia_db_name: "authelia"
+dc_authelia_db_user_name: "authelia"
+dc_authelia_db_user_pw: ""  # Empty for generated password
+dc_authelia_db_port: 5432
+
+# * --------------->>> Redis Configuration <<<-------------- * #
+## Environment variables
+dc_authelia_redis_create_with_userns: true
+dc_authelia_redis_image_version: "latest"
+dc_authelia_redis_pw: ""  # Empty for generated password
+dc_authelia_redis_port: 6379
 
 # ? -----------------------------------------------------------------------------
 # *                                 dc_authentik                                *
 # ? -----------------------------------------------------------------------------
+# * ------------->>> Container Configuration <<<------------ * #
+# * >>> Container variables
+dc_authentik_container_name: "authentik"
+dc_authentik_create_with_userns: true
+dc_authentik_image_version: "2024.6.3" # "latest"
+dc_authentik_secret_key: ""  # Empty for generated password
+dc_authentik_http_port: 9000 # Default: 9000
+dc_authentik_https_port: 9443 # Default: 9443
+# dc_authentik_healthcheck_port: 9300 # Default: 9300
+# * Worker only for sure
+dc_authentik_bootstrap_pw: "{{ demo_auth_user_pw }}" # Empty for generated password # Configure the default password for the akadmin user. Only read on the first startup.
+
+# * ---------------->>> DB Configuration <<<---------------- * #
+## Environment variables
+dc_authentik_db_create_with_userns: true
+dc_authentik_db_image_version: "latest"
+dc_authentik_db_superuser_pw: ""  # Empty for generated password ; superuser name --> postgres
+dc_authentik_db_name: "authentik"
+dc_authentik_db_user_name: "authentik"
+dc_authentik_db_user_pw: ""  # Empty for generated password
+dc_authentik_db_port: 5432
+
+# * --------------->>> Redis Configuration <<<-------------- * #
+## Environment variables
+dc_authentik_redis_create_with_userns: true
+dc_authentik_redis_image_version: "latest"
+dc_authentik_redis_pw: ""  # Empty for generated password
+dc_authentik_redis_port: 6379
 
 # ? -----------------------------------------------------------------------------
 # *                                 dc_crowdsec                                 *
 # ? -----------------------------------------------------------------------------
+# * ------------->>> Container Configuration <<<------------ * #
+# * >>> Container variables
+dc_crowdsec_container_name: "crowdsec"
+# dc_crowdsec_create_with_userns: false # ! To many problems... odd container... therefore host mode
+dc_crowdsec_image_version: "latest"
+# dc_crowdsec_u_g_id: 22005 # ! to many problems... odd container... therefore host mode
+dc_crowdsec_port: 8080
 
 # ? -----------------------------------------------------------------------------
 # *                                 dc_it-tools                                 *
 # ? -----------------------------------------------------------------------------
+# * ------------->>> Container Configuration <<<------------ * #
+# * >>> Container variables
+dc_it_tools_container_name: "it-tools"
+dc_it_tools_create_with_userns: true
+dc_it_tools_image_version: "latest"
 
 # ? -----------------------------------------------------------------------------
-# *                            dc_postgresql_bitnami                            *
+# *                                  dc_nginx                                   *
 # ? -----------------------------------------------------------------------------
-
-# ? -----------------------------------------------------------------------------
-# *                              dc_redis_bitnami                               *
-# ? -----------------------------------------------------------------------------
-
-# ? -----------------------------------------------------------------------------
-# *                             dc_secrets_manager                              *
-# ? -----------------------------------------------------------------------------
-
-# ? -----------------------------------------------------------------------------
-# *                               dc_socketproxy                                *
-# ? -----------------------------------------------------------------------------
+# * ------------->>> Container Configuration <<<------------ * #
+# * >>> Container variables
 
 # ? -----------------------------------------------------------------------------
 # *                                  dc_traefik                                 *
 # ? -----------------------------------------------------------------------------
-
 # ! ------------------>>> Dependencies <<<------------------ ! #
 # ? Has to be set by vars
 # timezone
 # domain_1
 # dc_traefik_cf_dns_api_token
 
-# * ----------->>> Container Configuration <<<--------------- * #
+# * ------------->>> Container Configuration <<<------------ * #
 # * >>> Container variables
 dc_traefik_container_name: "traefik"
 dc_traefik_create_with_userns: true
@@ -128,7 +208,7 @@ dc_traefik_cloudflare_ip_ranges: >
   162.158.0.0/15, 104.16.0.0/13, 104.24.0.0/14, 172.64.0.0/13, 131.0.72.0/22
 dc_traefik_local_ip_ranges: ""
 
-# * --------->>> SocketProxy Configuration <<<------------- * #
+# * ------------>>> SocketProxy Configuration <<<------------ * #
 # * >>> Container variables
 
 ## ? Environment variables for socketproxy
@@ -137,13 +217,8 @@ dc_traefik_socketproxy_env_log_level: "info"  # debug, info, notice, warning, er
 # * Not always needed - Can expose some information that your service does not need
 dc_traefik_socketproxy_env_containers: "1"
 
-
 # ? -----------------------------------------------------------------------------
 # *                                dc_whoami                                    *
-# ? -----------------------------------------------------------------------------
-
-# ? -----------------------------------------------------------------------------
-# *                               dn_traefik_net                                *
 # ? -----------------------------------------------------------------------------
 
 
