@@ -179,21 +179,6 @@
                     # ! file:/// does not seams to work for bootstrap therefore better to use a temp password
                     AUTHENTIK_BOOTSTRAP_PASSWORD: "{{ dc_authentik_bootstrap_pw }}" # Configure the default password for the akadmin user. Only read on the first startup.
 
-                nginx:
-                  image: nginx:latest
-                  container_name: nginx-eval-1
-                  networks:
-                    traefik_net:
-                  labels:
-                    traefik.enable: "true"
-                    traefik.http.routers.nginx-https.entrypoints: "websecure"
-                    traefik.http.routers.nginx-https.rule: "Host(`nginx.casalex.de`)"
-                    traefik.http.routers.nginx-https.service: "nginx-https-svc"
-                    traefik.http.services.nginx-https-svc.loadbalancer.server.port: "80"
-                    traefik.http.routers.nginx-https.middlewares: "middlewares-authentik@file"
-
-                  restart: unless-stopped
-
 
 # https://docs.goauthentik.io/docs/installation/automated-install
 # https://docs.goauthentik.io/docs/installation/configuration
