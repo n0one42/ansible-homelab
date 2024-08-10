@@ -21,3 +21,5 @@
   roles:
     - role: docker_provisioning
     - role: dc_traefik
+      vars:
+        dc_traefik_container_name: traefik-metrics
