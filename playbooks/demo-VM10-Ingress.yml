@@ -21,7 +21,9 @@
   roles:
     - role: docker_provisioning
     - role: dc_traefik
+      vars:
+        # dc_traefik_container_name: traefik-ingress
+        dc_traefik_type: "ingress"
     - role: dc_authelia
-    - role: dc_adguard
-    - role: dc_it-tools
     - role: dc_authentik
+    - role: dc_adguard

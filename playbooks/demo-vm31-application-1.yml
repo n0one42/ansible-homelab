@@ -20,3 +20,9 @@
   gather_facts: false
   roles:
     - role: docker_provisioning
+    - role: dc_traefik
+      vars:
+        dc_traefik_container_name: traefik-application-1
+        dc_traefik_type: "application-1"
+        dc_traefik_crowdsec_enabled: false
+    - role: dc_it-tools

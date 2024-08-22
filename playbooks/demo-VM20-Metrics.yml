@@ -23,3 +23,5 @@
     - role: dc_traefik
       vars:
         dc_traefik_container_name: traefik-metrics
+        dc_traefik_type: "metrics"
+        dc_traefik_crowdsec_enabled: false

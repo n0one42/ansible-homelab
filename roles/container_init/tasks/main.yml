@@ -57,6 +57,30 @@
         modification_time: preserve
       loop: "{{ container_init_files_to_create | default([]) }}"
 
+    - name: Copy all files from a template directory
+      when: container_init_templates_in_directory_to_copy | default([]) | length > 0
+      block:
+        - name: Find all template files in the directory
+          delegate_to: localhost
+          become: false
+          ansible.builtin.find:
+            paths: "{{ item.src }}"
+            file_type: file
+          register: found_templates
+          loop: "{{ container_init_templates_in_directory_to_copy }}"
+
+        - name: Copy template files found in the directories
+          ansible.builtin.template:
+            src: "{{ item.path }}"
+            dest: "{{ item_dest | regex_replace('\\.j2$', '') }}"
+            owner: "{{ user }}"
+            group: "{{ group }}"
+            mode: "{{ item.mode | default('0440') }}"
+            force: "{{ item.force | default(true) }}"
+          loop: "{{ found_templates.results | map(attribute='files') | flatten(levels=1) }}"
+          vars:
+            item_dest: "{{ container_init_templates_in_directory_to_copy | selectattr('src', 'equalto', item.path | dirname) | map(attribute='dest') | first }}/{{ item.path | basename }}"
+
     - name: Copy template files
       ansible.builtin.template:
         src: "{{ item.src }}"
