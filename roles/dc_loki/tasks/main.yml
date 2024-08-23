@@ -23,6 +23,9 @@
       vars:
         container_init_appdata_directories_to_create:
           - "data"
+        container_init_templates_to_copy:
+          - src: "{{ ansible_hostname }}/loki-docker-config.yml.j2"
+            dest: "{{ appdata_type_path }}/loki-docker-config.yml"
 
 
     - name: Install docker compose loki with inline definition
@@ -31,6 +34,9 @@
         definition:
           # ! --------------------------- Networks --------------------------- ! #
           networks:
+            traefik_net:
+              name: "{{ dc_traefik_net_name }}"  # eg: traefik_net
+              external: true  # indicating that it's a pre-existing network not managed by this Docker Compose file.
             app_net:
               name: "{{ app_name }}_net"  # eg: grafana_net
               external: true  # indicating that it's a pre-existing network not managed by this Docker Compose file.
@@ -46,15 +52,21 @@
               privileged: false
               userns_mode: "{{ 'host' if dc_loki_create_with_userns | bool == false else 'remap' }}"
               user: "{{ dc_loki_u_g_id }}:{{ dc_loki_u_g_id }}"
-              command: -config.file=/etc/loki/local-config.yaml
+              # command: -config.file=/etc/loki/loki-docker-config.yml
               networks:
+                traefik_net: "{{ {'ipv4_address': dc_traefik_net_loki_ip} if dc_traefik_net_loki_ip is defined and dc_traefik_net_loki_ip | length > 0 else {} }}"
                 app_net: "{{ {'ipv4_address': dc_loki_net_ip} if dc_loki_net_ip is defined and dc_loki_net_ip | length > 0 else {} }}"
-              # ports:  # Not needed
-              #   - "{{ dc_loki_port }}:3100"
+              ports:
+                - "{{ dc_loki_port }}:3100"
               volumes:
                 - "{{ appdata_type_path }}/data:/loki"
-              #   - "{{ secrets_type_path }}:/run/secrets"
+                - "{{ appdata_type_path }}/loki-docker-config.yml:/etc/loki/local-config.yaml"
               # environment:
 
 
 # ! --------------------------- Notes --------------------------- ! #
+# https://github.com/grafana/loki/blob/main/cmd/loki/loki-docker-config.yaml
+# https://grafana.com/docs/loki/latest/configure/examples/configuration-examples/
+
+# http://10.0.90.20:3100/ready
+# http://10.0.90.20:3100/metrics

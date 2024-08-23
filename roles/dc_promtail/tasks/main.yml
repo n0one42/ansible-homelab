@@ -62,3 +62,5 @@
 
 
 # ! --------------------------- Notes --------------------------- ! #
+# Promtail is a log shipper. It reads logs from various sources (such as log files, Docker containers, or syslog) and then forwards or “pushes” them to a Loki instance.
+# Loki acts as a log storage and indexing system. It does not actively pull logs from Promtail; instead, it listens for incoming log data that Promtail sends.

@@ -149,7 +149,7 @@
                         type: loki
                         access: proxy
                         orgId: 1
-                        url: http://grafana-loki:3100
+                        url: http://{{ app_name }}-loki:{{ dc_grafana_loki_port }}
                         basicAuth: false
                         isDefault: true
                         version: 1
@@ -211,7 +211,7 @@
 #       - loki
 
 # Cleaning
-# sudo docker container rm -f promtail grafana-loki nginx-app
+# sudo docker container rm -f grafana-promtail grafana-loki nginx-app
 # sudo docker container rm -f grafana grafana-postgresql && sudo docker network rm grafana_net && sudo rm -r $APPDATA_DIR/grafana && sudo rm -r $SECRETS_DIR/grafana
 
 # https://grafana.com/docs/grafana/latest/administration/provisioning/

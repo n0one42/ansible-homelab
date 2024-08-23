@@ -93,7 +93,7 @@
 
 # ? gets under /run/secrets mounted
 - name: Handle secrets files & directories
-  when: (container_init_secret_files_to_create | default([]) | length > 0) or (secret_container_init_templates_to_copy | default([]) | length > 0)
+  when: (container_init_secret_files_to_create | default([]) | length > 0)
   vars:
     secrets_type_path: "{{ docker_secrets }}/{{ app_name }}/{{ container_type }}"
   block:
@@ -136,12 +136,3 @@
       no_log: true
       loop: "{{ container_init_secret_files_to_create | default([]) }}"
       when: item.content | length > 0
-
-    - name: Copy secret template files
-      ansible.builtin.template:
-        src: "{{ item.src }}"
-        dest: "{{ secrets_type_path }}/{{ item.dest }}"
-        owner: "{{ user }}"
-        group: "{{ group }}"
-        mode: "{{ item.mode | default('0440') }}"  # 0550 for executable
-      loop: "{{ secret_container_init_templates_to_copy | default([]) }}"
