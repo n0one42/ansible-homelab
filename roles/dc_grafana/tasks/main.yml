@@ -33,14 +33,24 @@
 
 
   # * ------------------------ Grafana Loki ------------------------ * #
-    # - name: Include redis role
-    #   ansible.builtin.import_role:
-    #     name: dc_redis_bitnami
-    #   vars:
-    #     dc_redis_bitnami_create_with_userns: "{{ dc_grafana_redis_create_with_userns }}"
-    #     dc_redis_bitnami_image_version: "{{ dc_grafana_redis_image_version }}"
-    #     dc_redis_bitnami_redis_port: "{{ dc_grafana_redis_port }}"
-    #     dc_redis_bitnami_net_ip: "{{ dc_grafana_net_redis_ip }}"
+    - name: Include loki role
+      ansible.builtin.import_role:
+        name: dc_loki
+      vars:
+        dc_loki_create_with_userns: "{{ dc_grafana_loki_create_with_userns }}"
+        dc_loki_image_version: "{{ dc_grafana_loki_image_version }}"
+        dc_loki_port: "{{ dc_grafana_loki_port }}"
+        dc_loki_net_ip: "{{ dc_grafana_net_loki_ip }}"
+
+
+  # * ------------------------ Grafana Promtail ------------------------ * #
+    - name: Include promtail role
+      ansible.builtin.import_role:
+        name: dc_promtail
+      vars:
+        dc_promtail_create_with_userns: "{{ dc_grafana_promtail_create_with_userns }}"
+        dc_promtail_image_version: "{{ dc_grafana_promtail_image_version }}"
+        dc_promtail_net_ip: "{{ dc_grafana_net_promtail_ip }}"
 
 
   # * ----------------------- Grafana App ------------------------- *
@@ -106,7 +116,8 @@
                     - "{{ appdata_type_path }}/data:/var/lib/grafana"
                     - "{{ secrets_type_path }}:/run/secrets"
                   environment:
-                    GF_INSTALL_PLUGINS: "grafana-clock-panel"
+                    GF_INSTALL_PLUGINS: "grafana-clock-panel,grafana-simple-json-datasource,grafana-worldmap-panel,grafana-piechart-panel"
+                    GF_PATHS_PROVISIONING: "/etc/grafana/provisioning"
                     GF_SECURITY_ADMIN_USER__FILE: "/run/secrets/dc_grafana_admin_user"
                     GF_SECURITY_ADMIN_PASSWORD__FILE: "/run/secrets/dc_grafana_admin_pw"
 
@@ -126,6 +137,25 @@
                     ## HTTP Services
                     traefik.http.routers.grafana-rtr.service: "grafana-svc"
                     traefik.http.services.grafana-svc.loadbalancer.server.port: "{{ dc_grafana_port }}"
+                  entrypoint:
+                    - sh
+                    - -euc
+                    - |
+                      mkdir -p /etc/grafana/provisioning/datasources
+                      cat <<EOF > /etc/grafana/provisioning/datasources/ds.yaml
+                      apiVersion: 1
+                      datasources:
+                      - name: Loki
+                        type: loki
+                        access: proxy
+                        orgId: 1
+                        url: http://grafana-loki:3100
+                        basicAuth: false
+                        isDefault: true
+                        version: 1
+                        editable: false
+                      EOF
+                      /run.sh
 
 
 #  version: "3"
@@ -181,4 +211,9 @@
 #       - loki
 
 # Cleaning
-# sudo docker container rm -f grafana && sudo docker network rm grafana_net && sudo rm -r $APPDATA_DIR/grafana && sudo rm -r $SECRETS_DIR/grafana
+# sudo docker container rm -f promtail grafana-loki nginx-app
+# sudo docker container rm -f grafana grafana-postgresql && sudo docker network rm grafana_net && sudo rm -r $APPDATA_DIR/grafana && sudo rm -r $SECRETS_DIR/grafana
+
+# https://grafana.com/docs/grafana/latest/administration/provisioning/
+# https://grafana.com/docs/grafana/latest/setup-grafana/configure-docker/
+# https://www.youtube.com/watch?v=AtxQHiFBn7k

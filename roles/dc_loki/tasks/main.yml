@@ -1,0 +1,60 @@
+---
+# tasks file for roles/dc_loki
+# TODO: Variables which has to be passed through the playbook or on import of this task file
+# ! Mandatory variables
+  # vars:
+  #   app_name: => traefik, portainer, grafana, netbox
+# ? Optional variables
+
+
+  # * --------------------------- App --------------------------- *
+- name: Create loki for --> {{ app_name }}
+  vars:
+    container_type: "loki" # => app, loki, redis
+    appdata_type_path: "{{ docker_appdata }}/{{ app_name }}/{{ container_type }}" # eg: grafana/loki
+    secrets_type_path: "{{ docker_secrets }}/{{ app_name }}/{{ container_type }}"
+    logs_type_path: "{{ docker_logs }}/{{ app_name }}"
+    user: "{{ (dc_loki_create_with_userns | bool) | ternary(dc_loki_u_g_id + 100000, dc_loki_u_g_id) }}"
+    group: "{{ (dc_loki_create_with_userns | bool) | ternary(dc_loki_u_g_id + 100000, dc_loki_u_g_id) }}"
+  block:
+    - name: '[Required] container_init role'
+      ansible.builtin.import_role:
+        name: container_init
+      vars:
+        container_init_appdata_directories_to_create:
+          - "data"
+
+
+    - name: Install docker compose loki with inline definition
+      community.docker.docker_compose_v2:
+        project_name: "{{ app_name }}-loki" # eg: grafana-loki
+        definition:
+          # ! --------------------------- Networks --------------------------- ! #
+          networks:
+            app_net:
+              name: "{{ app_name }}_net"  # eg: grafana_net
+              external: true  # indicating that it's a pre-existing network not managed by this Docker Compose file.
+
+          # * ---------------------------- App ------------------------------ * #
+          services:
+            loki:
+              image: grafana/loki:{{ dc_loki_image_version }}
+              container_name: "{{ app_name }}-loki"  # eg: grafana-loki
+              restart: unless-stopped
+              security_opt:
+                - no-new-privileges:true
+              privileged: false
+              userns_mode: "{{ 'host' if dc_loki_create_with_userns | bool == false else 'remap' }}"
+              user: "{{ dc_loki_u_g_id }}:{{ dc_loki_u_g_id }}"
+              command: -config.file=/etc/loki/local-config.yaml
+              networks:
+                app_net: "{{ {'ipv4_address': dc_loki_net_ip} if dc_loki_net_ip is defined and dc_loki_net_ip | length > 0 else {} }}"
+              # ports:  # Not needed
+              #   - "{{ dc_loki_port }}:3100"
+              volumes:
+                - "{{ appdata_type_path }}/data:/loki"
+              #   - "{{ secrets_type_path }}:/run/secrets"
+              # environment:
+
+
+# ! --------------------------- Notes --------------------------- ! #
