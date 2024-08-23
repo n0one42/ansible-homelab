@@ -188,6 +188,7 @@ dc_it_tools_image_version: "latest"
 # timezone
 # domain_1
 # dc_traefik_cf_dns_api_token
+# dc_traefik_type --> "ingress" / "metrics" / "application-1" # Has to match the dc_traefik/templates folder name
 
 # * ------------->>> Container Configuration <<<------------ * #
 # * >>> Container variables

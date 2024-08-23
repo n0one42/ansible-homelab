@@ -20,10 +20,11 @@
   gather_facts: false
   roles:
     - role: docker_provisioning
+    # ensure clock is set / synced
+    - role: dc_adguard  # ! must be first if used for correct dns
     - role: dc_traefik
       vars:
-        # dc_traefik_container_name: traefik-ingress
+        dc_traefik_container_name: traefik-ingress
         dc_traefik_type: "ingress"
     - role: dc_authelia
     - role: dc_authentik
-    - role: dc_adguard
