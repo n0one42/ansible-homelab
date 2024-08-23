@@ -115,9 +115,9 @@ dc_traefik_socketproxy_net_ip: "{{ dc_traefik_socketproxy_net_base }}.5"  # 10.1
 # 10.100.50.112 - 10.100.50.119 # usable => 10.100.50.114 - 10.100.50.118
 # 10.100.50.120 - 10.100.50.127 # usable => 10.100.50.122 - 10.100.50.126
 # ? / 28
-# 10.100.50.128 - 10.100.50.143 # usable => 10.100.50.130 - 10.100.50.142
-# 10.100.50.144 - 10.100.50.159 # usable => 10.100.50.146 - 10.100.50.158
-# 10.100.50.160 - 10.100.50.175 # usable => 10.100.50.162 - 10.100.50.174
+# 10.100.50.128 - 10.100.50.143 # usable => 10.100.50.130 - 10.100.50.142 # crowdsec
+# 10.100.50.144 - 10.100.50.159 # usable => 10.100.50.146 - 10.100.50.158 # authentik
+# 10.100.50.160 - 10.100.50.175 # usable => 10.100.50.162 - 10.100.50.174 # grafana
 # ...
 # 10.100.50.208 - 10.100.50.223 # usable => 10.100.50.210 - 10.100.50.222
 # 10.100.50.224 - 10.100.50.239 # usable => 10.100.50.226 - 10.100.50.238
@@ -160,6 +160,18 @@ dc_authentik_net_app_server_ip: "{{ dc_authentik_net_base }}.146"
 dc_authentik_net_app_worker_ip: "{{ dc_authentik_net_base }}.147"
 dc_authentik_net_db_ip: "{{ dc_authentik_net_base }}.148"
 dc_authentik_net_redis_ip: "{{ dc_authentik_net_base }}.149"
+
+# ? -----------------------------------------------------------------------------
+# *                                  Grafana                                   *
+# ? -----------------------------------------------------------------------------
+dc_grafana_net_base: 10.100.50
+dc_grafana_net_address: "{{ dc_grafana_net_base }}.160"
+dc_grafana_net_prefix_length: 28
+dc_grafana_net_cidr: "{{ dc_grafana_net_address }}/{{ dc_grafana_net_prefix_length }}"
+dc_grafana_net_app_ip: "{{ dc_grafana_net_base }}.162"
+dc_grafana_net_db_ip: "{{ dc_grafana_net_base }}.163"
+dc_grafana_net_loki_ip: "{{ dc_grafana_net_base }}.165"
+dc_grafana_net_promtail_ip: "{{ dc_grafana_net_base }}.166"
 
 # ? ######################################################################################## #
 # !                                   Standalone containers                                  #

@@ -1,0 +1,184 @@
+---
+# tasks file for roles/dc_grafana
+- name: Create Grafana with Loki and Promtail
+  vars:
+    app_name: "{{ dc_grafana_container_name }}" # "grafana"
+    db_name: "{{ dc_grafana_db_name }}" # "grafana"
+    db_user_name: "{{ dc_grafana_db_user_name }}" # "grafana"
+    db_user_pw: "{{ dc_grafana_db_user_pw }}"  # ! MUST BE HERE BECAUSE SHARED !
+    db_port: "{{ dc_grafana_db_port }}" # "5432"
+  block:
+  # ! --------------------------- Networks --------------------------- ! #
+    - name: Create network for --> {{ app_name }}
+      community.docker.docker_network:
+        name: "{{ app_name }}_net"
+        driver: bridge
+        internal: true
+        ipam_config:
+          - subnet: "{{ dc_grafana_net_cidr }}"
+
+
+  # * ------------------------ Grafana DB ------------------------ * #
+    - name: Include postgresql role
+      ansible.builtin.import_role:
+        name: dc_postgresql_bitnami
+      vars:
+        dc_postgresql_bitnami_create_with_userns: "{{ dc_grafana_db_create_with_userns }}"
+        dc_postgresql_bitnami_image_version: "{{ dc_grafana_db_image_version }}"
+        dc_postgresql_bitnami_db_superuser_pw: "{{ dc_grafana_db_superuser_pw }}"
+        dc_postgresql_bitnami_db_name: "{{ dc_grafana_db_name }}"
+        dc_postgresql_bitnami_db_user_name: "{{ dc_grafana_db_user_name }}"
+        dc_postgresql_bitnami_db_port: "{{ dc_grafana_db_port }}"
+        dc_postgresql_bitnami_net_ip: "{{ dc_grafana_net_db_ip }}"
+
+
+  # * ------------------------ Grafana Loki ------------------------ * #
+    # - name: Include redis role
+    #   ansible.builtin.import_role:
+    #     name: dc_redis_bitnami
+    #   vars:
+    #     dc_redis_bitnami_create_with_userns: "{{ dc_grafana_redis_create_with_userns }}"
+    #     dc_redis_bitnami_image_version: "{{ dc_grafana_redis_image_version }}"
+    #     dc_redis_bitnami_redis_port: "{{ dc_grafana_redis_port }}"
+    #     dc_redis_bitnami_net_ip: "{{ dc_grafana_net_redis_ip }}"
+
+
+  # * ----------------------- Grafana App ------------------------- *
+    - name: Create app --> {{ app_name }}
+      vars:
+        container_type: "app" # => app, db, redis
+        appdata_type_path: "{{ docker_appdata }}/{{ app_name }}/{{ container_type }}"
+        secrets_type_path: "{{ docker_secrets }}/{{ app_name }}/{{ container_type }}"
+        logs_type_path: "{{ docker_logs }}/{{ app_name }}/{{ container_type }}"
+        user: "{{ (dc_grafana_create_with_userns | bool) | ternary(dc_grafana_u_g_id + 100000, dc_grafana_u_g_id) }}"
+        group: "{{ (dc_grafana_create_with_userns | bool) | ternary(dc_grafana_u_g_id + 100000, dc_grafana_u_g_id) }}"
+      block:
+        - name: '[Required] dc_secrets_manager role'
+          ansible.builtin.import_role:
+            name: dc_secrets_manager
+          vars:
+            dc_secrets_manager_passwords_to_generate:
+              - var_name: db_user_pw
+                content: "{{ db_user_pw }}"
+              - var_name: dc_grafana_admin_user
+                content: "{{ dc_grafana_admin_user }}"
+              - var_name: dc_grafana_admin_pw
+                content: "{{ dc_grafana_admin_pw }}"
+
+        - name: Include container_init role
+          ansible.builtin.import_role:
+            name: container_init
+          vars:
+            container_init_appdata_directories_to_create:
+              - "data"
+
+
+        - name: Install docker compose grafana with inline definition
+          community.docker.docker_compose_v2:
+            project_name: "{{ app_name }}"  # eg: grafana
+            definition:
+              # ! --------------------------- Networks --------------------------- ! #
+              networks:
+                traefik_net:
+                  name: "{{ dc_traefik_net_name }}"  # eg: traefik_net
+                  external: true  # indicating that it's a pre-existing network not managed by this Docker Compose file.
+                app_net:
+                  name: "{{ app_name }}_net"  # eg: grafana_net
+                  external: true  # indicating that it's a pre-existing network not managed by this Docker Compose file.
+
+              # * ---------------------------- App ------------------------------ * #
+              services:
+                grafana:
+                  image: grafana/grafana:{{ dc_grafana_image_version }}
+                  container_name: "{{ app_name }}"
+                  restart: unless-stopped
+                  security_opt:
+                    - no-new-privileges:true
+                  privileged: false
+                  userns_mode: "{{ 'host' if dc_grafana_create_with_userns | bool == false else 'remap' }}"
+                  user: "{{ dc_grafana_u_g_id }}:{{ dc_grafana_u_g_id }}"
+                  networks:
+                    traefik_net: "{{ {'ipv4_address': dc_traefik_net_grafana_ip} if dc_traefik_net_grafana_ip is defined and dc_traefik_net_grafana_ip | length > 0 else {} }}"
+                    app_net: "{{ {'ipv4_address': dc_grafana_net_app_ip} if dc_grafana_net_app_ip is defined and dc_grafana_net_app_ip | length > 0 else {} }}"
+                  ports:
+                    - "{{ dc_grafana_port }}:3000"
+                  volumes:
+                    - "{{ appdata_type_path }}/data:/var/lib/grafana"
+                    - "{{ secrets_type_path }}:/run/secrets"
+                  environment:
+                    GF_INSTALL_PLUGINS: "grafana-clock-panel"
+                    GF_SECURITY_ADMIN_USER__FILE: "/run/secrets/dc_grafana_admin_user"
+                    GF_SECURITY_ADMIN_PASSWORD__FILE: "/run/secrets/dc_grafana_admin_pw"
+
+                    GF_DATABASE_TYPE: postgres
+                    GF_DATABASE_HOST: "{{ dc_grafana_net_db_ip }}"
+                    GF_DATABASE_PORT: "{{ db_port }}"
+                    GF_DATABASE_NAME: "{{ db_name }}"
+                    GF_DATABASE_USER: "{{ db_user_name }}"
+                    GF_DATABASE_PASSWORD__FILE: "/run/secrets/db_user_pw"
+                  labels:
+                    traefik.enable: "true"
+                    ## HTTP Routers
+                    traefik.http.routers.grafana-rtr.entrypoints: "websecure"
+                    traefik.http.routers.grafana-rtr.rule: "Host(`{{ app_name }}.{{ domain_1 }}`)"
+                    ## Middlewares
+                    traefik.http.routers.grafana-rtr.middlewares: "chain-no-auth@file"  # Has to be chain-no-auth
+                    ## HTTP Services
+                    traefik.http.routers.grafana-rtr.service: "grafana-svc"
+                    traefik.http.services.grafana-svc.loadbalancer.server.port: "{{ dc_grafana_port }}"
+
+
+#  version: "3"
+
+# networks:
+#   loki:
+
+# services:
+#   loki:
+#     image: grafana/loki:2.9.2
+#     ports:
+#       - "3100:3100"
+#     command: -config.file=/etc/loki/local-config.yaml
+#     networks:
+#       - loki
+
+#   promtail:
+#     image: grafana/promtail:2.9.2
+#     volumes:
+#       - /var/log:/var/log
+#     command: -config.file=/etc/promtail/config.yml
+#     networks:
+#       - loki
+
+#   grafana:
+#     environment:
+#       - GF_PATHS_PROVISIONING=/etc/grafana/provisioning
+#       - GF_AUTH_ANONYMOUS_ENABLED=true
+#       - GF_AUTH_ANONYMOUS_ORG_ROLE=Admin
+#     entrypoint:
+#       - sh
+#       - -euc
+#       - |
+#         mkdir -p /etc/grafana/provisioning/datasources
+#         cat <<EOF > /etc/grafana/provisioning/datasources/ds.yaml
+#         apiVersion: 1
+#         datasources:
+#         - name: Loki
+#           type: loki
+#           access: proxy
+#           orgId: 1
+#           url: http://loki:3100
+#           basicAuth: false
+#           isDefault: true
+#           version: 1
+#           editable: false
+#         EOF
+#         /run.sh
+#     image: grafana/grafana:latest
+#     ports:
+#       - "3000:3000"
+#     networks:
+#       - loki
+
+# Cleaning
+# sudo docker container rm -f grafana && sudo docker network rm grafana_net && sudo rm -r $APPDATA_DIR/grafana && sudo rm -r $SECRETS_DIR/grafana

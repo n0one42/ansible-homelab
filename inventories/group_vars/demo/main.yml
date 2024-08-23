@@ -61,9 +61,11 @@ docker_compose: "{{ docker_home }}/compose"  # compose datafiles
 # *                              Container U/G IDs                              *
 # ? -----------------------------------------------------------------------------
 
+dc_authelia_u_g_id: 22002 # with userns --> 122002
 dc_traefik_u_g_id: 22003 # with userns --> 122003
 dc_adguard_u_g_id: 22007 # with userns --> 122007
 dc_authentik_u_g_id: 22017 # with userns --> 122017
+dc_grafana_u_g_id: 22021 # with userns --> 122021
 dc_it_tools_u_g_id: 22022 # with userns --> 122022
 
 # ? -----------------------------------------------------------------------------
@@ -74,10 +76,10 @@ dc_it_tools_u_g_id: 22022 # with userns --> 122022
 dc_adguard_container_name: "adguard"
 dc_adguard_create_with_userns: true
 dc_adguard_image_version: "latest"
-# dc_adguard_port: 9091
 dc_adguard_override_config_file: false  # ! Overrides the config file with the template one
 dc_adguard_auth_user: "{{ demo_auth_user }}"
 dc_adguard_auth_pw_bcrypt: "{{ demo_auth_pw_bcrypt }}"
+# dc_adguard_port: 9091
 
 # ? -----------------------------------------------------------------------------
 # *                                 dc_authelia                                 *
@@ -87,7 +89,6 @@ dc_adguard_auth_pw_bcrypt: "{{ demo_auth_pw_bcrypt }}"
 dc_authelia_container_name: "authelia"
 dc_authelia_create_with_userns: true
 dc_authelia_image_version: "latest"
-dc_authelia_u_g_id: 22002 # with userns --> 122002
 dc_authelia_jwt_secret: ""  # Empty for generated password
 dc_authelia_storage_encryption_key: ""  # Empty for generated password
 dc_authelia_session_secret: ""  # Empty for generated password
@@ -217,6 +218,39 @@ dc_traefik_socketproxy_env_log_level: "info"  # debug, info, notice, warning, er
 
 # * Not always needed - Can expose some information that your service does not need
 dc_traefik_socketproxy_env_containers: "1"
+
+# ? -----------------------------------------------------------------------------
+# *                                  dc_grafana                                 *
+# ? -----------------------------------------------------------------------------
+# ! ------------------>>> Dependencies <<<------------------ ! #
+# ? Has to be set by vars
+
+# * ------------->>> Container Configuration <<<------------ * #
+# * >>> Container variables
+dc_grafana_container_name: "grafana"
+dc_grafana_create_with_userns: true
+dc_grafana_image_version: "latest"
+dc_grafana_log_level: "INFO"
+dc_grafana_admin_user: "{{ demo_auth_user }}"
+dc_grafana_admin_pw: "{{ demo_auth_user_pw }}"  # Empty for generated password
+dc_grafana_port: 3000
+
+# * ---------------->>> DB Configuration <<<---------------- * #
+## Environment variables
+dc_grafana_db_create_with_userns: true
+dc_grafana_db_image_version: "latest"
+dc_grafana_db_superuser_pw: ""  # Empty for generated password ; superuser name --> postgres
+dc_grafana_db_name: "grafana"
+dc_grafana_db_user_name: "grafana"
+dc_grafana_db_user_pw: ""  # Empty for generated password
+dc_grafana_db_port: 5432
+
+# * ------------>>> Loki Configuration <<<------------ * #
+# * >>> Container variables
+
+# * ------------>>> Promtail Configuration <<<------------ * #
+# * >>> Container variables
+
 
 # ? -----------------------------------------------------------------------------
 # *                                dc_whoami                                    *
