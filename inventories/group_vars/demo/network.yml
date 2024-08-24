@@ -73,6 +73,7 @@ dc_traefik_net_address: "{{ dc_traefik_net_base }}.0"
 dc_traefik_net_prefix_length: 24  # usable => 10.100.90.2 - 10.100.90.254
 dc_traefik_net_cidr: "{{ dc_traefik_net_address }}/{{ dc_traefik_net_prefix_length }}"  # 10.100.90.0/24
 
+dc_traefik_net_promtail_ip: "{{ dc_traefik_net_base }}.247"  # 10.100.90.247
 dc_traefik_net_loki_ip: "{{ dc_traefik_net_base }}.248"  # 10.100.90.248
 dc_traefik_net_it_tools_ip: "{{ dc_traefik_net_base }}.249"  # 10.100.90.249
 dc_traefik_net_adguard_ip: "{{ dc_traefik_net_base }}.250"  # 10.100.90.250

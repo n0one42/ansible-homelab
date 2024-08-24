@@ -6,6 +6,10 @@
   #   app_name: => traefik, portainer, grafana, netbox
 # ? Optional variables
 
+- name: Set facts app_name for standalone
+  ansible.builtin.set_fact:
+    app_name: "standalone"
+  when: dc_promtail_standalone | default(false)
 
   # * --------------------------- App --------------------------- *
 - name: Create promtail for --> {{ app_name }}
@@ -23,17 +27,33 @@
       vars:
         container_init_appdata_directories_to_create:
           - "data"
-
+        container_init_templates_to_copy:
+          - src: "{{ ansible_hostname }}/promtail-docker-config.yml.j2"
+            dest: "{{ appdata_type_path }}/promtail-docker-config.yml"
 
     - name: Install docker compose promtail with inline definition
+      vars:
+        docker_networks: >-
+          {{
+            {
+              "traefik_net": {
+                "name": dc_traefik_net_name,
+                "external": true
+              }
+            }
+            if dc_promtail_standalone else {
+              "app_net": {
+                "name": app_name ~ "_net",
+                "external": true
+              }
+            }
+          }}
+
       community.docker.docker_compose_v2:
         project_name: "{{ app_name }}-promtail" # eg: grafana-promtail
         definition:
           # ! --------------------------- Networks --------------------------- ! #
-          networks:
-            app_net:
-              name: "{{ app_name }}_net"  # eg: grafana_net
-              external: true  # indicating that it's a pre-existing network not managed by this Docker Compose file.
+          networks: "{{ docker_networks }}"
 
           # * ---------------------------- App ------------------------------ * #
           services:
@@ -48,10 +68,14 @@
               # user: "{{ dc_promtail_u_g_id }}:{{ dc_promtail_u_g_id }}"
               userns_mode: host
               user: root
-              command: -config.file=/etc/promtail/config.yml
+              # command: -config.file=/etc/promtail/config.yml
+              extra_hosts:
+                - "loki.{{ domain_1 }}:10.0.90.20"  # Has to be the internal ip of the traefik where loki is running
               networks:
-                app_net: "{{ {'ipv4_address': dc_promtail_net_ip} if dc_promtail_net_ip is defined and dc_promtail_net_ip | length > 0 else {} }}"
+                app_net: "{{ {'ipv4_address': dc_promtail_net_ip} if dc_promtail_net_ip is defined and dc_promtail_net_ip | length > 0 and not dc_promtail_standalone | default(false) | bool else omit }}"
+                traefik_net: "{{ {'ipv4_address': dc_traefik_net_promtail_ip} if dc_traefik_net_promtail_ip is defined and dc_traefik_net_promtail_ip | length > 0 and dc_promtail_standalone | default(false) | bool else omit }}"
               volumes:
+                - "{{ appdata_type_path }}/promtail-docker-config.yml:/etc/promtail/config.yml"
                 - /var/log:/var/log
                 - /var/lib/docker/containers:/var/lib/docker/containers:ro
                 - /var/lib/docker/100000.100000:/var/lib/docker/containers:ro
@@ -64,3 +88,4 @@
 # ! --------------------------- Notes --------------------------- ! #
 # Promtail is a log shipper. It reads logs from various sources (such as log files, Docker containers, or syslog) and then forwards or “pushes” them to a Loki instance.
 # Loki acts as a log storage and indexing system. It does not actively pull logs from Promtail; instead, it listens for incoming log data that Promtail sends.
+# Grafana queries logs from Loki and displays them in Dashboards.

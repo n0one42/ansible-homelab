@@ -56,17 +56,26 @@
               networks:
                 traefik_net: "{{ {'ipv4_address': dc_traefik_net_loki_ip} if dc_traefik_net_loki_ip is defined and dc_traefik_net_loki_ip | length > 0 else {} }}"
                 app_net: "{{ {'ipv4_address': dc_loki_net_ip} if dc_loki_net_ip is defined and dc_loki_net_ip | length > 0 else {} }}"
-              ports:
-                - "{{ dc_loki_port }}:3100"
+              # ports:
+              #   - "{{ dc_loki_port }}:3100"
               volumes:
                 - "{{ appdata_type_path }}/data:/loki"
                 - "{{ appdata_type_path }}/loki-docker-config.yml:/etc/loki/local-config.yaml"
               # environment:
-
+              labels:
+                traefik.enable: "true"
+                # * HTTP Routers
+                traefik.http.routers.loki-rtr.entrypoints: "websecure"
+                traefik.http.routers.loki-rtr.rule: "Host(`loki.{{ domain_1 }}`)"
+                # * Middlewares
+                traefik.http.routers.loki-rtr.middlewares: "chain-basic-auth@file" # For Basic HTTP Authentication
+                # * HTTP Services
+                traefik.http.routers.loki-rtr.service: "loki-svc"
+                traefik.http.services.loki-svc.loadbalancer.server.port: "{{ dc_loki_port }}"
 
 # ! --------------------------- Notes --------------------------- ! #
 # https://github.com/grafana/loki/blob/main/cmd/loki/loki-docker-config.yaml
 # https://grafana.com/docs/loki/latest/configure/examples/configuration-examples/
 
-# http://10.0.90.20:3100/ready
-# http://10.0.90.20:3100/metrics
+# http://10.0.90.20:3100/ready    # https://loki.your.dom/ready
+# http://10.0.90.20:3100/metrics  # https://loki.your.dom/metrics

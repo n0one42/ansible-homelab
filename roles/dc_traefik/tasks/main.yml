@@ -82,7 +82,7 @@
           when: dc_traefik_crowdsec_enabled | bool
 
 
-        - name: Docker compose traefik network generation for inline definition
+        - name: Install docker compose traefik with inline definition
           vars:
             docker_networks: >-
               {{

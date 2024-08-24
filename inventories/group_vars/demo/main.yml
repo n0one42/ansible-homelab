@@ -257,6 +257,7 @@ dc_grafana_loki_port: 3100
 # * >>> Container variables
 dc_grafana_promtail_create_with_userns: true
 dc_grafana_promtail_image_version: "2.9.2"
+dc_promtail_standalone: false
 
 # ? -----------------------------------------------------------------------------
 # *                                dc_whoami                                    *
