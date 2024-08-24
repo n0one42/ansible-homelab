@@ -70,7 +70,7 @@
               user: root
               # command: -config.file=/etc/promtail/config.yml
               extra_hosts:
-                - "loki.{{ domain_1 }}:10.0.90.20"  # Has to be the internal ip of the traefik where loki is running
+                - "loki.{{ domain_1 }}:{{ dc_promtail_loki_traefik_ip }}"  # Has to be the internal ip of the traefik where loki is running
               networks:
                 app_net: "{{ {'ipv4_address': dc_promtail_net_ip} if dc_promtail_net_ip is defined and dc_promtail_net_ip | length > 0 and not dc_promtail_standalone | default(false) | bool else omit }}"
                 traefik_net: "{{ {'ipv4_address': dc_traefik_net_promtail_ip} if dc_traefik_net_promtail_ip is defined and dc_traefik_net_promtail_ip | length > 0 and dc_promtail_standalone | default(false) | bool else omit }}"

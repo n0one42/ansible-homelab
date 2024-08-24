@@ -35,6 +35,7 @@
     - role: dc_promtail
       vars:
         dc_promtail_standalone: true
+        dc_promtail_loki_traefik_ip: "{{ dc_dmz_net_vm20_metrics_ip }}" # Has to be the internal ip of the traefik where loki is running
         dc_promtail_create_with_userns: "{{ dc_grafana_promtail_create_with_userns }}"
         dc_promtail_image_version: "{{ dc_grafana_promtail_image_version }}"
         dc_promtail_net_ip: "{{ dc_grafana_net_promtail_ip }}"
