@@ -257,7 +257,12 @@ dc_grafana_loki_port: 3100
 # * >>> Container variables
 dc_grafana_promtail_create_with_userns: true
 dc_grafana_promtail_image_version: "2.9.2"
+
+## ? Environment variables if used in standalone mode (external promtail)
 dc_promtail_standalone: false
+dc_promtail_insecure_skip_verify: "{{ dc_traefik_acme_staging_mode }}"
+dc_promtail_basic_auth_user: "{{ demo_auth_user }}" # traefik basic auth credentials
+dc_promtail_basic_auth_password: "{{ demo_auth_user_pw }}"  # traefik basic auth credentials
 
 # ? -----------------------------------------------------------------------------
 # *                                dc_whoami                                    *
