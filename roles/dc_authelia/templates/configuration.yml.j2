@@ -74,12 +74,14 @@ session:
     - domain: '{{ domain_1 }}'
       authelia_url: 'https://{{ dc_authelia_container_name }}.{{ domain_1 }}'
       default_redirection_url: 'https://{{ domain_1 }}'
+{% if not dc_authelia_use_sqlite %}  
   redis:
     host: "{{ dc_authelia_net_redis_ip }}"
     port: "{{ dc_authelia_redis_port }}" # 6379
     database_index: 0
     maximum_active_connections: 10
     minimum_idle_connections: 0
+{% endif %}
 
 # https://www.authelia.com/configuration/security/regulation/
 regulation:
@@ -91,8 +93,10 @@ regulation:
 storage:
   # For local storage, uncomment lines below and comment out mysql. https://docs.authelia.com/configuration/storage/sqlite.html
   # This is good for the beginning. If you have a busy site then switch to other databases.
-  # local:
-  #  path: /config/db.sqlite3
+{% if dc_authelia_use_sqlite %}
+  local:
+    path: /config/db.sqlite3
+{% endif %}
 # # https://www.authelia.com/configuration/storage/mysql/
 #   mysql:
 #     host: mariadb
@@ -101,6 +105,7 @@ storage:
 #     username: DBUSERNAME
 #     # password: DBPASSWORD
 # https://www.authelia.com/configuration/storage/postgres/
+{% if not dc_authelia_use_sqlite %}
   postgres:
     address: 'tcp://{{ dc_authelia_net_db_ip }}:{{ dc_authelia_db_port }}'
     database: '{{ dc_authelia_db_name }}'
@@ -108,6 +113,7 @@ storage:
     username: '{{ dc_authelia_db_user_name }}'
     # password: 'mypassword'
     timeout: '5s'
+{% endif %}
 
 # https://www.authelia.com/configuration/notifications/introduction/
 notifier:

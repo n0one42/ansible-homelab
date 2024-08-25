@@ -23,19 +23,19 @@
       ansible.builtin.setup:
         filter: ansible_hostname
   roles:
-    - role: docker_provisioning
-    # ensure clock is set / synced
-    - role: dc_adguard  # ! must be first if used for correct dns
-    - role: dc_traefik
-      vars:
-        dc_traefik_container_name: traefik-ingress
-        dc_traefik_type: "ingress"
+    # - role: docker_provisioning
+    # # ensure clock is set / synced
+    # - role: dc_adguard  # ! must be first if used for correct dns
+    # - role: dc_traefik
+    #   vars:
+    #     dc_traefik_container_name: traefik-ingress
+    #     dc_traefik_type: "ingress"
     - role: dc_authelia
-    - role: dc_authentik
-    - role: dc_promtail
-      vars:
-        dc_promtail_standalone: true
-        dc_promtail_loki_traefik_ip: "{{ dc_dmz_net_vm20_metrics_ip }}" # Has to be the internal ip of the traefik where loki is running
-        dc_promtail_net_ip: "{{ dc_grafana_net_promtail_ip }}" # Will not be used since it is a standalone. Just for reference
-        dc_promtail_create_with_userns: "{{ dc_grafana_promtail_create_with_userns }}"
-        dc_promtail_image_version: "{{ dc_grafana_promtail_image_version }}"
+    # - role: dc_authentik
+    # - role: dc_promtail
+    #   vars:
+    #     dc_promtail_standalone: true
+    #     dc_promtail_loki_traefik_ip: "{{ dc_dmz_net_vm20_metrics_ip }}" # Has to be the internal ip of the traefik where loki is running
+    #     dc_promtail_net_ip: "{{ dc_grafana_net_promtail_ip }}" # Will not be used since it is a standalone. Just for reference
+    #     dc_promtail_create_with_userns: "{{ dc_grafana_promtail_create_with_userns }}"
+    #     dc_promtail_image_version: "{{ dc_grafana_promtail_image_version }}"

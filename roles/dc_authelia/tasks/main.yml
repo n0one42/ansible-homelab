@@ -32,6 +32,7 @@
         dc_postgresql_bitnami_db_user_name: "{{ dc_authelia_db_user_name }}"
         dc_postgresql_bitnami_db_port: "{{ dc_authelia_db_port }}"
         dc_postgresql_bitnami_net_ip: "{{ dc_authelia_net_db_ip }}"
+      when: not dc_authelia_use_sqlite
 
 
   # * ------------------------ Authelia Redis ------------------------ * #
@@ -43,7 +44,7 @@
         dc_redis_bitnami_image_version: "{{ dc_authelia_db_image_version }}"
         dc_redis_bitnami_redis_port: "{{ dc_authelia_redis_port }}"
         dc_redis_bitnami_net_ip: "{{ dc_authelia_net_redis_ip }}"
-
+      when: not dc_authelia_use_sqlite
 
   # * ----------------------- Authelia App ------------------------- *
     - name: Create app --> {{ app_name }}
@@ -60,10 +61,6 @@
             name: dc_secrets_manager
           vars:
             dc_secrets_manager_passwords_to_generate:
-              - var_name: redis_pw
-                content: "{{ redis_pw }}"
-              - var_name: db_user_pw
-                content: "{{ db_user_pw }}"
               - var_name: authelia_jwt_secret
                 content: "{{ dc_authelia_jwt_secret }}"
                 type: jwt_secret
@@ -73,6 +70,17 @@
               - var_name: authelia_session_secret
                 content: "{{ dc_authelia_session_secret }}"
                 type: session_secret
+
+        - name: '[Required] dc_secrets_manager role'
+          ansible.builtin.import_role:
+            name: dc_secrets_manager
+          vars:
+            dc_secrets_manager_passwords_to_generate:
+              - var_name: redis_pw
+                content: "{{ redis_pw }}"
+              - var_name: db_user_pw
+                content: "{{ db_user_pw }}"
+          when: not dc_authelia_use_sqlite
 
         - name: Include container_init role
           ansible.builtin.import_role:
@@ -131,12 +139,12 @@
                     - "{{ logs_type_path }}/authelia.log:/config/authelia.log"
                     - "{{ secrets_type_path }}:/run/secrets"
                   environment:
-                    TZ: "{{ timezone }}"
-                    AUTHELIA_IDENTITY_VALIDATION_RESET_PASSWORD_JWT_SECRET_FILE: /run/secrets/authelia_jwt_secret
-                    AUTHELIA_SESSION_SECRET_FILE: /run/secrets/authelia_session_secret
-                    AUTHELIA_STORAGE_ENCRYPTION_KEY_FILE: /run/secrets/authelia_storage_encryption_key
-                    AUTHELIA_SESSION_REDIS_PASSWORD_FILE: /run/secrets/redis_pw
-                    AUTHELIA_STORAGE_POSTGRES_PASSWORD_FILE: /run/secrets/db_user_pw
+                    - TZ="{{ timezone }}"
+                    - AUTHELIA_IDENTITY_VALIDATION_RESET_PASSWORD_JWT_SECRET_FILE=/run/secrets/authelia_jwt_secret
+                    - AUTHELIA_SESSION_SECRET_FILE=/run/secrets/authelia_session_secret
+                    - AUTHELIA_STORAGE_ENCRYPTION_KEY_FILE=/run/secrets/authelia_storage_encryption_key
+                    - "{{ 'AUTHELIA_SESSION_REDIS_PASSWORD_FILE=/run/secrets/redis_pw' if not dc_authelia_use_sqlite | bool else omit }}"
+                    - "{{ 'AUTHELIA_STORAGE_POSTGRES_PASSWORD_FILE=/run/secrets/db_user_pw' if not dc_authelia_use_sqlite | bool else omit }}"
                   labels:
                     traefik.enable: "true"
                     ## HTTP Routers
@@ -152,4 +160,4 @@
 # https://www.smarthomebeginner.com/authelia-docker-compose-guide-2024-v2/
 
 # Cleaning
-# sudo docker container rm -f authelia authelia-redis authelia-postgresql && sudo docker network rm authelia_net && sudo rm -r $APPDATA_DIR/authelia && sudo rm -r $SECRETS_DIR/authelia
+# sudo docker container rm -f authelia authelia-redis authelia-postgresql && sudo docker network rm authelia_net && sudo rm -r $APPDATA_DIR/authelia && sudo rm -r $SECRETS_DIR/authelia $LOGS_DIR/authelia
