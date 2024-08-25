@@ -76,11 +76,12 @@
                 app_net: "{{ {'ipv4_address': dc_promtail_net_ip} if dc_promtail_net_ip is defined and dc_promtail_net_ip | length > 0 and not dc_promtail_standalone | default(false) | bool else omit }}"
                 traefik_net: "{{ {'ipv4_address': dc_traefik_net_promtail_ip} if dc_traefik_net_promtail_ip is defined and dc_traefik_net_promtail_ip | length > 0 and dc_promtail_standalone | default(false) | bool else omit }}"
               volumes:
-                - "{{ appdata_type_path }}/promtail-docker-config.yml:/etc/promtail/config.yml"
-                - /var/log:/var/log
+                - "{{ appdata_type_path }}/promtail-docker-config.yml:/etc/promtail/config.yml:ro"
+                - "{{ docker_logs }}:/opt/docker/logs:ro"
+                - /var/log:/var/log:ro
                 - /var/lib/docker/containers:/var/lib/docker/containers:ro
                 - /var/lib/docker/100000.100000:/var/lib/docker/containers:ro
-                - /var/run/docker.sock:/var/run/docker.sock
+                - /var/run/docker.sock:/var/run/docker.sock:ro
                 # - "{{ appdata_type_path }}/data:/promtail"
               #   - "{{ secrets_type_path }}:/run/secrets"
               # environment:

@@ -23,10 +23,10 @@
       ansible.builtin.setup:
         filter: ansible_hostname
   roles:
-    # - role: docker_provisioning
-    # - role: dc_traefik
-    #   vars:
-    #     dc_traefik_container_name: traefik-metrics
-    #     dc_traefik_type: "metrics"
-    #     dc_traefik_crowdsec_enabled: false
+    - role: docker_provisioning
+    - role: dc_traefik
+      vars:
+        dc_traefik_container_name: traefik-metrics
+        dc_traefik_type: "metrics"
+        dc_traefik_crowdsec_enabled: false
     - role: dc_grafana

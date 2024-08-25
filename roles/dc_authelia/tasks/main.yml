@@ -80,11 +80,13 @@
           vars:
             container_init_appdata_directories_to_create:
               - "config"
-            # container_init_custom_directories_to_create:
-            #   - path: "{{ logs_type_path }}"
-            #     owner: "{{ user }}"
-            #     group: "{{ group }}"
-            #     mode: "0550"
+            container_init_custom_directories_to_create:
+              - path: "{{ logs_type_path }}"
+                owner: "{{ user }}"
+                group: "{{ group }}"
+                mode: "0550"
+            container_init_files_to_create:
+              - { dest: "{{ logs_type_path }}/authelia.log", owner: "{{ user }}", group: "{{ group }}", mode: "0660" }
             container_init_templates_to_copy:
               - src: "configuration.yml.j2"
                 dest: "{{ appdata_type_path }}/config/configuration.yml"
@@ -126,7 +128,7 @@
                   #   - "{{ dc_authelia_port }}:9091"
                   volumes:
                     - "{{ appdata_type_path }}/config:/config"
-                    # - "{{ logs_type_path }}:/config/logs"
+                    - "{{ logs_type_path }}/authelia.log:/config/authelia.log"
                     - "{{ secrets_type_path }}:/run/secrets"
                   environment:
                     TZ: "{{ timezone }}"
