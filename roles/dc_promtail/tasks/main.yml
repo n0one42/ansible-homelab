@@ -30,6 +30,7 @@
         container_init_templates_to_copy:
           - src: "{{ ansible_hostname }}/promtail-docker-config.yml.j2"
             dest: "{{ appdata_type_path }}/promtail-docker-config.yml"
+      notify: Restart container
 
     - name: Install docker compose promtail with inline definition
       vars:
@@ -70,7 +71,7 @@
               user: root
               # command: -config.file=/etc/promtail/config.yml
               extra_hosts:
-                - "loki.{{ domain_1 }}:{{ dc_promtail_loki_traefik_ip }}"  # Has to be the internal ip of the traefik where loki is running
+                - "loki.{{ domain_1 }}:{{ dc_promtail_loki_traefik_ip | default('127.0.0.1') }}"  # Has to be the internal ip of the traefik where loki is running
               networks:
                 app_net: "{{ {'ipv4_address': dc_promtail_net_ip} if dc_promtail_net_ip is defined and dc_promtail_net_ip | length > 0 and not dc_promtail_standalone | default(false) | bool else omit }}"
                 traefik_net: "{{ {'ipv4_address': dc_traefik_net_promtail_ip} if dc_traefik_net_promtail_ip is defined and dc_traefik_net_promtail_ip | length > 0 and dc_promtail_standalone | default(false) | bool else omit }}"
@@ -86,6 +87,8 @@
 
 
 # ! --------------------------- Notes --------------------------- ! #
+# Depending on the logs wanted, it is best to use this container as root. Since this will not be exposed, this should be acceptable.
+
 # Promtail is a log shipper. It reads logs from various sources (such as log files, Docker containers, or syslog) and then forwards or “pushes” them to a Loki instance.
 # Loki acts as a log storage and indexing system. It does not actively pull logs from Promtail; instead, it listens for incoming log data that Promtail sends.
 # Grafana queries logs from Loki and displays them in Dashboards.
