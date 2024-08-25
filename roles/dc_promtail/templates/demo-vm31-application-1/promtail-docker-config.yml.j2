@@ -1,0 +1,25 @@
+server:
+  http_listen_port: 9080
+  grpc_listen_port: 0
+
+positions:
+  filename: /tmp/positions.yaml
+
+clients:
+  - url: https://loki.{{ domain_1 }}/loki/api/v1/push
+    tls_config:
+      insecure_skip_verify: {{ dc_promtail_insecure_skip_verify }}
+    basic_auth:
+      username: "{{ dc_promtail_basic_auth_user }}"
+      password: "{{ dc_promtail_basic_auth_password }}"
+    external_labels:
+      instance: "{{ ansible_hostname }}"
+
+scrape_configs:
+- job_name: system
+  static_configs:
+  - targets:
+      - localhost
+    labels:
+      job: varlogs
+      __path__: /var/log/*log
