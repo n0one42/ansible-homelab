@@ -28,21 +28,21 @@ scrape_configs:
   #   static_configs:
   #     - targets: ["localhost:9090"]
 
-  # Scrape config for Node Exporter
-  - job_name: 'external_node_exporter'
-    scheme: https
-    tls_config:
-      insecure_skip_verify: {{ dc_prometheus_nodeexporter_insecure_skip_verify }}
-    basic_auth:
-      username: "{{ dc_prometheus_nodeexporter_basic_auth_user }}"
-      password: "{{ dc_prometheus_nodeexporter_basic_auth_password }}"
-    static_configs:
-      - targets: ['nodeexporter-ingress.casalex.de']
-    metrics_path: /metrics
-
-  # - job_name: "node-exporter-metrics"
+  # # Scrape config for Node Exporter
+  # - job_name: 'external_node_exporter'
+  #   scheme: https
+  #   tls_config:
+  #     insecure_skip_verify: {{ dc_prometheus_nodeexporter_insecure_skip_verify }}
+  #   basic_auth:
+  #     username: "{{ dc_prometheus_nodeexporter_basic_auth_user }}"
+  #     password: "{{ dc_prometheus_nodeexporter_basic_auth_password }}"
   #   static_configs:
-  #     - targets: ["localhost:9100"]
+  #     - targets: ['nodeexporter-ingress.casalex.de']
+  #   metrics_path: /metrics
+
+  - job_name: "node-exporter-metrics"
+    static_configs:
+      - targets: ["{{ dc_grafana_net_nodeexporter_ip }}:9100"]
 
   # - job_name: "node-exporter-application-1"
   #   scheme: https

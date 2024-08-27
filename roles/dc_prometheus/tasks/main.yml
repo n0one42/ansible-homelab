@@ -37,17 +37,19 @@
         docker_networks: >-
           {{
             {
-              "app_net": {
-                "name": app_name ~ "_net",
-                "external": true
-              }
-            } if not dc_prometheus_standalone else {}
-            | combine({
               "traefik_net": {
                 "name": dc_traefik_net_name,
                 "external": true
               }
-            })
+            }
+            | combine(
+              {
+                "app_net": {
+                  "name": app_name ~ "_net",
+                  "external": true
+                }
+              } if not dc_prometheus_standalone else {}
+            )
           }}
 
       community.docker.docker_compose_v2:
@@ -55,6 +57,7 @@
         definition:
           # ! --------------------------- Networks --------------------------- ! #
           networks: "{{ docker_networks }}"
+
 
           # * ---------------------------- App ------------------------------ * #
           services:
@@ -68,12 +71,16 @@
               userns_mode: "{{ 'host' if dc_prometheus_create_with_userns | bool == false else 'remap' }}"
               user: "{{ dc_prometheus_u_g_id }}:{{ dc_prometheus_u_g_id }}"
               # command: -config.file=/etc/prometheus/prometheus.yml
+              command:
+                - '--config.file=/etc/prometheus/prometheus.yml'
+                - '--storage.tsdb.path=/prometheus'
+                - '--log.level=debug'  # Set log level to debug
               extra_hosts:
                 - "nodeexporter-ingress.{{ domain_1 }}:{{ dc_dmz_net_vm10_ingress_ip }}"  # Has to be the internal ip of the traefik where the node-exporter are running
                 - "nodeexporter-application-1.{{ domain_1 }}:{{ dc_dmz_net_vm31_application_1_ip }}"  # Has to be the internal ip of the traefik where the node-exporter are running
               networks:
                 app_net: "{{ {'ipv4_address': dc_prometheus_net_ip} if dc_prometheus_net_ip is defined and dc_prometheus_net_ip | length > 0 and not dc_prometheus_standalone | default(false) | bool else omit }}"
-                traefik_net: "{{ {'ipv4_address': dc_traefik_net_prometheus_ip} if dc_traefik_net_prometheus_ip is defined and dc_traefik_net_prometheus_ip | length > 0 and dc_prometheus_standalone | default(false) | bool else omit }}"
+                traefik_net: "{{ {'ipv4_address': dc_traefik_net_prometheus_ip} if dc_traefik_net_prometheus_ip is defined and dc_traefik_net_prometheus_ip | length > 0 else {} }}"
               ports:
                 - "{{ dc_prometheus_port }}:9090"
               volumes:
@@ -94,3 +101,5 @@
 
 
 # ! --------------------------- Notes --------------------------- ! #
+# Prometheus /metrics: This endpoint provides metrics related to the Prometheus server itself.
+# Node Exporter: This provides detailed system-level metrics of the VM.
