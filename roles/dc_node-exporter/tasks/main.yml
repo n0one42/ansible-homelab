@@ -54,15 +54,11 @@
               image: prom/node-exporter:{{ dc_nodeexporter_image_version }}
               container_name: "{{ app_name }}-nodeexporter"  # eg: grafana-nodeexporter
               restart: unless-stopped
-              # security_opt:
-              #   - no-new-privileges:true
+              security_opt:
+                - no-new-privileges:true
               privileged: false
-              # cap_add:
-              #   - SYS_ADMIN
-              # userns_mode: "{{ 'host' if dc_nodeexporter_create_with_userns | bool == false else 'remap' }}"
-              # user: "{{ dc_nodeexporter_u_g_id }}:{{ dc_nodeexporter_u_g_id }}"
-              userns_mode: host
-              user: root
+              userns_mode: "{{ 'host' if dc_nodeexporter_create_with_userns | bool == false else 'remap' }}"
+              user: "{{ dc_nodeexporter_u_g_id }}:{{ dc_nodeexporter_u_g_id }}"
               command:
                 - --path.procfs=/host/proc
                 - --path.sysfs=/host/sys
