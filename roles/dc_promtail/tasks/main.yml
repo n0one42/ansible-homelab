@@ -6,101 +6,159 @@
   #   app_name: => traefik, portainer, grafana, netbox
 # ? Optional variables
 
-- name: Set facts app_name for standalone
-  ansible.builtin.set_fact:
-    app_name: "standalone"
-  when: dc_promtail_standalone | default(false)
+- name: Create Promtail & Socket Proxy
+  block:
+    - name: Set facts app_name for standalone
+      ansible.builtin.set_fact:
+        app_name: "standalone"
+      when: dc_promtail_standalone | default(false)
+
+  # * ------------------------ Socket Proxy ------------------------ * #
+    - name: Include Socket Proxy role
+      ansible.builtin.import_role:
+        name: dc_socketproxy
+      vars:
+        dc_socketproxy_container_name: "{{ app_name }}-promtail"
+        dc_socketproxy_net_cidr: "{{ dc_promtail_socketproxy_net_cidr }}"
+        dc_socketproxy_net_ip: "{{ dc_promtail_socketproxy_net_ip }}"
+
+        dc_socketproxy_env_log_level: "{{ dc_promtail_socketproxy_env_log_level }}"
+        dc_socketproxy_env_containers: "{{ dc_promtail_socketproxy_env_containers }}"
+        dc_socketproxy_env_networks: "{{ dc_promtail_socketproxy_env_networks }}"
+        dc_socketproxy_env_nodes: "{{ dc_promtail_socketproxy_env_nodes }}"
+        dc_socketproxy_env_services: "{{ dc_promtail_socketproxy_env_services }}"
+        dc_socketproxy_env_tasks: "{{ dc_promtail_socketproxy_env_tasks }}"
 
   # * --------------------------- App --------------------------- *
-- name: Create promtail for --> {{ app_name }}
-  vars:
-    container_type: "promtail" # => app, db, redis, loki, promtail
-    appdata_type_path: "{{ docker_appdata }}/{{ app_name }}/{{ container_type }}" # eg: grafana/promtail
-    secrets_type_path: "{{ docker_secrets }}/{{ app_name }}/{{ container_type }}"
-    logs_type_path: "{{ docker_logs }}/{{ app_name }}"
-    user: "{{ (dc_promtail_create_with_userns | bool) | ternary(dc_promtail_u_g_id + 100000, dc_promtail_u_g_id) }}"
-    group: "{{ (dc_promtail_create_with_userns | bool) | ternary(dc_promtail_u_g_id + 100000, dc_promtail_u_g_id) }}"
-  block:
-    - name: '[Required] container_init role'
-      ansible.builtin.import_role:
-        name: container_init
+    - name: Create promtail for --> {{ app_name }}
       vars:
-        container_init_appdata_directories_to_create:
-          - "data"
-        container_init_templates_to_copy:
-          - src: "{{ ansible_hostname }}/promtail-docker-config.yml.j2"
-            dest: "{{ appdata_type_path }}/promtail-docker-config.yml"
-      notify: Restart container
+        container_type: "promtail" # => app, db, redis, loki, promtail
+        appdata_type_path: "{{ docker_appdata }}/{{ app_name }}/{{ container_type }}" # eg: grafana/promtail
+        secrets_type_path: "{{ docker_secrets }}/{{ app_name }}/{{ container_type }}"
+        logs_type_path: "{{ docker_logs }}/{{ app_name }}"
+        user: "{{ (dc_promtail_create_with_userns | bool) | ternary(dc_promtail_u_g_id + 100000, dc_promtail_u_g_id) }}"
+        group: "{{ (dc_promtail_create_with_userns | bool) | ternary(dc_promtail_u_g_id + 100000, dc_promtail_u_g_id) }}"
+      block:
+        - name: '[Required] container_init role'
+          ansible.builtin.import_role:
+            name: container_init
+          vars:
+            container_init_templates_to_copy:
+              - src: "{{ ansible_hostname }}/promtail-docker-config.yml.j2"
+                dest: "{{ appdata_type_path }}/promtail-docker-config.yml"
+          notify: Restart container
 
-    - name: Install docker compose promtail with inline definition
-      vars:
-        docker_networks: >-
-          {{
-            {
-              "traefik_net": {
-                "name": dc_traefik_net_name,
-                "external": true
-              }
-            }
-            | combine(
-              {
-                "app_net": {
-                  "name": app_name ~ "_net",
-                  "external": true
+        - name: Install docker compose promtail with inline definition
+          vars:
+            docker_networks: >-
+              {{
+                {
+                  "traefik_net": {
+                    "name": dc_traefik_net_name,
+                    "external": true
+                  },
+                  "socketproxy_net": {
+                    "name": app_name ~ "-promtail_socketproxy_net",
+                    "external": true
+                  }
                 }
-              } if not dc_promtail_standalone else {}
-            )
-          }}
+                | combine(
+                  {
+                    "app_net": {
+                      "name": app_name ~ "_net",
+                      "external": true
+                    }
+                  } if not dc_promtail_standalone else {}
+                )
+              }}
 
-      community.docker.docker_compose_v2:
-        project_name: "{{ app_name }}-promtail" # eg: grafana-promtail
-        definition:
-          # ! --------------------------- Networks --------------------------- ! #
-          networks: "{{ docker_networks }}"
+          community.docker.docker_compose_v2:
+            project_name: "{{ app_name }}-promtail" # eg: grafana-promtail
+            definition:
+              # ! --------------------------- Networks --------------------------- ! #
+              networks: "{{ docker_networks }}"
 
 
-          # * ---------------------------- App ------------------------------ * #
-          services:
-            promtail:
-              image: grafana/promtail:{{ dc_promtail_image_version }}
-              container_name: "{{ app_name }}-promtail"  # eg: grafana-promtail
-              restart: unless-stopped
-              security_opt:
-                - no-new-privileges:true
-              privileged: false
-              userns_mode: "{{ 'host' if dc_promtail_create_with_userns | bool == false else 'remap' }}"
-              user: "{{ dc_promtail_u_g_id }}:{{ dc_promtail_u_g_id }}"
-              # userns_mode: host
-              # user: root
-              # command: -config.file=/etc/promtail/config.yml
-              extra_hosts:
-                - "loki.{{ domain_1 }}:{{ dc_promtail_loki_traefik_ip | default('127.0.0.1') }}"  # Has to be the internal ip of the traefik where loki is running
-              networks:
-                app_net: "{{ {'ipv4_address': dc_promtail_net_ip} if dc_promtail_net_ip is defined and dc_promtail_net_ip | length > 0 and not dc_promtail_standalone | default(false) | bool else omit }}"
-                traefik_net: "{{ {'ipv4_address': dc_traefik_net_promtail_ip} if dc_traefik_net_promtail_ip is defined and dc_traefik_net_promtail_ip | length > 0 else {} }}"
-              # ports:
-              #   - "{{ dc_promtail_port }}:9080"
-              volumes:
-                - "{{ appdata_type_path }}/promtail-docker-config.yml:/etc/promtail/config.yml:ro"
-                - "{{ docker_logs }}:/opt/docker/logs:ro"
-                - /var/log:/var/log:ro
-                - /var/lib/docker/containers:/var/lib/docker/containers:ro
-                - /var/lib/docker/100000.100000:/var/lib/docker/containers:ro
-                - /var/run/docker.sock:/var/run/docker.sock:ro
-                # - "{{ appdata_type_path }}/data:/promtail"
-              #   - "{{ secrets_type_path }}:/run/secrets"
-              # environment:
-              labels:
-                traefik.enable: "true"
-                # * HTTP Routers
-                traefik.http.routers.promtail-rtr.entrypoints: "websecure"
-                traefik.http.routers.promtail-rtr.rule: "Host(`promtail-{{ dc_traefik_type }}.{{ domain_1 }}`)"
-                # * Middlewares
-                traefik.http.routers.promtail-rtr.middlewares: "chain-basic-auth@file" # For Basic HTTP Authentication
-                # * HTTP Services
-                traefik.http.routers.promtail-rtr.service: "promtail-svc"
-                traefik.http.services.promtail-svc.loadbalancer.server.port: "{{ dc_promtail_port }}"
+              # * ---------------------------- App ------------------------------ * #
+              services:
+                promtail:
+                  image: grafana/promtail:{{ dc_promtail_image_version }}
+                  container_name: "{{ app_name }}-promtail"  # eg: grafana-promtail
+                  restart: unless-stopped
+                  security_opt:
+                    - no-new-privileges:true
+                  privileged: false
+                  userns_mode: "{{ 'host' if dc_promtail_create_with_userns | bool == false else 'remap' }}"
+                  user: "{{ dc_promtail_u_g_id }}:{{ dc_promtail_u_g_id }}"
+                  # command: -config.file=/etc/promtail/config.yml
+                  extra_hosts:
+                    - "loki.{{ domain_1 }}:{{ dc_promtail_loki_traefik_ip | default('127.0.0.1') }}"  # Has to be the internal ip of the traefik where loki is running
+                  networks:
+                    app_net: "{{ {'ipv4_address': dc_promtail_net_ip} if dc_promtail_net_ip is defined and dc_promtail_net_ip | length > 0 and not dc_promtail_standalone | default(false) | bool else omit }}"
+                    socketproxy_net: "{{ {'ipv4_address': dc_promtail_socketproxy_net_app_ip} if dc_promtail_socketproxy_net_app_ip is defined and dc_promtail_socketproxy_net_app_ip | length > 0 else {} }}"
+                    traefik_net: "{{ {'ipv4_address': dc_traefik_net_promtail_ip} if dc_traefik_net_promtail_ip is defined and dc_traefik_net_promtail_ip | length > 0 else {} }}"
+                  # ports:
+                  #   - "{{ dc_promtail_port }}:9080"
+                  volumes:
+                    - "{{ appdata_type_path }}/promtail-docker-config.yml:/etc/promtail/config.yml:ro"
+                    - "{{ docker_logs }}:/opt/docker/logs:ro"
+                    - /var/log:/var/log:ro
+                  # environment:
+                  labels:
+                    traefik.enable: "true"
+                    # * HTTP Routers
+                    traefik.http.routers.promtail-rtr.entrypoints: "websecure"
+                    traefik.http.routers.promtail-rtr.rule: "Host(`promtail-{{ dc_traefik_type }}.{{ domain_1 }}`)"
+                    # * Middlewares
+                    traefik.http.routers.promtail-rtr.middlewares: "chain-basic-auth@file" # For Basic HTTP Authentication
+                    # * HTTP Services
+                    traefik.http.routers.promtail-rtr.service: "promtail-svc"
+                    traefik.http.services.promtail-svc.loadbalancer.server.port: "{{ dc_promtail_port }}"
 
+        - name: ACL Permissions
+          block:
+            - name: Install ACL package
+              ansible.builtin.package:
+                name: acl
+                state: present
+
+            - name: Set ACL for dc_promtail_u_g_id on /opt/docker/logs
+              ansible.posix.acl:
+                path: /opt/docker/logs
+                entity: "{{ user }}"
+                etype: user
+                permissions: r-x
+                state: present
+                recurse: true
+                default: true
+
+            - name: Set ACL for dc_promtail_u_g_id on /opt/docker/logs
+              ansible.posix.acl:
+                path: /opt/docker/logs
+                entity: "{{ user }}"
+                etype: user
+                permissions: r-x
+                state: present
+                recurse: true
+
+            - name: Set ACL for dc_promtail_u_g_id on /var/log
+              ansible.posix.acl:
+                path: /var/log
+                entity: "{{ user }}"
+                etype: user
+                permissions: r-x
+                state: present
+                recurse: true
+                default: true
+
+            - name: Set ACL for dc_promtail_u_g_id on /var/log
+              ansible.posix.acl:
+                path: /var/log
+                entity: "{{ user }}"
+                etype: user
+                permissions: r-x
+                state: present
+                recurse: true
 
 # ! --------------------------- Notes --------------------------- ! #
 # Depending on the logs wanted, it is best to use this container as root. Since this will not be exposed, this should be acceptable.
@@ -108,3 +166,8 @@
 # Promtail is a log shipper. It reads logs from various sources (such as log files, Docker containers, or syslog) and then forwards or “pushes” them to a Loki instance.
 # Loki acts as a log storage and indexing system. It does not actively pull logs from Promtail; instead, it listens for incoming log data that Promtail sends.
 # Grafana queries logs from Loki and displays them in Dashboards.
+
+# cleaning:
+# sudo docker container rm -f grafana-promtail grafana-promtail-socketproxy
+# sudo docker network rm grafana-promtail_socketproxy_net
+# sudo rm -r $APPDATA_DIR/grafana/promtail

@@ -272,6 +272,16 @@ dc_promtail_insecure_skip_verify: "{{ dc_traefik_acme_staging_mode }}"
 dc_promtail_basic_auth_user: "{{ demo_auth_user }}" # traefik basic auth credentials
 dc_promtail_basic_auth_password: "{{ demo_auth_user_pw }}"  # traefik basic auth credentials
 
+## ? Environment variables for socketproxy
+dc_promtail_socketproxy_env_log_level: "info"  # debug, info, notice, warning, err, crit, alert and emerg
+
+# * Not always needed - Can expose some information that your service does not need
+dc_promtail_socketproxy_env_containers: "1"
+dc_promtail_socketproxy_env_networks: "1"
+dc_promtail_socketproxy_env_nodes: "1"
+dc_promtail_socketproxy_env_services: "1"
+dc_promtail_socketproxy_env_tasks: "1"
+
 # * ------------>>> Prometheus Configuration <<<------------ * #
 # * >>> Container variables
 dc_grafana_prometheus_create_with_userns: true

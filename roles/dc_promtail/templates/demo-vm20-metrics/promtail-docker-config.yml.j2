@@ -26,7 +26,8 @@ scrape_configs:
 
   - job_name: docker_logs
     docker_sd_configs:
-      - host: unix:///var/run/docker.sock
+      # - host: unix:///var/run/docker.sock
+      - host: tcp://{{ app_name }}-promtail-socketproxy:2375
         refresh_interval: 5s
         # filters:
         #   - name: label

@@ -108,6 +108,17 @@ dc_traefik_socketproxy_net_cidr: "{{ dc_traefik_socketproxy_net_address }}/{{ dc
 dc_traefik_socketproxy_net_app_ip: "{{ dc_traefik_socketproxy_net_base }}.4"  # 10.100.20.4
 dc_traefik_socketproxy_net_ip: "{{ dc_traefik_socketproxy_net_base }}.5"  # 10.100.20.5
 
+# ? -----------------------------------------------------------------------------
+# *                                   Promtail                                   *
+# ? -----------------------------------------------------------------------------
+dc_promtail_socketproxy_net_base: 10.100.20
+dc_promtail_socketproxy_net_address: "{{ dc_promtail_socketproxy_net_base }}.8"
+dc_promtail_socketproxy_net_prefix_length: 29 # 6 usable octets eg 10.100.20.10 - 10.100.20.14
+dc_promtail_socketproxy_net_cidr: "{{ dc_promtail_socketproxy_net_address }}/{{ dc_promtail_socketproxy_net_prefix_length }}"  # 10.100.20.8/29
+
+dc_promtail_socketproxy_net_app_ip: "{{ dc_promtail_socketproxy_net_base }}.12"  # 10.100.20.12
+dc_promtail_socketproxy_net_ip: "{{ dc_promtail_socketproxy_net_base }}.13"  # 10.100.20.13
+
 # ? ######################################################################################## #
 # *                                            Apps                                          #
 # ? ######################################################################################## #
