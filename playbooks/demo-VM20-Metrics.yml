@@ -18,15 +18,22 @@
   hosts: demo-vm20-metrics
   become: true
   gather_facts: false
+  vars:
+    dc_traefik_type: "metrics"
+    dc_traefik_crowdsec_enabled: false
   pre_tasks:
     - name: Gather only the hostname fact
       ansible.builtin.setup:
         filter: ansible_hostname
+    # ? ensure clock is set / synced otherwise time sensitive things will not work like authelia
+    - name: Synchronize system time with NTP
+      ansible.builtin.systemd:
+        name: systemd-timesyncd.service
+        state: restarted
+      changed_when: false
   roles:
     - role: docker_provisioning
     - role: dc_traefik
       vars:
         dc_traefik_container_name: traefik-metrics
-        dc_traefik_type: "metrics"
-        dc_traefik_crowdsec_enabled: false
     - role: dc_grafana

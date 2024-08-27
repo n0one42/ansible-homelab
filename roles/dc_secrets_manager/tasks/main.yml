@@ -42,11 +42,11 @@
       loop: "{{ password_file_stats.results }}"
       vars:
         password_types:
-          default: "chars=ascii_uppercase,ascii_lowercase,digits,-_!@#%+=.^^ length=24"
+          default: "chars=ascii_uppercase,ascii_lowercase,digits,-_!@#%+=.^ length=24"
           jwt_secret: "chars=ascii_uppercase,ascii_lowercase,digits,-_!@#%+=.^ length=64"
           storage_encryption_key: "chars=ascii_uppercase,ascii_lowercase,digits,-_!@#%+=.^ length=64"
           session_secret: "chars=ascii_uppercase,ascii_lowercase,digits,-_!@#%+=.^ length=64"
-          crowdsec_bouncer_key: "chars=ascii_uppercase,ascii_lowercase,digits,-_!@#%+=.^ length=64"
+          crowdsec_bouncer_key: "chars=ascii_uppercase,ascii_lowercase,digits,-_#%&* length=64"
           postgres_password: "chars=ascii_uppercase,ascii_lowercase,digits,-_!@#%+=.^ length=32"
           redis_password: "chars=ascii_uppercase,ascii_lowercase,digits,-_!@#%+=.^ length=32"
       no_log: true

@@ -37,17 +37,17 @@
         docker_networks: >-
           {{
             {
-              "traefik_net": {
-                "name": dc_traefik_net_name,
-                "external": true
-              }
-            }
-            if dc_promtail_standalone else {
               "app_net": {
                 "name": app_name ~ "_net",
                 "external": true
               }
-            }
+            } if not dc_promtail_standalone else {}
+            | combine({
+              "traefik_net": {
+                "name": dc_traefik_net_name,
+                "external": true
+              }
+            })
           }}
 
       community.docker.docker_compose_v2:

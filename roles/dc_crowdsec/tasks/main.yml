@@ -56,10 +56,6 @@
             definition:
               # ! --------------------------- Networks --------------------------- ! #
               networks:
-                traefik_net:
-                  name: "{{ dc_traefik_net_name }}"  # eg: traefik_net
-                  external: true  # indicating that it's a pre-existing network not managed by this Docker Compose file.
-
                 app_net:
                   name: "{{ app_name }}_net"
                   driver: bridge
@@ -67,6 +63,9 @@
                   ipam:
                     config:
                       - subnet: "{{ dc_crowdsec_net_cidr }}"
+                traefik_net:
+                  name: "{{ dc_traefik_net_name }}"  # eg: traefik_net
+                  external: true  # indicating that it's a pre-existing network not managed by this Docker Compose file.
 
 
               # * ---------------------------- App ------------------------------ * #

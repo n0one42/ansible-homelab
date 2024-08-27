@@ -18,18 +18,25 @@
   hosts: demo-vm10-ingress
   become: true
   gather_facts: false
+  vars:
+    dc_traefik_type: "ingress"
+    dc_traefik_crowdsec_enabled: true
   pre_tasks:
     - name: Gather only the hostname fact
       ansible.builtin.setup:
         filter: ansible_hostname
+    # ? ensure clock is set / synced otherwise time sensitive things will not work like authelia
+    - name: Synchronize system time with NTP
+      ansible.builtin.systemd:
+        name: systemd-timesyncd.service
+        state: restarted
+      changed_when: false
   roles:
-    # - role: docker_provisioning
-    # # ensure clock is set / synced
-    # - role: dc_adguard  # ! must be first if used for correct dns
-    # - role: dc_traefik
-    #   vars:
-    #     dc_traefik_container_name: traefik-ingress
-    #     dc_traefik_type: "ingress"
+    - role: docker_provisioning
+    - role: dc_adguard  # ! must be first if used for correct dns
+    - role: dc_traefik
+      vars:
+        dc_traefik_container_name: traefik-ingress
     - role: dc_authelia
     # - role: dc_authentik
     # - role: dc_promtail
@@ -39,3 +46,10 @@
     #     dc_promtail_net_ip: "{{ dc_grafana_net_promtail_ip }}" # Will not be used since it is a standalone. Just for reference
     #     dc_promtail_create_with_userns: "{{ dc_grafana_promtail_create_with_userns }}"
     #     dc_promtail_image_version: "{{ dc_grafana_promtail_image_version }}"
+    # - role: dc_node-exporter
+    #   vars:
+    #     dc_nodeexporter_standalone: true
+    #     dc_nodeexporter_net_ip: "{{ dc_grafana_net_nodeexporter_ip }}" # Will not be used since it is a standalone. Just for reference
+    #     dc_nodeexporter_port: "{{ dc_grafana_nodeexporter_port }}"
+    #     dc_nodeexporter_create_with_userns: "{{ dc_grafana_nodeexporter_create_with_userns }}"
+    #     dc_nodeexporter_image_version: "{{ dc_grafana_nodeexporter_image_version }}"

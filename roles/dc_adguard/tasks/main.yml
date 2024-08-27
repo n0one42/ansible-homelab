@@ -117,7 +117,8 @@
                     traefik.http.routers.adguard-rtr.entrypoints: "websecure"
                     traefik.http.routers.adguard-rtr.rule: "Host(`{{ app_name }}.{{ domain_1 }}`)"
                     ## Middlewares
-                    traefik.http.routers.adguard-rtr.middlewares: "chain-no-auth@file" # Should be chain-no-auth and not chain-adguard
+                    traefik.http.routers.adguard-rtr.middlewares: "chain-authelia@file" # For Authelia Authentication
+                    # traefik.http.routers.adguard-rtr.middlewares: "chain-no-auth@file" # For No Authentication
                     ## HTTP Services
                     traefik.http.routers.adguard-rtr.service: "adguard-svc"
                     traefik.http.services.adguard-svc.loadbalancer.server.port: "80" # "{{ dc_adguard_port }}"

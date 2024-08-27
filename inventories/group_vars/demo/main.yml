@@ -69,6 +69,8 @@ dc_it_tools_u_g_id: 22022 # with userns --> 122022
 dc_grafana_u_g_id: 22025 # with userns --> 122025
 dc_loki_u_g_id: 22026 # with userns --> 122026
 dc_promtail_u_g_id: 22027 # with userns --> 122027
+dc_prometheus_u_g_id: 22028 # with userns --> 122028
+dc_nodeexporter_u_g_id: 22029 # with userns --> 122029
 
 # ? -----------------------------------------------------------------------------
 # *                                  dc_adguard                                 *
@@ -252,7 +254,7 @@ dc_grafana_db_port: 5432
 # * >>> Container variables
 dc_grafana_loki_create_with_userns: true
 dc_grafana_loki_image_version: "2.9.2"
-dc_grafana_loki_port: 3100
+dc_grafana_loki_port: 9090
 
 # * ------------>>> Promtail Configuration <<<------------ * #
 # * >>> Container variables
@@ -264,6 +266,28 @@ dc_promtail_standalone: false
 dc_promtail_insecure_skip_verify: "{{ dc_traefik_acme_staging_mode }}"
 dc_promtail_basic_auth_user: "{{ demo_auth_user }}" # traefik basic auth credentials
 dc_promtail_basic_auth_password: "{{ demo_auth_user_pw }}"  # traefik basic auth credentials
+
+# * ------------>>> Prometheus Configuration <<<------------ * #
+# * >>> Container variables
+dc_grafana_prometheus_create_with_userns: true
+dc_grafana_prometheus_image_version: "latest"
+dc_grafana_prometheus_port: 3100
+
+## ? Environment variables if used in standalone mode (external prometheus)
+dc_prometheus_standalone: false
+dc_prometheus_nodeexporter_insecure_skip_verify: "{{ dc_traefik_acme_staging_mode }}"
+dc_prometheus_nodeexporter_basic_auth_user: "{{ demo_auth_user }}" # traefik basic auth credentials
+dc_prometheus_nodeexporter_basic_auth_password: "{{ demo_auth_user_pw }}"  # traefik basic auth credentials
+
+# * ------------>>> Node-Exporter Configuration <<<------------ * #
+# * >>> Container variables
+dc_grafana_nodeexporter_create_with_userns: true
+dc_grafana_nodeexporter_image_version: "latest"
+dc_grafana_nodeexporter_port: 9100
+
+## ? Environment variables if used in standalone mode (external nodeexporter)
+dc_nodeexporter_standalone: false
+
 
 # ? -----------------------------------------------------------------------------
 # *                                dc_whoami                                    *

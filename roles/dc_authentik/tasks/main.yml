@@ -86,11 +86,11 @@
             definition:
               # ! --------------------------- Networks --------------------------- ! #
               networks:
-                traefik_net:
-                  name: "{{ dc_traefik_net_name }}"  # eg: traefik_net
-                  external: true  # indicating that it's a pre-existing network not managed by this Docker Compose file.
                 app_net:
                   name: "{{ app_name }}_net"  # eg: authentik_net
+                  external: true  # indicating that it's a pre-existing network not managed by this Docker Compose file.
+                traefik_net:
+                  name: "{{ dc_traefik_net_name }}"  # eg: traefik_net
                   external: true  # indicating that it's a pre-existing network not managed by this Docker Compose file.
 
               # * ---------------------------- App ------------------------------ * #
@@ -106,8 +106,8 @@
                   user: "{{ dc_authentik_u_g_id }}:{{ dc_authentik_u_g_id }}"
                   command: server
                   networks:
-                    traefik_net: "{{ {'ipv4_address': dc_traefik_net_authentik_ip} if dc_traefik_net_authentik_ip is defined and dc_traefik_net_authentik_ip | length > 0 else {} }}"
                     app_net: "{{ {'ipv4_address': dc_authentik_net_app_server_ip} if dc_authentik_net_app_server_ip is defined and dc_authentik_net_app_server_ip | length > 0 else {} }}"
+                    traefik_net: "{{ {'ipv4_address': dc_traefik_net_authentik_ip} if dc_traefik_net_authentik_ip is defined and dc_traefik_net_authentik_ip | length > 0 else {} }}"
                   ports:
                     # - "{{ dc_authentik_http_port }}:9000"
                     - "{{ dc_authentik_https_port }}:9443"

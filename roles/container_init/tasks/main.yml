@@ -111,7 +111,7 @@
         state: directory
         owner: "{{ user }}"
         group: "{{ group }}"
-        mode: "0500"
+        mode: "0550"
 
     - name: Touch secret files
       ansible.builtin.file:

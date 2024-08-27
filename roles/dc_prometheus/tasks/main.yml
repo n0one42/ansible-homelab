@@ -1,0 +1,96 @@
+---
+# tasks file for roles/dc_prometheus
+# TODO: Variables which has to be passed through the playbook or on import of this task file
+# ! Mandatory variables
+  # vars:
+  #   app_name: => traefik, portainer, grafana, netbox
+# ? Optional variables
+
+- name: Set facts app_name for standalone
+  ansible.builtin.set_fact:
+    app_name: "standalone"
+  when: dc_prometheus_standalone | default(false)
+
+  # * --------------------------- App --------------------------- *
+- name: Create prometheus for --> {{ app_name }}
+  vars:
+    container_type: "prometheus" # => app, db, redis, loki, promtail
+    appdata_type_path: "{{ docker_appdata }}/{{ app_name }}/{{ container_type }}" # eg: grafana/prometheus
+    secrets_type_path: "{{ docker_secrets }}/{{ app_name }}/{{ container_type }}"
+    logs_type_path: "{{ docker_logs }}/{{ app_name }}"
+    user: "{{ (dc_prometheus_create_with_userns | bool) | ternary(dc_prometheus_u_g_id + 100000, dc_prometheus_u_g_id) }}"
+    group: "{{ (dc_prometheus_create_with_userns | bool) | ternary(dc_prometheus_u_g_id + 100000, dc_prometheus_u_g_id) }}"
+  block:
+    - name: '[Required] container_init role'
+      ansible.builtin.import_role:
+        name: container_init
+      vars:
+        container_init_appdata_directories_to_create:
+          - "data"
+        container_init_templates_to_copy:
+          - src: "{{ ansible_hostname }}/prometheus-docker-config.yml.j2"
+            dest: "{{ appdata_type_path }}/prometheus-docker-config.yml"
+      notify: Restart container
+
+    - name: Install docker compose prometheus with inline definition
+      vars:
+        docker_networks: >-
+          {{
+            {
+              "app_net": {
+                "name": app_name ~ "_net",
+                "external": true
+              }
+            } if not dc_prometheus_standalone else {}
+            | combine({
+              "traefik_net": {
+                "name": dc_traefik_net_name,
+                "external": true
+              }
+            })
+          }}
+
+      community.docker.docker_compose_v2:
+        project_name: "{{ app_name }}-prometheus" # eg: grafana-prometheus
+        definition:
+          # ! --------------------------- Networks --------------------------- ! #
+          networks: "{{ docker_networks }}"
+
+          # * ---------------------------- App ------------------------------ * #
+          services:
+            prometheus:
+              image: prom/prometheus:{{ dc_prometheus_image_version }}
+              container_name: "{{ app_name }}-prometheus"  # eg: grafana-prometheus
+              restart: unless-stopped
+              security_opt:
+                - no-new-privileges:true
+              privileged: false
+              userns_mode: "{{ 'host' if dc_prometheus_create_with_userns | bool == false else 'remap' }}"
+              user: "{{ dc_prometheus_u_g_id }}:{{ dc_prometheus_u_g_id }}"
+              # command: -config.file=/etc/prometheus/prometheus.yml
+              extra_hosts:
+                - "nodeexporter-ingress.{{ domain_1 }}:{{ dc_dmz_net_vm10_ingress_ip }}"  # Has to be the internal ip of the traefik where the node-exporter are running
+                - "nodeexporter-application-1.{{ domain_1 }}:{{ dc_dmz_net_vm31_application_1_ip }}"  # Has to be the internal ip of the traefik where the node-exporter are running
+              networks:
+                app_net: "{{ {'ipv4_address': dc_prometheus_net_ip} if dc_prometheus_net_ip is defined and dc_prometheus_net_ip | length > 0 and not dc_prometheus_standalone | default(false) | bool else omit }}"
+                traefik_net: "{{ {'ipv4_address': dc_traefik_net_prometheus_ip} if dc_traefik_net_prometheus_ip is defined and dc_traefik_net_prometheus_ip | length > 0 and dc_prometheus_standalone | default(false) | bool else omit }}"
+              ports:
+                - "{{ dc_prometheus_port }}:9090"
+              volumes:
+                - "{{ appdata_type_path }}/data:/prometheus"
+                - "{{ appdata_type_path }}/prometheus-docker-config.yml:/etc/prometheus/prometheus.yml"
+                # - "{{ secrets_type_path }}:/run/secrets"
+              # environment:
+              labels:
+                traefik.enable: "true"
+                # * HTTP Routers
+                traefik.http.routers.prometheus-rtr.entrypoints: "websecure"
+                traefik.http.routers.prometheus-rtr.rule: "Host(`prometheus.{{ domain_1 }}`)"
+                # * Middlewares
+                traefik.http.routers.prometheus-rtr.middlewares: "chain-basic-auth@file" # For Basic HTTP Authentication
+                # * HTTP Services
+                traefik.http.routers.prometheus-rtr.service: "prometheus-svc"
+                traefik.http.services.prometheus-svc.loadbalancer.server.port: "{{ dc_prometheus_port }}"
+
+
+# ! --------------------------- Notes --------------------------- ! #

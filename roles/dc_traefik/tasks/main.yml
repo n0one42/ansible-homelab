@@ -169,7 +169,7 @@
                     # - --entrypoints.websecure.http.tls.domains[1].sans=*.$DOMAINNAME_KHUB # Pulls wildcard cert for second domain
                     - --providers.file.directory=/rules # Load dynamic configuration from one or more .toml or .yml files in a directory
                     - --providers.file.watch=true # Only works on top level files in the rules folder
-                    - "{{ '--certificatesResolvers.dns-cloudflare.acme.caServer=https://acme-staging-v02.api.letsencrypt.org/directory' if dc_traefik_acme_staging_mode | bool else omit }}" # ? LetsEncrypt Staging Server - uncomment when testing
+                    - "{{ '--certificatesResolvers.dns-cloudflare.acme.caServer=https://acme-staging-v02.api.letsencrypt.org/directory' if dc_traefik_acme_staging_mode | bool else '' }}" # ? LetsEncrypt Staging Server - uncomment when testing
                     - --certificatesResolvers.dns-cloudflare.acme.storage=/acme.json
                     - --certificatesResolvers.dns-cloudflare.acme.dnsChallenge.provider=cloudflare
                     - --certificatesResolvers.dns-cloudflare.acme.dnsChallenge.resolvers=1.1.1.1:53,1.0.0.1:53
@@ -190,8 +190,8 @@
                     # - --metrics.influxdb2.pushInterval=30s
                     # - --metrics.influxdb2.additionallabels.host=$DOMAINNAME_1
                     # * ------------------- Plugins ------------------- * #
-                    - "{{ '--experimental.plugins.crowdsec-bouncer-traefik-plugin.modulename=github.com/maxlerebourg/crowdsec-bouncer-traefik-plugin' if dc_traefik_crowdsec_enabled | bool else omit }}"
-                    - "{{ '--experimental.plugins.crowdsec-bouncer-traefik-plugin.version=v1.3.3' if dc_traefik_crowdsec_enabled | bool else omit }}"
+                    - "{{ '--experimental.plugins.crowdsec-bouncer-traefik-plugin.modulename=github.com/maxlerebourg/crowdsec-bouncer-traefik-plugin' if dc_traefik_crowdsec_enabled | bool else '' }}"
+                    - "{{ '--experimental.plugins.crowdsec-bouncer-traefik-plugin.version=v1.3.3' if dc_traefik_crowdsec_enabled | bool else '' }}"
                   networks:
                     traefik_net: "{{ {'ipv4_address': dc_traefik_net_ip} if dc_traefik_net_ip is defined and dc_traefik_net_ip | length > 0 else {} }}"
                     socketproxy_net: "{{ {'ipv4_address': dc_traefik_socketproxy_net_app_ip} if dc_traefik_socketproxy_net_app_ip is defined and dc_traefik_socketproxy_net_app_ip | length > 0 else {} }}"
@@ -235,4 +235,5 @@
                     # traefik.http.routers.traefik-rtr.middlewares: "chain-no-auth@file" # For No Authentication
                     # traefik.http.routers.traefik-rtr.middlewares: "chain-basic-auth@file" # For Basic HTTP Authentication
                     # traefik.http.routers.traefik-rtr.middlewares: "chain-oauth@file" # For Google OAuth
-                    traefik.http.routers.traefik-rtr.middlewares: "chain-authelia@file" # For Authelia Authentication
+                    # traefik.http.routers.traefik-rtr.middlewares: "chain-authelia@file" # For Authelia Authentication
+                    traefik.http.routers.traefik-rtr.middlewares: "{{ 'chain-authelia@file' if dc_traefik_type == 'ingress' else 'chain-basic-auth@file' }}"

@@ -105,16 +105,34 @@
 
 
         - name: Install docker compose authelia with inline definition
+          vars:
+            docker_environment: >-
+              {{
+                {
+                  "TZ": timezone,
+                  "AUTHELIA_IDENTITY_VALIDATION_RESET_PASSWORD_JWT_SECRET_FILE": "/run/secrets/authelia_jwt_secret",
+                  "AUTHELIA_SESSION_SECRET_FILE": "/run/secrets/authelia_session_secret",
+                  "AUTHELIA_STORAGE_ENCRYPTION_KEY_FILE": "/run/secrets/authelia_storage_encryption_key"
+                }
+                | combine(
+                  {
+                    "AUTHELIA_SESSION_REDIS_PASSWORD_FILE": "/run/secrets/redis_pw",
+                    "AUTHELIA_STORAGE_POSTGRES_PASSWORD_FILE": "/run/secrets/db_user_pw"
+                  }
+                  if not dc_authelia_use_sqlite else {}
+                )
+              }}
+
           community.docker.docker_compose_v2:
             project_name: "{{ app_name }}"  # eg: authelia
             definition:
               # ! --------------------------- Networks --------------------------- ! #
               networks:
-                traefik_net:
-                  name: "{{ dc_traefik_net_name }}"  # eg: traefik_net
-                  external: true  # indicating that it's a pre-existing network not managed by this Docker Compose file.
                 app_net:
                   name: "{{ app_name }}_net"  # eg: authelia_net
+                  external: true  # indicating that it's a pre-existing network not managed by this Docker Compose file.
+                traefik_net:
+                  name: "{{ dc_traefik_net_name }}"  # eg: traefik_net
                   external: true  # indicating that it's a pre-existing network not managed by this Docker Compose file.
 
               # * ---------------------------- App ------------------------------ * #
@@ -130,21 +148,15 @@
                   user: "{{ dc_authelia_u_g_id }}:{{ dc_authelia_u_g_id }}"
                   networks:
                     # default: # testing only
-                    traefik_net: "{{ {'ipv4_address': dc_authelia_traefik_net_ip} if dc_authelia_traefik_net_ip is defined and dc_authelia_traefik_net_ip | length > 0 else {} }}"
                     app_net: "{{ {'ipv4_address': dc_authelia_net_app_ip} if dc_authelia_net_app_ip is defined and dc_authelia_net_app_ip | length > 0 else {} }}"
+                    traefik_net: "{{ {'ipv4_address': dc_authelia_traefik_net_ip} if dc_authelia_traefik_net_ip is defined and dc_authelia_traefik_net_ip | length > 0 else {} }}"
                   # ports:
                   #   - "{{ dc_authelia_port }}:9091"
                   volumes:
                     - "{{ appdata_type_path }}/config:/config"
                     - "{{ logs_type_path }}/authelia.log:/config/authelia.log"
                     - "{{ secrets_type_path }}:/run/secrets"
-                  environment:
-                    - TZ="{{ timezone }}"
-                    - AUTHELIA_IDENTITY_VALIDATION_RESET_PASSWORD_JWT_SECRET_FILE=/run/secrets/authelia_jwt_secret
-                    - AUTHELIA_SESSION_SECRET_FILE=/run/secrets/authelia_session_secret
-                    - AUTHELIA_STORAGE_ENCRYPTION_KEY_FILE=/run/secrets/authelia_storage_encryption_key
-                    - "{{ 'AUTHELIA_SESSION_REDIS_PASSWORD_FILE=/run/secrets/redis_pw' if not dc_authelia_use_sqlite | bool else omit }}"
-                    - "{{ 'AUTHELIA_STORAGE_POSTGRES_PASSWORD_FILE=/run/secrets/db_user_pw' if not dc_authelia_use_sqlite | bool else omit }}"
+                  environment: "{{ docker_environment }}"
                   labels:
                     traefik.enable: "true"
                     ## HTTP Routers
