@@ -67,8 +67,8 @@
               networks:
                 app_net: "{{ {'ipv4_address': dc_nodeexporter_net_ip} if dc_nodeexporter_net_ip is defined and dc_nodeexporter_net_ip | length > 0 and not dc_nodeexporter_standalone | default(false) | bool else omit }}"
                 traefik_net: "{{ {'ipv4_address': dc_traefik_net_nodeexporter_ip} if dc_traefik_net_nodeexporter_ip is defined and dc_traefik_net_nodeexporter_ip | length > 0 else {} }}"
-              ports:
-                - "{{ dc_nodeexporter_port }}:9100"
+              # ports:
+              #   - "{{ dc_nodeexporter_port }}:9100"
               volumes:
                 - /proc:/host/proc:ro
                 - /sys:/host/sys:ro

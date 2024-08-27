@@ -81,8 +81,8 @@
               networks:
                 app_net: "{{ {'ipv4_address': dc_prometheus_net_ip} if dc_prometheus_net_ip is defined and dc_prometheus_net_ip | length > 0 and not dc_prometheus_standalone | default(false) | bool else omit }}"
                 traefik_net: "{{ {'ipv4_address': dc_traefik_net_prometheus_ip} if dc_traefik_net_prometheus_ip is defined and dc_traefik_net_prometheus_ip | length > 0 else {} }}"
-              ports:
-                - "{{ dc_prometheus_port }}:9090"
+              # ports:
+              #   - "{{ dc_prometheus_port }}:9090"
               volumes:
                 - "{{ appdata_type_path }}/data:/prometheus"
                 - "{{ appdata_type_path }}/prometheus-docker-config.yml:/etc/prometheus/prometheus.yml"
@@ -92,7 +92,7 @@
                 traefik.enable: "true"
                 # * HTTP Routers
                 traefik.http.routers.prometheus-rtr.entrypoints: "websecure"
-                traefik.http.routers.prometheus-rtr.rule: "Host(`prometheus.{{ domain_1 }}`)"
+                traefik.http.routers.prometheus-rtr.rule: "Host(`prometheus-{{ dc_traefik_type }}.{{ domain_1 }}`)"
                 # * Middlewares
                 traefik.http.routers.prometheus-rtr.middlewares: "chain-basic-auth@file" # For Basic HTTP Authentication
                 # * HTTP Services

@@ -84,7 +84,7 @@
                 traefik.enable: "true"
                 # * HTTP Routers
                 traefik.http.routers.loki-rtr.entrypoints: "websecure"
-                traefik.http.routers.loki-rtr.rule: "Host(`loki.{{ domain_1 }}`)"
+                traefik.http.routers.loki-rtr.rule: "Host(`loki-{{ dc_traefik_type }}.{{ domain_1 }}`)"
                 # * Middlewares
                 traefik.http.routers.loki-rtr.middlewares: "chain-basic-auth@file" # For Basic HTTP Authentication
                 # * HTTP Services

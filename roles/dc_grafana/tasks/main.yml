@@ -39,8 +39,8 @@
       vars:
         dc_loki_create_with_userns: "{{ dc_grafana_loki_create_with_userns }}"
         dc_loki_image_version: "{{ dc_grafana_loki_image_version }}"
-        dc_loki_port: "{{ dc_grafana_loki_port }}"
         dc_loki_net_ip: "{{ dc_grafana_net_loki_ip }}"
+        dc_loki_port: "{{ dc_grafana_loki_port }}"
 
 
   # * ------------------------ Grafana Promtail ------------------------ * #
@@ -51,6 +51,7 @@
         dc_promtail_create_with_userns: "{{ dc_grafana_promtail_create_with_userns }}"
         dc_promtail_image_version: "{{ dc_grafana_promtail_image_version }}"
         dc_promtail_net_ip: "{{ dc_grafana_net_promtail_ip }}"
+        dc_promtail_port: "{{ dc_grafana_promtail_port }}"
 
 
   # * ------------------------ Grafana Node Exporter ------------------------ * #
@@ -60,8 +61,8 @@
       vars:
         dc_nodeexporter_create_with_userns: "{{ dc_grafana_nodeexporter_create_with_userns }}"
         dc_nodeexporter_image_version: "{{ dc_grafana_nodeexporter_image_version }}"
-        dc_nodeexporter_port: "{{ dc_grafana_nodeexporter_port }}"
         dc_nodeexporter_net_ip: "{{ dc_grafana_net_nodeexporter_ip }}"
+        dc_nodeexporter_port: "{{ dc_grafana_nodeexporter_port }}"
 
 
   # * ------------------------ Grafana Prometheus ------------------------ * #
@@ -71,8 +72,8 @@
       vars:
         dc_prometheus_create_with_userns: "{{ dc_grafana_prometheus_create_with_userns }}"
         dc_prometheus_image_version: "{{ dc_grafana_prometheus_image_version }}"
-        dc_prometheus_port: "{{ dc_grafana_prometheus_port }}"
         dc_prometheus_net_ip: "{{ dc_grafana_net_prometheus_ip }}"
+        dc_prometheus_port: "{{ dc_grafana_prometheus_port }}"
 
 
   # * ----------------------- Grafana App ------------------------- *

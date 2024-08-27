@@ -254,7 +254,7 @@ dc_grafana_db_port: 5432
 # * >>> Container variables
 dc_grafana_loki_create_with_userns: true
 dc_grafana_loki_image_version: "2.9.2"
-dc_grafana_loki_port: 9090
+dc_grafana_loki_port: 3100
 
 ## ? Environment variables if used in standalone mode (external promtail)
 dc_loki_standalone: false
@@ -264,6 +264,7 @@ dc_loki_standalone: false
 dc_grafana_promtail_create_with_userns: true
 dc_grafana_promtail_image_version: "2.9.2"
 dc_grafana_promtail_port: 9080
+dc_grafana_promtail_grpc_port: 9043
 
 ## ? Environment variables if used in standalone mode (external promtail)
 dc_promtail_standalone: false
