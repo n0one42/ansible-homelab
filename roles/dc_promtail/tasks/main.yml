@@ -33,20 +33,28 @@
     - name: Create promtail for --> {{ app_name }}
       vars:
         container_type: "promtail" # => app, db, redis, loki, promtail
-        appdata_type_path: "{{ docker_appdata }}/{{ app_name }}/{{ container_type }}" # eg: grafana/promtail
-        secrets_type_path: "{{ docker_secrets }}/{{ app_name }}/{{ container_type }}"
-        logs_type_path: "{{ docker_logs }}/{{ app_name }}"
         user: "{{ (dc_promtail_create_with_userns | bool) | ternary(dc_promtail_u_g_id + 100000, dc_promtail_u_g_id) }}"
         group: "{{ (dc_promtail_create_with_userns | bool) | ternary(dc_promtail_u_g_id + 100000, dc_promtail_u_g_id) }}"
       block:
-        - name: '[Required] container_init role'
+        - name: Debug app_name
+          ansible.builtin.debug:
+            msg: "{{ app_name }}"
+
+        - name: Debug app_name extension
+          ansible.builtin.debug:
+            msg: "{{ app_name }}-promtail"
+
+        - name: '[Required] filesystem_manager role'
           ansible.builtin.import_role:
-            name: container_init
+            name: filesystem_manager
           vars:
-            container_init_templates_to_copy:
+            filesystem_manager_templates_to_copy:
               - src: "{{ ansible_hostname }}/promtail-docker-config.yml.j2"
+                filename: "promtail-docker-config.yml"
                 dest: "{{ appdata_type_path }}/promtail-docker-config.yml"
-          notify: Restart container
+            filesystem_manager_give_full_read_access_to_path:
+              - path: "{{ docker_logs }}"
+              - path: /var/log
 
         - name: Install docker compose promtail with inline definition
           vars:
@@ -115,50 +123,6 @@
                     traefik.http.routers.promtail-rtr.service: "promtail-svc"
                     traefik.http.services.promtail-svc.loadbalancer.server.port: "{{ dc_promtail_port }}"
 
-        - name: ACL Permissions
-          block:
-            - name: Install ACL package
-              ansible.builtin.package:
-                name: acl
-                state: present
-
-            - name: Set ACL for dc_promtail_u_g_id on /opt/docker/logs
-              ansible.posix.acl:
-                path: /opt/docker/logs
-                entity: "{{ user }}"
-                etype: user
-                permissions: r-x
-                state: present
-                recurse: true
-                default: true
-
-            - name: Set ACL for dc_promtail_u_g_id on /opt/docker/logs
-              ansible.posix.acl:
-                path: /opt/docker/logs
-                entity: "{{ user }}"
-                etype: user
-                permissions: r-x
-                state: present
-                recurse: true
-
-            - name: Set ACL for dc_promtail_u_g_id on /var/log
-              ansible.posix.acl:
-                path: /var/log
-                entity: "{{ user }}"
-                etype: user
-                permissions: r-x
-                state: present
-                recurse: true
-                default: true
-
-            - name: Set ACL for dc_promtail_u_g_id on /var/log
-              ansible.posix.acl:
-                path: /var/log
-                entity: "{{ user }}"
-                etype: user
-                permissions: r-x
-                state: present
-                recurse: true
 
 # ! --------------------------- Notes --------------------------- ! #
 # Depending on the logs wanted, it is best to use this container as root. Since this will not be exposed, this should be acceptable.

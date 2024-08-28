@@ -18,29 +18,29 @@
           - subnet: "{{ dc_grafana_net_cidr }}"
 
 
-  # # * ------------------------ Grafana DB ------------------------ * #
-  #   - name: Include postgresql role
-  #     ansible.builtin.import_role:
-  #       name: dc_postgresql_bitnami
-  #     vars:
-  #       dc_postgresql_bitnami_create_with_userns: "{{ dc_grafana_db_create_with_userns }}"
-  #       dc_postgresql_bitnami_image_version: "{{ dc_grafana_db_image_version }}"
-  #       dc_postgresql_bitnami_db_superuser_pw: "{{ dc_grafana_db_superuser_pw }}"
-  #       dc_postgresql_bitnami_db_name: "{{ dc_grafana_db_name }}"
-  #       dc_postgresql_bitnami_db_user_name: "{{ dc_grafana_db_user_name }}"
-  #       dc_postgresql_bitnami_db_port: "{{ dc_grafana_db_port }}"
-  #       dc_postgresql_bitnami_net_ip: "{{ dc_grafana_net_db_ip }}"
+  # * ------------------------ Grafana DB ------------------------ * #
+    - name: Include postgresql role
+      ansible.builtin.import_role:
+        name: dc_postgresql_bitnami
+      vars:
+        dc_postgresql_bitnami_create_with_userns: "{{ dc_grafana_db_create_with_userns }}"
+        dc_postgresql_bitnami_image_version: "{{ dc_grafana_db_image_version }}"
+        dc_postgresql_bitnami_db_superuser_pw: "{{ dc_grafana_db_superuser_pw }}"
+        dc_postgresql_bitnami_db_name: "{{ dc_grafana_db_name }}"
+        dc_postgresql_bitnami_db_user_name: "{{ dc_grafana_db_user_name }}"
+        dc_postgresql_bitnami_db_port: "{{ dc_grafana_db_port }}"
+        dc_postgresql_bitnami_net_ip: "{{ dc_grafana_net_db_ip }}"
 
 
-  # # * ------------------------ Grafana Loki ------------------------ * #
-  #   - name: Include loki role
-  #     ansible.builtin.import_role:
-  #       name: dc_loki
-  #     vars:
-  #       dc_loki_create_with_userns: "{{ dc_grafana_loki_create_with_userns }}"
-  #       dc_loki_image_version: "{{ dc_grafana_loki_image_version }}"
-  #       dc_loki_net_ip: "{{ dc_grafana_net_loki_ip }}"
-  #       dc_loki_port: "{{ dc_grafana_loki_port }}"
+  # * ------------------------ Grafana Loki ------------------------ * #
+    - name: Include loki role
+      ansible.builtin.import_role:
+        name: dc_loki
+      vars:
+        dc_loki_create_with_userns: "{{ dc_grafana_loki_create_with_userns }}"
+        dc_loki_image_version: "{{ dc_grafana_loki_image_version }}"
+        dc_loki_net_ip: "{{ dc_grafana_net_loki_ip }}"
+        dc_loki_port: "{{ dc_grafana_loki_port }}"
 
 
   # * ------------------------ Grafana Promtail ------------------------ * #
@@ -54,26 +54,26 @@
         dc_promtail_port: "{{ dc_grafana_promtail_port }}"
 
 
-  # # * ------------------------ Grafana Node Exporter ------------------------ * #
-  #   - name: Include node-exporter role
-  #     ansible.builtin.import_role:
-  #       name: dc_node-exporter
-  #     vars:
-  #       dc_nodeexporter_create_with_userns: "{{ dc_grafana_nodeexporter_create_with_userns }}"
-  #       dc_nodeexporter_image_version: "{{ dc_grafana_nodeexporter_image_version }}"
-  #       dc_nodeexporter_net_ip: "{{ dc_grafana_net_nodeexporter_ip }}"
-  #       dc_nodeexporter_port: "{{ dc_grafana_nodeexporter_port }}"
+  # * ------------------------ Grafana Node Exporter ------------------------ * #
+    - name: Include node-exporter role
+      ansible.builtin.import_role:
+        name: dc_node-exporter
+      vars:
+        dc_nodeexporter_create_with_userns: "{{ dc_grafana_nodeexporter_create_with_userns }}"
+        dc_nodeexporter_image_version: "{{ dc_grafana_nodeexporter_image_version }}"
+        dc_nodeexporter_net_ip: "{{ dc_grafana_net_nodeexporter_ip }}"
+        dc_nodeexporter_port: "{{ dc_grafana_nodeexporter_port }}"
 
 
-  # # * ------------------------ Grafana Prometheus ------------------------ * #
-  #   - name: Include prometheus role
-  #     ansible.builtin.import_role:
-  #       name: dc_prometheus
-  #     vars:
-  #       dc_prometheus_create_with_userns: "{{ dc_grafana_prometheus_create_with_userns }}"
-  #       dc_prometheus_image_version: "{{ dc_grafana_prometheus_image_version }}"
-  #       dc_prometheus_net_ip: "{{ dc_grafana_net_prometheus_ip }}"
-  #       dc_prometheus_port: "{{ dc_grafana_prometheus_port }}"
+  # * ------------------------ Grafana Prometheus ------------------------ * #
+    - name: Include prometheus role
+      ansible.builtin.import_role:
+        name: dc_prometheus
+      vars:
+        dc_prometheus_create_with_userns: "{{ dc_grafana_prometheus_create_with_userns }}"
+        dc_prometheus_image_version: "{{ dc_grafana_prometheus_image_version }}"
+        dc_prometheus_net_ip: "{{ dc_grafana_net_prometheus_ip }}"
+        dc_prometheus_port: "{{ dc_grafana_prometheus_port }}"
 
 
   # * ----------------------- Grafana App ------------------------- *

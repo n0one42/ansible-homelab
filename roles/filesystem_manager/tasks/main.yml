@@ -1,0 +1,78 @@
+---
+# tasks file for roles/filesystem_manager
+# New and combined version for all file management parts but is W.I.P. for now
+
+- name: Create base directory --> {{ app_name }}
+  ansible.builtin.file:
+    path: "{{ appdata_base_path }}"
+    state: directory
+    owner: root
+    group: root
+    mode: '0555'  # dr-xr-xr-x
+
+- name: Create sub-directory --> {{ app_name + '/' + container_type }}
+  ansible.builtin.file:
+    path: "{{ appdata_type_path }}"
+    state: directory
+    owner: "{{ user }}" # 22025 # with userns --> 122025
+    group: "{{ group }}" # 22025 # with userns --> 122025
+    mode: '0550'  # dr-xr-x---
+
+- name: Copy template files
+  when: filesystem_manager_templates_to_copy | default([]) | length > 0
+  ansible.builtin.template:
+    src: "{{ item.src }}"
+    dest: "{{ item.dest }}"
+    owner: "{{ user }}"
+    group: "{{ group }}"
+    mode: "{{ item.mode | default('0440') }}"  # 0550 for executable
+    force: "{{ item.force | default(true) }}"
+  loop: "{{ filesystem_manager_templates_to_copy | default([]) }}"
+  notify: Restart container
+
+- name: Set sub-directory default ACL --> {{ app_name + '/' + container_type }}
+  ansible.posix.acl:
+    path: "{{ appdata_type_path }}"
+    entity: "{{ pve_vm_primary_user_name }}"  # My real user
+    etype: user
+    permissions: rwx
+    state: present
+    recurse: true
+    default: true
+    recalculate_mask: no_mask
+
+- name: Set sub-directory ACL for existing files in --> {{ app_name + '/' + container_type }}
+  ansible.posix.acl:
+    path: "{{ appdata_type_path }}"
+    entity: "{{ pve_vm_primary_user_name }}"  # My real user
+    etype: user
+    permissions: rwx
+    state: present
+    recurse: true
+    recalculate_mask: no_mask
+
+- name: Set read access on specified paths
+  when: filesystem_manager_give_full_read_access_to_path | default([]) | length > 0
+  block:
+    - name: Set default ACL for specified paths
+      ansible.posix.acl:
+        path: "{{ item.path }}"
+        entity: "{{ user }}"
+        etype: user
+        permissions: r-x
+        state: present
+        recurse: true
+        default: true
+        recalculate_mask: no_mask
+      loop: "{{ filesystem_manager_give_full_read_access_to_path }}"
+
+    - name: Set ACL for existing files in specified paths
+      ansible.posix.acl:
+        path: "{{ item.path }}"
+        entity: "{{ user }}"
+        etype: user
+        permissions: r-x
+        state: present
+        recurse: true
+        recalculate_mask: no_mask
+      loop: "{{ filesystem_manager_give_full_read_access_to_path }}"

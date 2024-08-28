@@ -12,6 +12,10 @@
 # *                                     Common Variables                                     #
 # ? ######################################################################################## #
 
+pve_vm_primary_user_name: "{{ primary_user_name | default('wasd') }}"
+pve_vm_primary_user_uid: "{{ primary_user_uid | default(1022) }}"
+pve_vm_primary_user_gid: "{{ primary_user_gid | default(1022) }}"
+
 timezone: "America/New_York"
 system_locale: "en_US.UTF-8"
 system_language: "en_US.UTF-8"
@@ -41,6 +45,12 @@ docker_logs: "{{ docker_home }}/logs"        # Log files
 docker_scripts: "{{ docker_home }}/scripts"  # Utility scripts
 docker_secrets: "{{ docker_home }}/secrets"  # Sensitive data
 docker_compose: "{{ docker_home }}/compose"  # compose datafiles
+
+appdata_base_path: "{{ docker_appdata }}/{{ app_name }}"
+appdata_type_path: "{{ docker_appdata }}/{{ app_name }}/{{ container_type }}" # eg: appdata/grafana/app ; appdata/grafana/promtail
+secrets_base_path: "{{ docker_secrets }}/{{ app_name }}"
+secrets_type_path: "{{ docker_secrets }}/{{ app_name }}/{{ container_type }}" # eg: secrets/grafana/app ; secrets/grafana/promtail
+logs_type_path: "{{ docker_logs }}/{{ app_name }}/{{ container_type }}" # eg: logs/grafana/app ; logs/grafana/promtail
 
 
 # ? ######################################################################################## #
