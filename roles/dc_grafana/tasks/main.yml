@@ -98,13 +98,18 @@
               - var_name: dc_grafana_admin_pw
                 content: "{{ dc_grafana_admin_pw }}"
 
-        - name: Include container_init role
+        - name: '[Required] filesystem_manager role'
           ansible.builtin.import_role:
-            name: container_init
+            name: filesystem_manager
           vars:
-            container_init_appdata_directories_to_create:
+            filesystem_manager_appdata_directories_to_create:
               - "data"
+              - "config/provisioning/datasources"
 
+            filesystem_manager_templates_to_copy:
+              - src: "ds.yml.j2"
+                dest: "{{ appdata_type_path }}/config/provisioning/datasources/ds.yml"
+                mode: '0660'
 
         - name: Install docker compose grafana with inline definition
           community.docker.docker_compose_v2:
@@ -133,13 +138,15 @@
                   networks:
                     app_net: "{{ {'ipv4_address': dc_grafana_net_app_ip} if dc_grafana_net_app_ip is defined and dc_grafana_net_app_ip | length > 0 else {} }}"
                     traefik_net: "{{ {'ipv4_address': dc_traefik_net_grafana_ip} if dc_traefik_net_grafana_ip is defined and dc_traefik_net_grafana_ip | length > 0 else {} }}"
-                  ports:
-                    - "{{ dc_grafana_port }}:3000"
+                  # ports:
+                  #   - "{{ dc_grafana_port }}:3000"
                   volumes:
                     - "{{ appdata_type_path }}/data:/var/lib/grafana"
+                    - "{{ appdata_type_path }}/config/provisioning/datasources/ds.yml:/etc/grafana/provisioning/datasources/ds.yml"
                     - "{{ secrets_type_path }}:/run/secrets"
                   environment:
                     GF_INSTALL_PLUGINS: "grafana-clock-panel,grafana-simple-json-datasource,grafana-worldmap-panel,grafana-piechart-panel"
+                    GF_PATHS_CONFIG: "/etc/grafana/grafana.ini"
                     GF_PATHS_PROVISIONING: "/etc/grafana/provisioning"
                     GF_SECURITY_ADMIN_USER__FILE: "/run/secrets/dc_grafana_admin_user"
                     GF_SECURITY_ADMIN_PASSWORD__FILE: "/run/secrets/dc_grafana_admin_pw"
@@ -160,34 +167,6 @@
                     ## HTTP Services
                     traefik.http.routers.grafana-rtr.service: "grafana-svc"
                     traefik.http.services.grafana-svc.loadbalancer.server.port: "{{ dc_grafana_port }}"
-                  entrypoint:
-                    - sh
-                    - -euc
-                    - |
-                      mkdir -p /etc/grafana/provisioning/datasources
-                      cat <<EOF > /etc/grafana/provisioning/datasources/ds.yaml
-                      apiVersion: 1
-                      datasources:
-                      - name: Loki
-                        type: loki
-                        access: proxy
-                        orgId: 1
-                        url: http://{{ app_name }}-loki:{{ dc_grafana_loki_port }}
-                        basicAuth: false
-                        isDefault: true
-                        version: 1
-                        editable: false
-                      - name: Prometheus
-                        type: prometheus
-                        access: proxy
-                        orgId: 1
-                        url: http://{{ app_name }}-prometheus:9090
-                        basicAuth: false
-                        isDefault: false
-                        version: 1
-                        editable: false
-                      EOF
-                      /run.sh
 
 
 # Cleaning
@@ -229,3 +208,26 @@
 #     Node Exporter on vm1 to expose metrics
 #     Loki on vm2 to receive and store logs from Promtail
 #     Prometheus on vm2 to scrape and store metrics from Node Exporter
+
+# ### Grafana Handling of Multiple Datasource Files
+
+# When you create multiple datasource configuration files in Grafana, Grafana will read and merge these configurations during startup or when it reloads its configuration. Here’s how it works:
+
+# #### Multiple Files, Different Datasources
+# - If you have multiple files, each defining a different datasource, Grafana will process each file separately and add all defined datasources to its configuration.
+#   Each datasource defined in a file is added as a separate entry in Grafana, provided that they have unique `name` fields.
+
+# #### Multiple Files, Same Datasource Name
+# - If you have multiple files that define a datasource with the same `name`, Grafana will attempt to merge these configurations. However, the behavior can vary depending on how the settings are specified:
+#   - **Identical settings**: If the datasource names and all other settings are identical, Grafana will treat it as a single datasource and there will be no conflicts.
+#   - **Different settings**: If the settings (such as `url`, `access`, `basicAuth`, etc.) differ but the `name` is the same, Grafana may merge the configurations, but this can lead to unpredictable behavior.
+#     It’s generally recommended to avoid having multiple datasources with the same name but different settings.
+
+# ### Best Practices for Multiple Datasource Files
+# 1. **Unique Names**: Ensure that each datasource has a unique `name`. This avoids conflicts and ensures each datasource is properly registered in Grafana.
+
+# 2. **Organize by Function**: If you have different types of datasources (e.g., Prometheus, Loki, InfluxDB), you can organize your files by datasource type. For example, you might have `prometheus.yaml`, `loki.yaml`, and `influxdb.yaml`.
+
+# 3. **Avoid Redundancy**: If possible, avoid defining the same datasource across multiple files with different settings. This can lead to confusion and potential conflicts.
+
+# 4. **Reloading**: Grafana supports reloading datasource configurations without needing to restart the service. This means you can add new datasources by simply placing a new configuration file in the provisioning directory, and Grafana will pick it up.

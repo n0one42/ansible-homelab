@@ -211,10 +211,12 @@ dc_it_tools_image_version: "latest"
 dc_traefik_container_name: "traefik"
 dc_traefik_create_with_userns: true
 dc_traefik_image_version: "3.1"
-dc_traefik_log_level: "INFO"
+dc_traefik_log_level: "WARN" # (Default: error) DEBUG, INFO, WARN, ERROR, FATAL, PANIC
+
 
 dc_traefik_acme_staging_mode: true  # true = LetsEncrypt Staging Server - false = LetsEncrypt Production Server
 dc_traefik_crowdsec_enabled: true
+dc_traefik_crowdsec_log_level: "WARN"
 dc_traefik_crowdsec_bouncer_key: "" # Empty for generated key
 
 dc_traefik_basic_auth_user: "{{ demo_auth_user }}"

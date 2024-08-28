@@ -36,21 +36,12 @@
         user: "{{ (dc_promtail_create_with_userns | bool) | ternary(dc_promtail_u_g_id + 100000, dc_promtail_u_g_id) }}"
         group: "{{ (dc_promtail_create_with_userns | bool) | ternary(dc_promtail_u_g_id + 100000, dc_promtail_u_g_id) }}"
       block:
-        - name: Debug app_name
-          ansible.builtin.debug:
-            msg: "{{ app_name }}"
-
-        - name: Debug app_name extension
-          ansible.builtin.debug:
-            msg: "{{ app_name }}-promtail"
-
         - name: '[Required] filesystem_manager role'
           ansible.builtin.import_role:
             name: filesystem_manager
           vars:
             filesystem_manager_templates_to_copy:
               - src: "{{ ansible_hostname }}/promtail-docker-config.yml.j2"
-                filename: "promtail-docker-config.yml"
                 dest: "{{ appdata_type_path }}/promtail-docker-config.yml"
             filesystem_manager_give_full_read_access_to_path:
               - path: "{{ docker_logs }}"

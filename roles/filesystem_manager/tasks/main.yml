@@ -10,13 +10,23 @@
     group: root
     mode: '0555'  # dr-xr-xr-x
 
-- name: Create sub-directory --> {{ app_name + '/' + container_type }}
+- name: Create container_type sub-directory --> {{ app_name + '/' + container_type }}
   ansible.builtin.file:
     path: "{{ appdata_type_path }}"
     state: directory
     owner: "{{ user }}" # 22025 # with userns --> 122025
     group: "{{ group }}" # 22025 # with userns --> 122025
     mode: '0550'  # dr-xr-x---
+
+- name: Create container_type specific directories with correct permissions
+  ansible.builtin.file:
+    path: "{{ appdata_type_path }}/{{ item }}"
+    state: directory
+    owner: "{{ user }}" # 22025 # with userns --> 122025
+    group: "{{ group }}" # 22025 # with userns --> 122025
+    mode: "{{ item.mode | default('0770') }}" # drxxrxx---
+    recurse: "{{ item.recurse | default(false) }}"
+  loop: "{{ filesystem_manager_appdata_directories_to_create | default([]) }}"
 
 - name: Copy template files
   when: filesystem_manager_templates_to_copy | default([]) | length > 0

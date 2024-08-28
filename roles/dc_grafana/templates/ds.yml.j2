@@ -1,0 +1,20 @@
+apiVersion: 1
+datasources:
+- name: Loki
+  type: loki
+  access: proxy
+  orgId: 1
+  url: http://{{ app_name }}-loki:{{ dc_grafana_loki_port }}
+  basicAuth: false
+  isDefault: true
+  version: 1
+  editable: false
+- name: Prometheus
+  type: prometheus
+  access: proxy
+  orgId: 1
+  url: http://{{ app_name }}-prometheus:9090
+  basicAuth: false
+  isDefault: false
+  version: 1
+  editable: false

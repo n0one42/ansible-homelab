@@ -145,11 +145,11 @@
                     # Allow these IPs to set the X-Forwarded-* headers - Cloudflare IPs: https://www.cloudflare.com/ips/
                     - --entrypoints.websecure.forwardedHeaders.trustedIPs={{ dc_traefik_cloudflare_ip_ranges }}{{ ',' + dc_traefik_local_ip_ranges if dc_traefik_local_ip_ranges is defined and dc_traefik_local_ip_ranges | length > 0 }}
                     - --log=true
-                    - --log.filePath=/logs/traefik.log  # (Default: stdout) # temp disabled for portainer output
-                    - --log.level=DEBUG # (Default: error) DEBUG, INFO, WARN, ERROR, FATAL, PANIC
+                    - --log.filePath=/logs/traefik.log  # (Default: stdout)
+                    - --log.level={{ dc_traefik_log_level }} # (Default: error) DEBUG, INFO, WARN, ERROR, FATAL, PANIC
                     - --accessLog=true
-                    - --accessLog.filePath=/logs/access.log # (Default: stdout) # temp disabled for portainer output
-                    - --accessLog.bufferingSize=100 # Configuring a buffer of 100 lines
+                    - --accessLog.filePath=/logs/access.log # (Default: stdout)
+                    # - --accessLog.bufferingSize=100 # Configuring a buffer of 100 lines
                     - --accessLog.filters.statusCodes=204-299,400-499,500-599
                     - --providers.docker=true
                     # - --providers.docker.endpoint=unix:///var/run/docker.sock # Use Docker Socket Proxy instead for improved security
