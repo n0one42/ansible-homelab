@@ -215,3 +215,18 @@ This project is licensed under the GPL-3.0 License - see the [LICENSE](https://g
 Community contributions and feedback are greatly appreciated.
 
 For more detailed information on each component, please navigate through the wiki pages using the sidebar.
+
+## Notes
+
+- What's Up Docker (WUD)
+- Graylog
+- Watchtower
+- WikiJs
+- Vaultwarden
+- Elasticsearch
+- Zabbix
+- Guacamole Server
+- Homepage
+- GitLab
+- OpnSense & ZenArmor (Sensei)
+- Webmin

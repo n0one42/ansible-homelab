@@ -32,8 +32,9 @@
         state: restarted
       changed_when: false
   roles:
-    - role: docker_provisioning
-    - role: dc_traefik
-      vars:
-        dc_traefik_container_name: traefik-metrics
-    - role: dc_grafana
+    - role: app_webmin
+    # - role: docker_provisioning
+    # - role: dc_traefik
+    #   vars:
+    #     dc_traefik_container_name: traefik-metrics
+    # - role: dc_grafana
