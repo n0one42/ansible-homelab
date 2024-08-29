@@ -133,6 +133,7 @@
         owner: "{{ user }}"
         group: "{{ group }}"
         mode: "{{ item.mode }}"
+        access_time: preserve
       no_log: true
       loop: "{{ container_init_secret_files_to_create | default([]) }}"
       when: item.content | length > 0

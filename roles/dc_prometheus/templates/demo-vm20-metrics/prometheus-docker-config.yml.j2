@@ -17,28 +17,24 @@ rule_files:
   # - "second_rules.yml"
 
 # A scrape configuration containing exactly one endpoint to scrape:
-# Here it's Prometheus itself.
 scrape_configs:
-  # # The job name is added as a label `job=<job_name>` to any timeseries scraped from this config.
-  # - job_name: "prometheus"
+  - job_name: "prometheus-{{ dc_traefik_type }}"
+    scheme: http
+    static_configs:
+      - targets: ["localhost:9090"]
+    metrics_path: /metrics
 
-  #   # metrics_path defaults to '/metrics'
-  #   # scheme defaults to 'http'.
-
-  #   static_configs:
-  #     - targets: ["localhost:9090"]
-
-  # # Scrape config for Node Exporter
-  # - job_name: 'external_node_exporter'
-  #   scheme: https
-  #   tls_config:
-  #     insecure_skip_verify: {{ dc_prometheus_nodeexporter_insecure_skip_verify }}
-  #   basic_auth:
-  #     username: "{{ dc_prometheus_nodeexporter_basic_auth_user }}"
-  #     password: "{{ dc_prometheus_nodeexporter_basic_auth_password }}"
-  #   static_configs:
-  #     - targets: ['nodeexporter-ingress.casalex.de']
-  #   metrics_path: /metrics
+  # Scrape config for Node Exporter
+  - job_name: 'node-exporter-ingress'
+    scheme: https
+    tls_config:
+      insecure_skip_verify: {{ dc_prometheus_nodeexporter_insecure_skip_verify }}
+    basic_auth:
+      username: "{{ dc_prometheus_nodeexporter_basic_auth_user }}"
+      password: "{{ dc_prometheus_nodeexporter_basic_auth_password }}"
+    static_configs:
+      - targets: ['nodeexporter-ingress.{{ domain_1 }}']
+    metrics_path: /metrics
 
   - job_name: "node-exporter-metrics"
     static_configs:

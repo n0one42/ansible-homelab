@@ -11,33 +11,23 @@
 - name: Create redis for --> {{ app_name }}
   vars:
     container_type: "redis" # => app, db, redis
-    appdata_type_path: "{{ docker_appdata }}/{{ app_name }}/{{ container_type }}" # eg: authelia/db
-    secrets_type_path: "{{ docker_secrets }}/{{ app_name }}/{{ container_type }}"
-    logs_type_path: "{{ docker_logs }}/{{ app_name }}"
     user: "{{ (dc_redis_bitnami_create_with_userns | bool) | ternary(1001 + 100000, 1001) }}"  # do not change for this container!
     group: "{{ (dc_redis_bitnami_create_with_userns | bool) | ternary(1001 + 100000, 1001) }}" # do not change for this container!
   block:
-    - name: '[Required] dc_secrets_manager role'
+    - name: '[Required] filesystem_manager role'
       ansible.builtin.import_role:
-        name: dc_secrets_manager
+        name: filesystem_manager
       vars:
-        dc_secrets_manager_passwords_to_generate:
+        filesystem_manager_appdata_directories_to_create:
+          - path: "data"
+        filesystem_manager_appdata_templates_to_copy:
+          - src: "{{ app_name }}/redis.conf.j2"
+            dest: "overrides.conf"
+        filesystem_manager_secret_files_to_create:
           - var_name: redis_pw
             content: "{{ redis_pw | default('') }}"
             type: redis_password
             set_facts: true  # optional - needed for the app
-            # overide_existing: true  # optional
-
-    - name: '[Required] container_init role'
-      ansible.builtin.import_role:
-        name: container_init
-      vars:
-        container_init_appdata_directories_to_create:
-          - "data"
-        container_init_secret_templates_to_copy:
-          - src: "redis/mydefault_redis.conf.j2"
-            dest: "overrides.conf"
-
 
     - name: Install docker compose redis bitnami with inline definition
       community.docker.docker_compose_v2:
@@ -73,7 +63,7 @@
               volumes:
                 - "{{ appdata_type_path }}/data:/bitnami/redis/data"
                 - "{{ secrets_type_path }}:/run/secrets"
-                # - "{{ secrets_type_path }}/overrides.conf:/opt/bitnami/redis/mounted-etc/overrides.conf"
+                # - "{{ appdata_type_path }}/overrides.conf:/opt/bitnami/redis/mounted-etc/overrides.conf"
               environment:
                 REDIS_PASSWORD_FILE: "/run/secrets/redis_pw"
                 ALLOW_EMPTY_PASSWORD: "no"

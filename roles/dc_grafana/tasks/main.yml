@@ -80,35 +80,27 @@
     - name: Create app --> {{ app_name }}
       vars:
         container_type: "app" # => app, db, redis
-        appdata_type_path: "{{ docker_appdata }}/{{ app_name }}/{{ container_type }}"
-        secrets_type_path: "{{ docker_secrets }}/{{ app_name }}/{{ container_type }}"
-        logs_type_path: "{{ docker_logs }}/{{ app_name }}/{{ container_type }}"
         user: "{{ (dc_grafana_create_with_userns | bool) | ternary(dc_grafana_u_g_id + 100000, dc_grafana_u_g_id) }}"
         group: "{{ (dc_grafana_create_with_userns | bool) | ternary(dc_grafana_u_g_id + 100000, dc_grafana_u_g_id) }}"
       block:
-        - name: '[Required] dc_secrets_manager role'
+        - name: '[Required] filesystem_manager role'
           ansible.builtin.import_role:
-            name: dc_secrets_manager
+            name: filesystem_manager
           vars:
-            dc_secrets_manager_passwords_to_generate:
+            filesystem_manager_appdata_directories_to_create:
+              - path: "data"
+              - path: "config/provisioning/datasources"
+            filesystem_manager_appdata_templates_to_copy:
+              - src: "ds.yml.j2"
+                dest: "config/provisioning/datasources/ds.yml"
+                mode: '0660'
+            filesystem_manager_secret_files_to_create:
               - var_name: db_user_pw
                 content: "{{ db_user_pw }}"
               - var_name: dc_grafana_admin_user
                 content: "{{ dc_grafana_admin_user }}"
               - var_name: dc_grafana_admin_pw
                 content: "{{ dc_grafana_admin_pw }}"
-
-        - name: '[Required] filesystem_manager role'
-          ansible.builtin.import_role:
-            name: filesystem_manager
-          vars:
-            filesystem_manager_appdata_directories_to_create:
-              - "data"
-              - "config/provisioning/datasources"
-            filesystem_manager_templates_to_copy:
-              - src: "ds.yml.j2"
-                dest: "{{ appdata_type_path }}/config/provisioning/datasources/ds.yml"
-                mode: '0660'
 
         - name: Install docker compose grafana with inline definition
           community.docker.docker_compose_v2:

@@ -1,21 +1,15 @@
 ---
 # handlers file for roles/dc_adguard
+- name: Restart container
+  community.docker.docker_container:
+    name: "{{ dc_adguard_container_name }}"
+    state: started
+    restart: true
+  when: dc_adguard_restart_container_on_template_change | default(true)
+
 - name: Restart systemd-resolved
   ansible.builtin.systemd:
     name: systemd-resolved
     state: restarted
     daemon_reload: true
   become: true
-
-- name: Restart docker
-  ansible.builtin.systemd:
-    name: docker
-    state: restarted
-    daemon_reload: true
-  become: true
-
-- name: Restart container
-  community.docker.docker_container:
-    name: "{{ dc_adguard_container_name }}"
-    state: started
-    restart: true

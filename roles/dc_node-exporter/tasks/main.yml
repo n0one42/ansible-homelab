@@ -15,9 +15,6 @@
 - name: Create nodeexporter for --> {{ app_name }}
   vars:
     container_type: "nodeexporter" # => app, db, redis, loki, promtail
-    appdata_type_path: "{{ docker_appdata }}/{{ app_name }}/{{ container_type }}" # eg: grafana/nodeexporter
-    secrets_type_path: "{{ docker_secrets }}/{{ app_name }}/{{ container_type }}"
-    logs_type_path: "{{ docker_logs }}/{{ app_name }}"
     user: "{{ (dc_nodeexporter_create_with_userns | bool) | ternary(dc_nodeexporter_u_g_id + 100000, dc_nodeexporter_u_g_id) }}"
     group: "{{ (dc_nodeexporter_create_with_userns | bool) | ternary(dc_nodeexporter_u_g_id + 100000, dc_nodeexporter_u_g_id) }}"
   block:
@@ -60,6 +57,7 @@
               userns_mode: "{{ 'host' if dc_nodeexporter_create_with_userns | bool == false else 'remap' }}"
               user: "{{ dc_nodeexporter_u_g_id }}:{{ dc_nodeexporter_u_g_id }}"
               command:
+                - --log.level={{ dc_grafana_nodeexporter_log_level }}
                 - --path.procfs=/host/proc
                 - --path.sysfs=/host/sys
                 - --collector.filesystem.ignored-mount-points

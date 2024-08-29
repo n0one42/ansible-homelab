@@ -15,9 +15,6 @@
 - name: Create prometheus for --> {{ app_name }}
   vars:
     container_type: "prometheus" # => app, db, redis, loki, promtail
-    appdata_type_path: "{{ docker_appdata }}/{{ app_name }}/{{ container_type }}" # eg: grafana/prometheus
-    secrets_type_path: "{{ docker_secrets }}/{{ app_name }}/{{ container_type }}"
-    logs_type_path: "{{ docker_logs }}/{{ app_name }}"
     user: "{{ (dc_prometheus_create_with_userns | bool) | ternary(dc_prometheus_u_g_id + 100000, dc_prometheus_u_g_id) }}"
     group: "{{ (dc_prometheus_create_with_userns | bool) | ternary(dc_prometheus_u_g_id + 100000, dc_prometheus_u_g_id) }}"
   block:
@@ -26,12 +23,11 @@
         name: filesystem_manager
       vars:
         filesystem_manager_appdata_directories_to_create:
-          - "data"
-        filesystem_manager_templates_to_copy:
+          - path: "data"
+        filesystem_manager_appdata_templates_to_copy:
           - src: "{{ ansible_hostname }}/prometheus-docker-config.yml.j2"
-            dest: "{{ appdata_type_path }}/prometheus-docker-config.yml"
+            dest: "prometheus-docker-config.yml"
             mode: '0660'
-
 
     - name: Install docker compose prometheus with inline definition
       vars:
@@ -71,11 +67,10 @@
               privileged: false
               userns_mode: "{{ 'host' if dc_prometheus_create_with_userns | bool == false else 'remap' }}"
               user: "{{ dc_prometheus_u_g_id }}:{{ dc_prometheus_u_g_id }}"
-              # command: -config.file=/etc/prometheus/prometheus.yml
               command:
                 - '--config.file=/etc/prometheus/prometheus.yml'
                 - '--storage.tsdb.path=/prometheus'
-                - '--log.level=debug'  # Set log level to debug
+                - '--log.level={{ dc_grafana_prometheus_log_level }}'
               extra_hosts:
                 - "nodeexporter-ingress.{{ domain_1 }}:{{ dc_dmz_net_vm10_ingress_ip }}"  # Has to be the internal ip of the traefik where the node-exporter are running
                 - "nodeexporter-application-1.{{ domain_1 }}:{{ dc_dmz_net_vm31_application_1_ip }}"  # Has to be the internal ip of the traefik where the node-exporter are running

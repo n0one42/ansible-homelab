@@ -15,9 +15,6 @@
 - name: Create loki for --> {{ app_name }}
   vars:
     container_type: "loki" # => app, loki, redis
-    appdata_type_path: "{{ docker_appdata }}/{{ app_name }}/{{ container_type }}" # eg: grafana/loki
-    secrets_type_path: "{{ docker_secrets }}/{{ app_name }}/{{ container_type }}"
-    logs_type_path: "{{ docker_logs }}/{{ app_name }}"
     user: "{{ (dc_loki_create_with_userns | bool) | ternary(dc_loki_u_g_id + 100000, dc_loki_u_g_id) }}"
     group: "{{ (dc_loki_create_with_userns | bool) | ternary(dc_loki_u_g_id + 100000, dc_loki_u_g_id) }}"
   block:
@@ -26,10 +23,10 @@
         name: filesystem_manager
       vars:
         filesystem_manager_appdata_directories_to_create:
-          - "data"
-        filesystem_manager_templates_to_copy:
+          - path: "data"
+        filesystem_manager_appdata_templates_to_copy:
           - src: "{{ ansible_hostname }}/loki-docker-config.yml.j2"
-            dest: "{{ appdata_type_path }}/loki-docker-config.yml"
+            dest: "loki-docker-config.yml"
             mode: '0660'
 
 

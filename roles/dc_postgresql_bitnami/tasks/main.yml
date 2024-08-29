@@ -12,17 +12,16 @@
 - name: Create postgresql db for --> {{ app_name }}
   vars:
     container_type: "db" # => app, db, redis
-    appdata_type_path: "{{ docker_appdata }}/{{ app_name }}/{{ container_type }}" # eg: authelia/db
-    secrets_type_path: "{{ docker_secrets }}/{{ app_name }}/{{ container_type }}"
-    logs_type_path: "{{ docker_logs }}/{{ app_name }}"
     user: "{{ (dc_postgresql_bitnami_create_with_userns | bool) | ternary(1001 + 100000, 1001) }}"  # do not change for this container!
     group: "{{ (dc_postgresql_bitnami_create_with_userns | bool) | ternary(1001 + 100000, 1001) }}" # do not change for this container!
   block:
-    - name: '[Required] dc_secrets_manager role'
+    - name: '[Required] filesystem_manager role'
       ansible.builtin.import_role:
-        name: dc_secrets_manager
+        name: filesystem_manager
       vars:
-        dc_secrets_manager_passwords_to_generate:
+        filesystem_manager_appdata_directories_to_create:
+          - path: "data"
+        filesystem_manager_secret_files_to_create:
           - var_name: db_user_pw
             content: "{{ db_user_pw | default('') }}"
             type: postgres_password
@@ -33,14 +32,6 @@
             type: postgres_password
             # set_facts: false  # optional
             # overide_existing: false  # optional
-
-    - name: '[Required] container_init role'
-      ansible.builtin.import_role:
-        name: container_init
-      vars:
-        container_init_appdata_directories_to_create:
-          - "data"
-
 
     - name: Install docker compose postgresql bitnami with inline definition
       community.docker.docker_compose_v2:

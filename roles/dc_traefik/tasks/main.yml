@@ -29,58 +29,45 @@
     - name: Create app
       vars:
         container_type: "app" # => app, db, redis
-        appdata_type_path: "{{ docker_appdata }}/{{ app_name }}/{{ container_type }}"
-        secrets_type_path: "{{ docker_secrets }}/{{ app_name }}/{{ container_type }}"
-        logs_type_path: "{{ docker_logs }}/{{ app_name }}/{{ container_type }}"
         user: "{{ (dc_traefik_create_with_userns | bool) | ternary(dc_traefik_u_g_id + 100000, dc_traefik_u_g_id) }}"
         group: "{{ (dc_traefik_create_with_userns | bool) | ternary(dc_traefik_u_g_id + 100000, dc_traefik_u_g_id) }}"
       block:
-        - name: Include container_init role
+        - name: '[Required] filesystem_manager role'
           ansible.builtin.import_role:
-            name: container_init
+            name: filesystem_manager
           vars:
-            container_init_appdata_directories_to_create:
-              - "rules"
-              - "plugins-storage"
-            container_init_custom_directories_to_create:
-              - path: "{{ logs_type_path }}"
-                owner: "{{ user }}"
-                group: "{{ group }}"
-                mode: "0550"
-            container_init_templates_in_directory_to_copy:
-              - src: "{{ playbook_dir | dirname }}/roles/dc_traefik/templates/shared"
-                dest: "{{ appdata_type_path }}/rules"
-              - src: "{{ playbook_dir | dirname }}/roles/dc_traefik/templates/{{ dc_traefik_type }}"
-                dest: "{{ appdata_type_path }}/rules"
-            # container_init_templates_to_copy:
-            #   - src: "traefik/chain-authelia.yml.j2"
-            #     dest: "{{ appdata_type_path }}/rules/chain-authelia.yml"
-            container_init_files_to_create:
-              - { dest: "{{ logs_type_path }}/traefik.log", owner: "{{ user }}", group: "{{ group }}", mode: "0660" }
-              - { dest: "{{ logs_type_path }}/access.log", owner: "{{ user }}", group: "{{ group }}", mode: "0660" }
-            container_init_secret_files_to_create:
+            filesystem_manager_appdata_directories_to_create:
+              - path: "rules"
+              - path: "plugins-storage"
+            filesystem_manager_appdata_files_to_touch:
               - filename: "acme.json"
-                content: ""
                 mode: "0600"
-              - filename: "basic_auth_credentials"
+            filesystem_manager_log_files_to_touch:
+              - filename: "traefik.log"
+              - filename: "access.log"
+            filesystem_manager_appdata_templates_in_directory_to_copy:
+              - src: "{{ playbook_dir | dirname }}/roles/dc_traefik/templates/shared"
+                dest: "rules"
+              - src: "{{ playbook_dir | dirname }}/roles/dc_traefik/templates/{{ dc_traefik_type }}"
+                dest: "rules"
+            filesystem_manager_secret_files_to_create:
+              - var_name: "basic_auth_credentials"
                 content: "{{ dc_traefik_basic_auth_user }}:{{ dc_traefik_basic_auth_password_hashed }}"
                 mode: "0440"
-              - filename: "dc_traefik_cf_dns_api_token"
+              - var_name: "dc_traefik_cf_dns_api_token"
                 content: "{{ dc_traefik_cf_dns_api_token }}" # pass it from the ansible vault
                 mode: "0440"
 
-        - name: '[Required] dc_secrets_manager role'
+        - name: '[Required] filesystem_manager role'
           ansible.builtin.import_role:
-            name: dc_secrets_manager
+            name: filesystem_manager
           vars:
-            dc_secrets_manager_passwords_to_generate:
-              - var_name: traefik_crowdsec_bouncer_key
+            filesystem_manager_secret_files_to_create:
+              - var_name: "traefik_crowdsec_bouncer_key"
                 content: "{{ traefik_crowdsec_bouncer_key | default('') }}"
-                type: crowdsec_bouncer_key
                 set_facts: true  # optional - needed for the app
                 # overide_existing: true  # optional
           when: dc_traefik_crowdsec_enabled | bool
-
 
         - name: Install docker compose traefik with inline definition
           vars:
@@ -213,9 +200,9 @@
                     # - /var/run/docker.sock:/var/run/docker.sock:ro # Enable if not using Socket Proxy
                     - "{{ appdata_type_path }}/rules:/rules" # Dynamic File Provider directory
                     - "{{ appdata_type_path }}/plugins-storage:/plugins-storage"
+                    - "{{ appdata_type_path }}/acme.json:/acme.json" # Certs File
                     - "{{ logs_type_path }}:/logs" # Traefik logs
                     - "{{ secrets_type_path }}:/run/secrets"
-                    - "{{ secrets_type_path }}/acme.json:/acme.json" # Certs File
                   environment:
                     TZ: "{{ timezone }}"
                     CF_DNS_API_TOKEN_FILE: /run/secrets/dc_traefik_cf_dns_api_token

@@ -30,26 +30,22 @@
     - name: Create app --> {{ app_name }}
       vars:
         container_type: "app" # => app, db, redis
-        appdata_type_path: "{{ docker_appdata }}/{{ app_name }}/{{ container_type }}"
-        secrets_type_path: "{{ docker_secrets }}/{{ app_name }}/{{ container_type }}"
-        logs_type_path: "{{ docker_logs }}/{{ app_name }}"
         user: "{{ (dc_adguard_create_with_userns | bool) | ternary(dc_adguard_u_g_id + 100000, dc_adguard_u_g_id) }}"
         group: "{{ (dc_adguard_create_with_userns | bool) | ternary(dc_adguard_u_g_id + 100000, dc_adguard_u_g_id) }}"
       block:
-        - name: '[Required] container_init role'
+        - name: '[Required] filesystem_manager role'
           ansible.builtin.import_role:
-            name: container_init
+            name: filesystem_manager
           vars:
-            container_init_appdata_directories_to_create:
-              - "config"
-              - "data"
-            container_init_templates_to_copy:
+            filesystem_manager_appdata_directories_to_create:
+              - path: "config"
+              - path: "data"
+            filesystem_manager_appdata_templates_to_copy:
               - src: "AdGuardHome.yaml.j2"
-                dest: "{{ appdata_type_path }}/config/AdGuardHome.yaml"
-                mode: "0600"
+                dest: "config/AdGuardHome.yaml"
+                mode: "0666"
                 force: "{{ dc_adguard_override_config_file }}"
           notify: Restart container
-
 
         - name: Install docker compose adguard with inline definition
           community.docker.docker_compose_v2:
@@ -97,7 +93,7 @@
                     - "1543:443/udp"
                     # # Dashboard
                     # - "3000:3000/tcp"
-                    # - "1080:80/tcp"
+                    # - "80:80/tcp"
                   cap_add:
                     # - "NET_ADMIN"
                     - "NET_BIND_SERVICE"
@@ -121,7 +117,7 @@
                     # traefik.http.routers.adguard-rtr.middlewares: "chain-no-auth@file" # For No Authentication
                     ## HTTP Services
                     traefik.http.routers.adguard-rtr.service: "adguard-svc"
-                    traefik.http.services.adguard-svc.loadbalancer.server.port: "80" # "{{ dc_adguard_port }}"
+                    traefik.http.services.adguard-svc.loadbalancer.server.port: "{{ dc_adguard_port }}" # "{{ dc_adguard_port }}"
 
 
 # ! --------------------------- Notes --------------------------- ! #

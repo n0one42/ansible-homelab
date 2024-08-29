@@ -2,64 +2,244 @@
 # tasks file for roles/filesystem_manager
 # New and combined version for all file management parts but is W.I.P. for now
 
-- name: Create base directory --> {{ app_name }}
-  ansible.builtin.file:
-    path: "{{ appdata_base_path }}"
-    state: directory
-    owner: root
-    group: root
-    mode: '0555'  # dr-xr-xr-x
+# ? ######################################################################################## #
+# *                                        AppDataDir                                        #
+# ? ######################################################################################## #
+- name: AppData
+  when: filesystem_manager_appdata_directories_to_create | default([]) | length > 0 or
+        filesystem_manager_appdata_files_to_touch | default([]) | length > 0 or
+        filesystem_manager_appdata_templates_to_copy | default([]) | length > 0 or
+        filesystem_manager_appdata_templates_in_directory_to_copy | default([]) | length > 0
+  block:
+    - name: Create appdata base directory --> {{ app_name }}
+      ansible.builtin.file:
+        path: "{{ appdata_base_path }}"
+        state: directory
+        owner: root
+        group: root
+        mode: '0555'  # dr-xr-xr-x
 
-- name: Create container_type sub-directory --> {{ app_name + '/' + container_type }}
-  ansible.builtin.file:
-    path: "{{ appdata_type_path }}"
-    state: directory
-    owner: "{{ user }}" # 22025 # with userns --> 122025
-    group: "{{ group }}" # 22025 # with userns --> 122025
-    mode: '0550'  # dr-xr-x---
+    - name: Create appdata container_type sub-directory --> {{ app_name + '/' + container_type }}
+      ansible.builtin.file:
+        path: "{{ appdata_type_path }}"
+        state: directory
+        owner: "{{ user }}" # 22025 # with userns --> 122025
+        group: "{{ group }}" # 22025 # with userns --> 122025
+        mode: '0550'  # dr-xr-x---
 
-- name: Create container_type specific directories with correct permissions
-  ansible.builtin.file:
-    path: "{{ appdata_type_path }}/{{ item }}"
-    state: directory
-    owner: "{{ user }}" # 22025 # with userns --> 122025
-    group: "{{ group }}" # 22025 # with userns --> 122025
-    mode: "{{ item.mode | default('0770') }}" # drxxrxx---
-    recurse: "{{ item.recurse | default(false) }}"
-  loop: "{{ filesystem_manager_appdata_directories_to_create | default([]) }}"
+    - name: Create appdata container_type specific directories with correct permissions --> {{ app_name + '/' + container_type }}
+      ansible.builtin.file:
+        path: "{{ appdata_type_path }}/{{ item.path }}"
+        state: directory
+        owner: "{{ user }}" # 22025 # with userns --> 122025
+        group: "{{ group }}" # 22025 # with userns --> 122025
+        mode: "{{ item.mode | default('0770') }}" # drxxrxx---
+        recurse: "{{ item.recurse | default(false) }}"
+      loop: "{{ filesystem_manager_appdata_directories_to_create | default([]) }}"
 
-- name: Copy template files
-  when: filesystem_manager_templates_to_copy | default([]) | length > 0
-  ansible.builtin.template:
-    src: "{{ item.src }}"
-    dest: "{{ item.dest }}"
-    owner: "{{ user }}"
-    group: "{{ group }}"
-    mode: "{{ item.mode | default('0440') }}"  # 0550 for executable
-    force: "{{ item.force | default(true) }}"
-  loop: "{{ filesystem_manager_templates_to_copy | default([]) }}"
-  notify: Restart container
 
-- name: Set sub-directory default ACL --> {{ app_name + '/' + container_type }}
-  ansible.posix.acl:
-    path: "{{ appdata_type_path }}"
-    entity: "{{ pve_vm_primary_user_name }}"  # My real user
-    etype: user
-    permissions: rwx
-    state: present
-    recurse: true
-    default: true
-    recalculate_mask: no_mask
+    - name: Touch files
+      ansible.builtin.file:
+        dest: "{{ appdata_type_path }}/{{ item.filename }}"
+        owner: "{{ user }}"
+        group: "{{ group }}"
+        mode: "{{ item.mode | default('0660') }}"  # 0550 for executable
+        state: touch
+        access_time: preserve
+        modification_time: preserve
+      loop: "{{ filesystem_manager_appdata_files_to_touch | default([]) }}"
 
-- name: Set sub-directory ACL for existing files in --> {{ app_name + '/' + container_type }}
-  ansible.posix.acl:
-    path: "{{ appdata_type_path }}"
-    entity: "{{ pve_vm_primary_user_name }}"  # My real user
-    etype: user
-    permissions: rwx
-    state: present
-    recurse: true
-    recalculate_mask: no_mask
+    - name: Create files
+      ansible.builtin.copy:
+        dest: "{{ appdata_type_path }}/{{ item.filename }}"
+        content: "{{ item.content }}"
+        owner: "{{ user }}"
+        group: "{{ group }}"
+        mode: "{{ item.mode | default('0660') }}"  # 0550 for executable
+        access_time: preserve
+      no_log: true  # could contain sensitive data like acme.json therefore no log
+      loop: "{{ filesystem_manager_appdata_files_to_create | default([]) }}"
+
+
+    - name: Copy template files
+      when: filesystem_manager_appdata_templates_to_copy | default([]) | length > 0
+      ansible.builtin.template:
+        src: "{{ item.src }}"
+        dest: "{{ appdata_type_path }}/{{ item.dest }}"
+        owner: "{{ user }}"
+        group: "{{ group }}"
+        mode: "{{ item.mode | default('0440') }}"  # 0550 for executable
+        force: "{{ item.force | default(true) }}"
+      loop: "{{ filesystem_manager_appdata_templates_to_copy | default([]) }}"
+      notify: Restart container # ? This will triggers the handler from the specific role eg promtail. Check promtail handler for infos
+
+    - name: Copy all files from a template directory
+      when: filesystem_manager_appdata_templates_in_directory_to_copy | default([]) | length > 0
+      block:
+        - name: Find all template files in the directory
+          delegate_to: localhost
+          become: false
+          ansible.builtin.find:
+            paths: "{{ item.src }}"
+            file_type: file
+          register: found_templates
+          loop: "{{ filesystem_manager_appdata_templates_in_directory_to_copy }}"
+
+        - name: Copy template files found in the directories
+          ansible.builtin.template:
+            src: "{{ item.path }}"
+            dest: "{{ appdata_type_path }}/{{ item_dest | regex_replace('\\.j2$', '') }}"
+            owner: "{{ user }}"
+            group: "{{ group }}"
+            mode: "{{ item.mode | default('0440') }}"
+            force: "{{ item.force | default(true) }}"
+          loop: "{{ found_templates.results | map(attribute='files') | flatten(levels=1) }}"
+          vars:
+            item_dest: "{{ filesystem_manager_appdata_templates_in_directory_to_copy | selectattr('src', 'equalto', item.path | dirname) | map(attribute='dest') | first }}/{{ item.path | basename }}"
+
+
+    - name: Set sub-directory default ACL --> {{ app_name + '/' + container_type }}
+      ansible.posix.acl:
+        path: "{{ appdata_type_path }}"
+        entity: "{{ pve_vm_primary_user_name }}"  # My real user
+        etype: user
+        permissions: rwx
+        state: present
+        recurse: true
+        default: true
+        recalculate_mask: no_mask
+
+    - name: Set sub-directory ACL for existing files in --> {{ app_name + '/' + container_type }}
+      ansible.posix.acl:
+        path: "{{ appdata_type_path }}"
+        entity: "{{ pve_vm_primary_user_name }}"  # My real user
+        etype: user
+        permissions: rwx
+        state: present
+        recurse: true
+        recalculate_mask: no_mask
+
+
+# ? ######################################################################################## #
+# *                                         LogsDir                                          #
+# ? ######################################################################################## #
+- name: Logs
+  when: filesystem_manager_log_files_to_touch | default([]) | length > 0
+  block:
+    - name: Create logs base directory --> {{ app_name }}
+      ansible.builtin.file:
+        path: "{{ logs_base_path }}"
+        state: directory
+        owner: root
+        group: root
+        mode: '0555'  # dr-xr-xr-x
+
+    - name: Create logs container_type sub-directory --> {{ app_name + '/' + container_type }}
+      ansible.builtin.file:
+        path: "{{ logs_type_path }}"
+        state: directory
+        owner: "{{ user }}" # 22025 # with userns --> 122025
+        group: "{{ group }}" # 22025 # with userns --> 122025
+        mode: '0550'  # dr-xr-x---
+
+
+    - name: Touch files
+      ansible.builtin.file:
+        dest: "{{ logs_type_path }}/{{ item.filename }}"
+        owner: "{{ user }}"
+        group: "{{ group }}"
+        mode: "{{ item.mode | default('0660') }}"  # 0550 for executable
+        state: touch
+        access_time: preserve
+        modification_time: preserve
+      loop: "{{ filesystem_manager_log_files_to_touch | default([]) }}"
+
+
+# ? ######################################################################################## #
+# *                                        SecretsDir                                        #
+# ? ######################################################################################## #
+- name: Secrets
+  when: filesystem_manager_secret_files_to_create | default([]) | length > 0
+  block:
+    - name: Create secrets base directory --> {{ app_name }}
+      ansible.builtin.file:
+        path: "{{ secrets_base_path }}"
+        state: directory
+        owner: root
+        group: root
+        mode: '0555'  # dr-xr-xr-x
+
+    - name: Create secrets container_type sub-directory --> {{ app_name + '/' + container_type }}
+      ansible.builtin.file:
+        path: "{{ secrets_type_path }}"
+        state: directory
+        owner: "{{ user }}" # 22025 # with userns --> 122025
+        group: "{{ group }}" # 22025 # with userns --> 122025
+        mode: '0550'  # dr-xr-x---
+
+
+    - name: Check if password files exist
+      ansible.builtin.stat:
+        path: "{{ secrets_type_path }}/{{ item.var_name }}"
+      register: password_file_stats
+      loop: "{{ filesystem_manager_secret_files_to_create }}"
+      no_log: true
+
+    - name: Generate or use provided passwords
+      ansible.builtin.set_fact:
+        generated_passwords: >-
+          {{ generated_passwords | default({}) | combine({
+            item.item.var_name: (item.item.content | default('') | trim != '') |
+            ternary(
+              item.item.content,
+              lookup('ansible.builtin.password', '/dev/null ' + password_types[item.item.type | default('default')])
+            )
+          }) }}
+      loop: "{{ password_file_stats.results }}"
+      vars:
+        password_types:
+          default: "chars=ascii_uppercase,ascii_lowercase,digits,-_!@#%+=.^ length=24"
+          jwt_secret: "chars=ascii_uppercase,ascii_lowercase,digits,-_!@#%+=.^ length=64"
+          storage_encryption_key: "chars=ascii_uppercase,ascii_lowercase,digits,-_!@#%+=.^ length=64"
+          session_secret: "chars=ascii_uppercase,ascii_lowercase,digits,-_!@#%+=.^ length=64"
+          crowdsec_bouncer_key: "chars=ascii_uppercase,ascii_lowercase,digits,-_#%&* length=64"
+          postgres_password: "chars=ascii_uppercase,ascii_lowercase,digits,-_!@#%+=.^ length=32"
+          redis_password: "chars=ascii_uppercase,ascii_lowercase,digits,-_!@#%+=.^ length=32"
+      no_log: true
+
+    - name: Create or update password files
+      ansible.builtin.copy:
+        content: "{{ generated_passwords[item.var_name] }}"
+        dest: "{{ secrets_type_path }}/{{ item.var_name }}"
+        owner: "{{ user | default('root') }}"
+        group: "{{ group | default('root') }}"
+        mode: "0400"
+      loop: "{{ filesystem_manager_secret_files_to_create }}"
+      when: >
+        not password_file_stats.results | selectattr("item.var_name", "equalto", item.var_name) | map(attribute="stat.exists") | first | bool
+        or (item.overide_existing is defined and item.overide_existing | bool)
+        or (item.overide_existing is not defined and item.content | default('') | trim != '')
+      no_log: true
+
+    - name: Read remote file contents
+      ansible.builtin.slurp:
+        src: "{{ secrets_type_path }}/{{ item.var_name }}"
+      register: remote_file_contents
+      loop: "{{ filesystem_manager_secret_files_to_create }}"
+      when: item.set_facts | default(false)
+      no_log: true
+
+    - name: Set facts for passwords if requested
+      ansible.builtin.set_fact: # noqa: var-naming[no-jinja]
+        "{{ item.item.var_name }}": "{{ item.content | b64decode }}"
+      loop: "{{ remote_file_contents.results }}"
+      when: item.item.set_facts | default(false)
+      no_log: true
+
+
+# ? ######################################################################################## #
+# *                                       Special cases                                      #
+# ? ######################################################################################## #
 
 - name: Set read access on specified paths
   when: filesystem_manager_give_full_read_access_to_path | default([]) | length > 0
@@ -86,3 +266,18 @@
         recurse: true
         recalculate_mask: no_mask
       loop: "{{ filesystem_manager_give_full_read_access_to_path }}"
+
+
+# ? ######################################################################################## #
+# !                                          Notes                                           #
+# ? ######################################################################################## #
+
+# Settings(appdata) and secrets management:
+# - All settings files, including those with secrets, are stored directly in appdata.
+# - This decision is based on equivalent security between secretsdir and appdatadir.
+# - If a container is compromised, both appdata and /run/secrets would be accessible.
+# - /run/secrets retains its primary purpose: a mount point for secrets injected as a volume.
+# - This approach simplifies management while maintaining Docker's secret handling practices.
+# eg:
+# /opt/docker/appdata/traefik-metrics/app/acme.json --> even if it has a sensitive content
+# /opt/docker/secrets/traefik-metrics/app/basic_auth_credentials

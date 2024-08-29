@@ -1,12 +1,13 @@
 server:
   http_listen_port: 9080
   grpc_listen_port: 0
+  log_level: "{{ dc_grafana_promtail_log_level }}"
 
 positions:
   filename: /tmp/positions.yaml
 
 clients:
-  - url: https://loki.{{ domain_1 }}/loki/api/v1/push
+  - url: https://loki-metrics.{{ domain_1 }}/loki/api/v1/push
     tls_config:
       insecure_skip_verify: {{ dc_promtail_insecure_skip_verify }}
     basic_auth:
@@ -31,7 +32,8 @@ scrape_configs:
 
   - job_name: docker_logs
     docker_sd_configs:
-      - host: unix:///var/run/docker.sock
+      # - host: unix:///var/run/docker.sock
+      - host: tcp://{{ app_name }}-promtail-socketproxy:2375
         refresh_interval: 5s
         # filters:
         #   - name: label
@@ -44,6 +46,7 @@ scrape_configs:
         target_label: 'logstream'
       - source_labels: ['__meta_docker_container_label_logging_jobname']
         target_label: 'job'
+
 
 # If using filters with logging=promtail
 # Use it like this:

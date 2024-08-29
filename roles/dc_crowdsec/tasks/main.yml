@@ -13,38 +13,28 @@
     - name: Create app --> {{ app_name }}
       vars:
         container_type: "app" # => app, db, redis
-        appdata_type_path: "{{ docker_appdata }}/{{ app_name }}/{{ container_type }}" # eg: crowdsec/app
-        secrets_type_path: "{{ docker_secrets }}/{{ app_name }}/{{ container_type }}"
-        logs_type_path: "{{ docker_logs }}/{{ app_name }}"
         user: 9999  # !  such an odd container...
         group: 9999 # !  such an odd container...
       block:
-        - name: '[Required] dc_secrets_manager role'
+        - name: '[Required] filesystem_manager role'
           ansible.builtin.import_role:
-            name: dc_secrets_manager
+            name: filesystem_manager
           vars:
-            dc_secrets_manager_passwords_to_generate:
+            filesystem_manager_appdata_directories_to_create:
+              - path: "data"
+              - path: "config"
+
+        - name: '[Required] filesystem_manager role'
+          ansible.builtin.import_role:
+            name: filesystem_manager
+          vars:
+            filesystem_manager_secret_files_to_create:
               - var_name: traefik_crowdsec_bouncer_key
                 content: "{{ traefik_crowdsec_bouncer_key | default('') }}"
                 type: crowdsec_bouncer_key
                 set_facts: true  # optional - needed for the app
                 # overide_existing: true  # optional
           when: dc_traefik_crowdsec_enabled is defined and dc_traefik_crowdsec_enabled | bool
-
-        - name: '[Required] container_init role'
-          ansible.builtin.import_role:
-            name: container_init
-          vars:
-            container_init_appdata_directories_to_create:
-              - "config"
-              - "data"
-
-            container_init_custom_directories_to_create:
-              - path: "{{ logs_type_path }}"
-                owner: "{{ user }}"
-                group: "{{ group }}"
-                mode: "0550"
-
 
         - name: Gather only the hostname fact
           ansible.builtin.setup:

@@ -50,18 +50,26 @@
     - name: Create app --> {{ app_name }}
       vars:
         container_type: "app" # => app, db, redis
-        appdata_type_path: "{{ docker_appdata }}/{{ app_name }}/{{ container_type }}"
-        secrets_type_path: "{{ docker_secrets }}/{{ app_name }}/{{ container_type }}"
-        logs_type_path: "{{ docker_logs }}/{{ app_name }}/{{ container_type }}"
         user: "{{ (dc_authelia_create_with_userns | bool) | ternary(dc_authelia_u_g_id + 100000, dc_authelia_u_g_id) }}"
         group: "{{ (dc_authelia_create_with_userns | bool) | ternary(dc_authelia_u_g_id + 100000, dc_authelia_u_g_id) }}"
       block:
-        - name: '[Required] dc_secrets_manager role'
+        - name: '[Required] filesystem_manager role'
           ansible.builtin.import_role:
-            name: dc_secrets_manager
+            name: filesystem_manager
           vars:
-            dc_secrets_manager_passwords_to_generate:
-              - var_name: authelia_jwt_secret
+            filesystem_manager_appdata_directories_to_create:
+              - path: "config"
+            # filesystem_manager_log_files_to_touch:
+            #   - filename: "authelia.log"
+            filesystem_manager_appdata_templates_to_copy:
+              - src: "configuration.yml.j2"
+                dest: "config/configuration.yml"
+                mode: "0400"
+              - src: "users.yml.j2"
+                dest: "config/users.yml"
+                mode: "0400"
+            filesystem_manager_secret_files_to_create:
+              - var_name: "authelia_jwt_secret"
                 content: "{{ dc_authelia_jwt_secret }}"
                 type: jwt_secret
               - var_name: authelia_storage_encryption_key
@@ -71,38 +79,16 @@
                 content: "{{ dc_authelia_session_secret }}"
                 type: session_secret
 
-        - name: '[Required] dc_secrets_manager role'
+        - name: '[Required] filesystem_manager role'
           ansible.builtin.import_role:
-            name: dc_secrets_manager
+            name: filesystem_manager
           vars:
-            dc_secrets_manager_passwords_to_generate:
+            filesystem_manager_secret_files_to_create:
               - var_name: redis_pw
                 content: "{{ redis_pw }}"
               - var_name: db_user_pw
                 content: "{{ db_user_pw }}"
           when: not dc_authelia_use_sqlite
-
-        - name: Include container_init role
-          ansible.builtin.import_role:
-            name: container_init
-          vars:
-            container_init_appdata_directories_to_create:
-              - "config"
-            container_init_custom_directories_to_create:
-              - path: "{{ logs_type_path }}"
-                owner: "{{ user }}"
-                group: "{{ group }}"
-                mode: "0550"
-            container_init_files_to_create:
-              - { dest: "{{ logs_type_path }}/authelia.log", owner: "{{ user }}", group: "{{ group }}", mode: "0660" }
-            container_init_templates_to_copy:
-              - src: "configuration.yml.j2"
-                dest: "{{ appdata_type_path }}/config/configuration.yml"
-                mode: "0400"
-              - src: "users.yml.j2"
-                dest: "{{ appdata_type_path }}/config/users.yml"
-                mode: "0400"
-
 
         - name: Install docker compose authelia with inline definition
           vars:
@@ -154,7 +140,7 @@
                   #   - "{{ dc_authelia_port }}:9091"
                   volumes:
                     - "{{ appdata_type_path }}/config:/config"
-                    - "{{ logs_type_path }}/authelia.log:/config/authelia.log"
+                    # - "{{ logs_type_path }}/authelia.log:/config/authelia.log"
                     - "{{ secrets_type_path }}:/run/secrets"
                   environment: "{{ docker_environment }}"
                   labels:

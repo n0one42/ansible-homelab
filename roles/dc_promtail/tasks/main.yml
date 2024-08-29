@@ -40,9 +40,9 @@
           ansible.builtin.import_role:
             name: filesystem_manager
           vars:
-            filesystem_manager_templates_to_copy:
+            filesystem_manager_appdata_templates_to_copy:
               - src: "{{ ansible_hostname }}/promtail-docker-config.yml.j2"
-                dest: "{{ appdata_type_path }}/promtail-docker-config.yml"
+                dest: "promtail-docker-config.yml"
             filesystem_manager_give_full_read_access_to_path:
               - path: "{{ docker_logs }}"
               - path: /var/log
@@ -91,7 +91,7 @@
                   user: "{{ dc_promtail_u_g_id }}:{{ dc_promtail_u_g_id }}"
                   # command: -config.file=/etc/promtail/config.yml
                   extra_hosts:
-                    - "loki.{{ domain_1 }}:{{ dc_promtail_loki_traefik_ip | default('127.0.0.1') }}"  # Has to be the internal ip of the traefik where loki is running
+                    - "loki-metrics.{{ domain_1 }}:{{ dc_promtail_loki_traefik_ip | default('127.0.0.1') }}"  # Has to be the internal ip of the traefik where loki is running
                   networks:
                     app_net: "{{ {'ipv4_address': dc_promtail_net_ip} if dc_promtail_net_ip is defined and dc_promtail_net_ip | length > 0 and not dc_promtail_standalone | default(false) | bool else omit }}"
                     socketproxy_net: "{{ {'ipv4_address': dc_promtail_socketproxy_net_app_ip} if dc_promtail_socketproxy_net_app_ip is defined and dc_promtail_socketproxy_net_app_ip | length > 0 else {} }}"

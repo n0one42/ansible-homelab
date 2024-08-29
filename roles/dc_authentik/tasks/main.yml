@@ -49,17 +49,18 @@
     - name: Create app --> {{ app_name }}
       vars:
         container_type: "app" # => app, db, redis
-        appdata_type_path: "{{ docker_appdata }}/{{ app_name }}/{{ container_type }}"
-        secrets_type_path: "{{ docker_secrets }}/{{ app_name }}/{{ container_type }}"
-        logs_type_path: "{{ docker_logs }}/{{ app_name }}/{{ container_type }}"
         user: "{{ (dc_authentik_create_with_userns | bool) | ternary(dc_authentik_u_g_id + 100000, dc_authentik_u_g_id) }}"
         group: "{{ (dc_authentik_create_with_userns | bool) | ternary(dc_authentik_u_g_id + 100000, dc_authentik_u_g_id) }}"
       block:
-        - name: '[Required] dc_secrets_manager role'
+        - name: '[Required] filesystem_manager role'
           ansible.builtin.import_role:
-            name: dc_secrets_manager
+            name: filesystem_manager
           vars:
-            dc_secrets_manager_passwords_to_generate:
+            filesystem_manager_appdata_directories_to_create:
+              - path: "media"
+              - path: "custom-templates"
+              - path: "certs"
+            filesystem_manager_secret_files_to_create:
               - var_name: redis_pw
                 content: "{{ redis_pw }}"
               - var_name: db_user_pw
@@ -69,15 +70,6 @@
                 type: jwt_secret
               - var_name: bootstrap_pw
                 content: "{{ dc_authentik_bootstrap_pw }}"
-
-        - name: Include container_init role
-          ansible.builtin.import_role:
-            name: container_init
-          vars:
-            container_init_appdata_directories_to_create:
-              - "media"
-              - "custom-templates"
-              - "certs"
 
 
         - name: Install docker compose authentik with inline definition
@@ -108,9 +100,9 @@
                   networks:
                     app_net: "{{ {'ipv4_address': dc_authentik_net_app_server_ip} if dc_authentik_net_app_server_ip is defined and dc_authentik_net_app_server_ip | length > 0 else {} }}"
                     traefik_net: "{{ {'ipv4_address': dc_traefik_net_authentik_ip} if dc_traefik_net_authentik_ip is defined and dc_traefik_net_authentik_ip | length > 0 else {} }}"
-                  ports:
+                  # ports:
                     # - "{{ dc_authentik_http_port }}:9000"
-                    - "{{ dc_authentik_https_port }}:9443"
+                    # - "{{ dc_authentik_https_port }}:9443"
                   volumes:
                     - "{{ appdata_type_path }}/media:/media"
                     - "{{ appdata_type_path }}/custom-templates:/templates"
@@ -123,20 +115,27 @@
                     AUTHENTIK_POSTGRESQL__USER: "{{ db_user_name }}"
                     AUTHENTIK_POSTGRESQL__PASSWORD: "file:///run/secrets/db_user_pw"
                     AUTHENTIK_SECRET_KEY: "file:///run/secrets/secret_key"
-                    AUTHENTIK_LOG_LEVEL: "info" # default: info  # debug, info, warning, error, trace # ! trace also includes sensitive data in logs
+                    AUTHENTIK_LOG_LEVEL: "{{ dc_authentik_log_level }}" # default: info  # debug, info, warning, error, trace # ! trace also includes sensitive data in logs
                     COMPOSE_PORT_HTTP: "{{ dc_authentik_http_port }}"
                     COMPOSE_PORT_HTTPS: "{{ dc_authentik_https_port }}"
                     AUTHENTIK_HOST: https://{{ app_name }}.{{ domain_1 }} # ? duno if needed here
                     AUTHENTIK_INSECURE: "false"
                   labels:
                     traefik.enable: "true"
-                    ## HTTP Routers
+                    ## Router for general application traffic
                     traefik.http.routers.authentik-rtr.entrypoints: "websecure"
-                    traefik.http.routers.authentik-rtr.rule: "Host(`{{ app_name }}.{{ domain_1 }}`) && PathPrefix(`/outpost.goauthentik.io/`) || Host(`{{ app_name }}.{{ domain_1 }}`)"
-                    ## Middlewares
-                    traefik.http.routers.authentik-rtr.middlewares: "chain-no-auth@file"  # Has to be chain-no-auth
-                    ## HTTP Services
+                    traefik.http.routers.authentik-rtr.rule: "Host(`{{ app_name }}.{{ domain_1 }}`)"
+                    traefik.http.routers.authentik-rtr.middlewares: "chain-no-auth@file"
+                    traefik.http.routers.authentik-rtr.priority: "10"
                     traefik.http.routers.authentik-rtr.service: "authentik-svc"
+
+                    ## Router specifically for Authentik's outpost
+                    traefik.http.routers.authentik-rtr-outpost.entrypoints: "websecure"
+                    traefik.http.routers.authentik-rtr-outpost.rule: "Host(`{{ app_name }}.{{ domain_1 }}`) && PathPrefix(`/outpost.goauthentik.io/`)"
+                    traefik.http.routers.authentik-rtr-outpost.priority: "15"
+                    traefik.http.routers.authentik-rtr-outpost.service: "authentik-svc"
+
+                    ## HTTP Services
                     traefik.http.services.authentik-svc.loadbalancer.server.port: "{{ dc_authentik_http_port }}"
 
 
@@ -167,7 +166,7 @@
                     AUTHENTIK_POSTGRESQL__NAME: "{{ db_name }}"
                     AUTHENTIK_POSTGRESQL__PASSWORD: "file:///run/secrets/db_user_pw"
                     AUTHENTIK_SECRET_KEY: "file:///run/secrets/secret_key"
-                    AUTHENTIK_LOG_LEVEL: "info" # default: info  # debug, info, warning, error, trace # ! trace also includes sensitive data in logs
+                    AUTHENTIK_LOG_LEVEL: "{{ dc_authentik_log_level }}" # default: info  # debug, info, warning, error, trace # ! trace also includes sensitive data in logs
                     COMPOSE_PORT_HTTP: "{{ dc_authentik_http_port }}"
                     COMPOSE_PORT_HTTPS: "{{ dc_authentik_https_port }}"
                     # * Worker only for sure
