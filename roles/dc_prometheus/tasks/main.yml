@@ -21,16 +21,17 @@
     user: "{{ (dc_prometheus_create_with_userns | bool) | ternary(dc_prometheus_u_g_id + 100000, dc_prometheus_u_g_id) }}"
     group: "{{ (dc_prometheus_create_with_userns | bool) | ternary(dc_prometheus_u_g_id + 100000, dc_prometheus_u_g_id) }}"
   block:
-    - name: '[Required] container_init role'
+    - name: '[Required] filesystem_manager role'
       ansible.builtin.import_role:
-        name: container_init
+        name: filesystem_manager
       vars:
-        container_init_appdata_directories_to_create:
+        filesystem_manager_appdata_directories_to_create:
           - "data"
-        container_init_templates_to_copy:
+        filesystem_manager_templates_to_copy:
           - src: "{{ ansible_hostname }}/prometheus-docker-config.yml.j2"
             dest: "{{ appdata_type_path }}/prometheus-docker-config.yml"
-      notify: Restart container
+            mode: '0660'
+
 
     - name: Install docker compose prometheus with inline definition
       vars:

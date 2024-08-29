@@ -21,15 +21,16 @@
     user: "{{ (dc_loki_create_with_userns | bool) | ternary(dc_loki_u_g_id + 100000, dc_loki_u_g_id) }}"
     group: "{{ (dc_loki_create_with_userns | bool) | ternary(dc_loki_u_g_id + 100000, dc_loki_u_g_id) }}"
   block:
-    - name: '[Required] container_init role'
+    - name: '[Required] filesystem_manager role'
       ansible.builtin.import_role:
-        name: container_init
+        name: filesystem_manager
       vars:
-        container_init_appdata_directories_to_create:
+        filesystem_manager_appdata_directories_to_create:
           - "data"
-        container_init_templates_to_copy:
+        filesystem_manager_templates_to_copy:
           - src: "{{ ansible_hostname }}/loki-docker-config.yml.j2"
             dest: "{{ appdata_type_path }}/loki-docker-config.yml"
+            mode: '0660'
 
 
     - name: Install docker compose loki with inline definition
@@ -90,6 +91,7 @@
                 # * HTTP Services
                 traefik.http.routers.loki-rtr.service: "loki-svc"
                 traefik.http.services.loki-svc.loadbalancer.server.port: "{{ dc_loki_port }}"
+
 
 # ! --------------------------- Notes --------------------------- ! #
 # https://github.com/grafana/loki/blob/main/cmd/loki/loki-docker-config.yaml

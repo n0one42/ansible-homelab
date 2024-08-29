@@ -105,7 +105,6 @@
             filesystem_manager_appdata_directories_to_create:
               - "data"
               - "config/provisioning/datasources"
-
             filesystem_manager_templates_to_copy:
               - src: "ds.yml.j2"
                 dest: "{{ appdata_type_path }}/config/provisioning/datasources/ds.yml"
@@ -145,7 +144,7 @@
                     - "{{ appdata_type_path }}/config/provisioning/datasources/ds.yml:/etc/grafana/provisioning/datasources/ds.yml"
                     - "{{ secrets_type_path }}:/run/secrets"
                   environment:
-                    GF_INSTALL_PLUGINS: "grafana-clock-panel,grafana-simple-json-datasource,grafana-worldmap-panel,grafana-piechart-panel"
+                    GF_INSTALL_PLUGINS: "grafana-clock-panel"
                     GF_PATHS_CONFIG: "/etc/grafana/grafana.ini"
                     GF_PATHS_PROVISIONING: "/etc/grafana/provisioning"
                     GF_SECURITY_ADMIN_USER__FILE: "/run/secrets/dc_grafana_admin_user"
@@ -163,7 +162,7 @@
                     traefik.http.routers.grafana-rtr.entrypoints: "websecure"
                     traefik.http.routers.grafana-rtr.rule: "Host(`{{ app_name }}.{{ domain_1 }}`)"
                     ## Middlewares
-                    traefik.http.routers.grafana-rtr.middlewares: "chain-no-auth@file"  # Has to be chain-no-auth
+                    traefik.http.routers.grafana-rtr.middlewares: "chain-basic-auth@file" # For Basic HTTP Authentication
                     ## HTTP Services
                     traefik.http.routers.grafana-rtr.service: "grafana-svc"
                     traefik.http.services.grafana-svc.loadbalancer.server.port: "{{ dc_grafana_port }}"
