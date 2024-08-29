@@ -5,4 +5,4 @@
     name: "{{ app_name }}-prometheus"
     state: started
     restart: true
-  when: dc_promtail_restart_container_on_template_change | default(true)
+  when: dc_prometheus_restart_container_on_template_change | default(true)
