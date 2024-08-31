@@ -117,6 +117,8 @@
 
 # ! --------------------------- Notes --------------------------- ! #
 # Depending on the logs wanted, it is best to use this container as root. Since this will not be exposed, this should be acceptable.
+# Actually it is using a non root user. With read permissions to the logs using filesystem_manager_give_full_read_access_to_path
+# ? Grafana and Loki has to already run. Otherwise it will not be able to push logs to it and you have to restart promtail.
 
 # Promtail is a log shipper. It reads logs from various sources (such as log files, Docker containers, or syslog) and then forwards or “pushes” them to a Loki instance.
 # Loki acts as a log storage and indexing system. It does not actively pull logs from Promtail; instead, it listens for incoming log data that Promtail sends.

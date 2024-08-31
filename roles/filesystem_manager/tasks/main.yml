@@ -245,6 +245,7 @@
   when: filesystem_manager_give_full_read_access_to_path | default([]) | length > 0
   block:
     - name: Set default ACL for specified paths
+      become: true
       ansible.posix.acl:
         path: "{{ item.path }}"
         entity: "{{ user }}"
@@ -257,6 +258,7 @@
       loop: "{{ filesystem_manager_give_full_read_access_to_path }}"
 
     - name: Set ACL for existing files in specified paths
+      become: true
       ansible.posix.acl:
         path: "{{ item.path }}"
         entity: "{{ user }}"

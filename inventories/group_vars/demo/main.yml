@@ -72,6 +72,8 @@ logs_type_path: "{{ docker_logs }}/{{ app_name }}/{{ container_type }}" # eg: lo
 # *                              Container U/G IDs                              *
 # ? -----------------------------------------------------------------------------
 
+dc_crowdsec_u_g_id: 0 # !  such an odd container... # ! to many problems... odd container... therefore host mode and root
+dc_cadvisor_u_g_id: 0 # with userns --> 122030 # ! needs root sadly
 dc_authelia_u_g_id: 22002 # with userns --> 122002
 dc_traefik_u_g_id: 22003 # with userns --> 122003
 dc_adguard_u_g_id: 22007 # with userns --> 122007
@@ -184,10 +186,9 @@ dc_authentik_redis_port: 6379
 # * ------------->>> Container Configuration <<<------------ * #
 # * >>> Container variables
 dc_crowdsec_container_name: "crowdsec"
-# dc_crowdsec_create_with_userns: false # ! To many problems... odd container... therefore host mode
+dc_crowdsec_create_with_userns: false # ! To many problems... odd container... therefore host mode and root
 dc_crowdsec_image_version: "latest"
 dc_crowdsec_log_level: ""
-# dc_crowdsec_u_g_id: 22005 # ! to many problems... odd container... therefore host mode
 dc_crowdsec_port: 8080
 
 # ? -----------------------------------------------------------------------------
@@ -221,8 +222,7 @@ dc_it_tools_log_level: ""
 dc_traefik_container_name: "traefik"
 dc_traefik_create_with_userns: true
 dc_traefik_image_version: "3.1"
-dc_traefik_log_level: "INFO" # (Default: error) DEBUG, INFO, WARN, ERROR, FATAL, PANIC
-
+dc_traefik_log_level: "INFO" # (Default: error) DEBUG, INFO, WARN, ERROR, FATAL, PANIC # Needs at least info for crowdsec
 
 dc_traefik_acme_staging_mode: true  # true = LetsEncrypt Staging Server - false = LetsEncrypt Production Server
 dc_traefik_crowdsec_enabled: true
@@ -310,7 +310,7 @@ dc_promtail_socketproxy_env_tasks: "1"
 # * >>> Container variables
 dc_grafana_prometheus_create_with_userns: true
 dc_grafana_prometheus_image_version: "latest"
-dc_grafana_prometheus_log_level: "info" # default: info [debug, info, warn, error]
+dc_grafana_prometheus_log_level: "debug" # default: info [debug, info, warn, error] # ? Best to let debug cuz hard to find when something not working
 dc_grafana_prometheus_port: 9090
 
 ## ? Environment variables if used in standalone mode (external prometheus)
@@ -328,6 +328,19 @@ dc_grafana_nodeexporter_port: 9100
 
 ## ? Environment variables if used in standalone mode (external nodeexporter)
 dc_nodeexporter_standalone: false
+
+# * ------------>>> Cadvisor Configuration <<<------------ * #
+# * >>> Container variables
+dc_grafana_cadvisor_create_with_userns: false # ! Need this cuz of root sadly
+dc_grafana_cadvisor_image_version: "latest"
+dc_grafana_cadvisor_log_level: "" # seams not to be any available
+dc_grafana_cadvisor_port: 8080
+
+## ? Environment variables if used in standalone mode (external cadvisor)
+dc_cadvisor_standalone: false
+dc_cadvisor_insecure_skip_verify: "{{ dc_traefik_acme_staging_mode }}"
+dc_cadvisor_basic_auth_user: "{{ demo_auth_user }}" # traefik basic auth credentials
+dc_cadvisor_basic_auth_password: "{{ demo_auth_user_pw }}"  # traefik basic auth credentials
 
 
 # ? -----------------------------------------------------------------------------

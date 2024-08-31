@@ -65,6 +65,17 @@
         dc_nodeexporter_port: "{{ dc_grafana_nodeexporter_port }}"
 
 
+  # * ------------------------ Grafana Cadvisor ------------------------ * #
+    - name: Include cadvisor role
+      ansible.builtin.import_role:
+        name: dc_cadvisor
+      vars:
+        dc_cadvisor_create_with_userns: "{{ dc_grafana_cadvisor_create_with_userns }}"
+        dc_cadvisor_image_version: "{{ dc_grafana_cadvisor_image_version }}"
+        dc_cadvisor_net_ip: "{{ dc_grafana_net_cadvisor_ip }}"
+        dc_cadvisor_port: "{{ dc_grafana_cadvisor_port }}"
+
+
   # * ------------------------ Grafana Prometheus ------------------------ * #
     - name: Include prometheus role
       ansible.builtin.import_role:
@@ -154,11 +165,14 @@
                     traefik.http.routers.grafana-rtr.entrypoints: "websecure"
                     traefik.http.routers.grafana-rtr.rule: "Host(`{{ app_name }}.{{ domain_1 }}`)"
                     ## Middlewares
-                    traefik.http.routers.grafana-rtr.middlewares: "chain-basic-auth@file" # For Basic HTTP Authentication
+                    # traefik.http.routers.grafana-rtr.middlewares: "chain-basic-auth@file" # For Basic HTTP Authentication
                     ## HTTP Services
                     traefik.http.routers.grafana-rtr.service: "grafana-svc"
                     traefik.http.services.grafana-svc.loadbalancer.server.port: "{{ dc_grafana_port }}"
 
+
+# ! --------------------------- Notes --------------------------- ! #
+# ? If the credentials are the same as those of chain-basic-auth, grafana will automatically use them. So do not wonder
 
 # Cleaning
 # sudo docker container rm -f grafana-promtail grafana-loki grafana-prometheus grafana-nodeexporter grafana

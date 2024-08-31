@@ -1,0 +1,125 @@
+---
+# tasks file for roles/dc_cadvisor
+# TODO: Variables which has to be passed through the playbook or on import of this task file
+# ! Mandatory variables
+  # vars:
+  #   app_name: => traefik, portainer, grafana, netbox
+# ? Optional variables
+
+- name: Create cAdvisor & Socket Proxy
+  block:
+    - name: Set facts app_name for standalone
+      ansible.builtin.set_fact:
+        app_name: "standalone"
+      when: dc_cadvisor_standalone | default(false)
+
+  # * --------------------------- App --------------------------- *
+    - name: Create cAdvisor for --> {{ app_name }}
+      vars:
+        container_type: "cadvisor" # => app, db, redis, loki, promtail, cadvisor
+        user: "{{ (dc_cadvisor_create_with_userns | bool) | ternary(dc_cadvisor_u_g_id + 100000, dc_cadvisor_u_g_id) }}"
+        group: "{{ (dc_cadvisor_create_with_userns | bool) | ternary(dc_cadvisor_u_g_id + 100000, dc_cadvisor_u_g_id) }}"
+      block:
+        - name: Install docker compose cAdvisor with inline definition
+          vars:
+            docker_networks: >-
+              {{
+                {
+                  "traefik_net": {
+                    "name": dc_traefik_net_name,
+                    "external": true
+                  }
+                }
+                | combine(
+                  {
+                    "app_net": {
+                      "name": app_name ~ "_net",
+                      "external": true
+                    }
+                  } if not dc_cadvisor_standalone else {}
+                )
+              }}
+
+          community.docker.docker_compose_v2:
+            project_name: "{{ app_name }}-cadvisor" # eg: grafana-cadvisor
+            definition:
+              # ! --------------------------- Networks --------------------------- ! #
+              networks: "{{ docker_networks }}"
+
+              # * ---------------------------- App ------------------------------ * #
+              services:
+                cadvisor:
+                  image: gcr.io/cadvisor/cadvisor:{{ dc_cadvisor_image_version }}
+                  container_name: "{{ app_name }}-cadvisor"  # eg: grafana-cadvisor
+                  restart: unless-stopped
+                  security_opt:
+                    - no-new-privileges:true
+                  privileged: false #  true  # cAdvisor typically needs privileged mode to access container metrics
+                  userns_mode: "{{ 'host' if dc_cadvisor_create_with_userns | bool == false else 'remap' }}"
+                  user: "{{ dc_cadvisor_u_g_id }}:{{ dc_cadvisor_u_g_id }}"
+                  command:
+                    - --housekeeping_interval=5s
+                    - --docker_only=true
+                    # - --store_container_labels=false  # Aparently less cpu usage
+                    # - --disable_metrics=accelerator,hugetlb # seams not to work https://github.com/google/cadvisor/issues/3372
+                  networks:
+                    app_net: "{{ {'ipv4_address': dc_cadvisor_net_ip} if dc_cadvisor_net_ip is defined and dc_cadvisor_net_ip | length > 0 and not dc_cadvisor_standalone | default(false) | bool else omit }}"
+                    traefik_net: "{{ {'ipv4_address': dc_traefik_net_cadvisor_ip} if dc_traefik_net_cadvisor_ip is defined and dc_traefik_net_cadvisor_ip | length > 0 else {} }}"
+                  # ports:
+                  #   - "{{ dc_cadvisor_port }}:8080"
+                  volumes:
+                    # ! Mandatory for docker stats --> [Dashboard(21361)] Docker - cAdvisor Compute Resources
+                    - /var/run/docker.sock:/var/run/docker.sock:ro
+                    - /sys/fs/cgroup:/sys/fs/cgroup:ro
+                    - /var/lib/docker:/var/lib/docker:ro
+                    - /proc:/rootfs/proc:ro # needed for docker stats
+                    - /var/lib/docker:/rootfs/var/lib/docker:ro # Container-specific information
+                    # ------------------------------
+                    # ? Seams to give better results
+                    - /sys/class:/sys/class:ro
+                    # ------------------------------------------------------------------------------------------
+
+                    # - /proc:/host/proc:ro
+                    # - /sys:/host/sys:ro
+                    # - /dev:/host/dev:ro
+                    # - /var:/host/var:ro
+                    # - /run:/host/run:ro
+
+                    # - /sys:/rootfs/sys:ro
+                    # - /dev:/rootfs/dev:ro
+                    # - /run:/rootfs/run:ro
+
+                    # - /:/rootfs:ro  # I do not like this. To many things are mounted. Instead of this, mount the needed folders.
+                    # - /dev/disk:/dev/disk:ro
+                    # - /proc:/host/proc:ro
+                    # - /sys:/sys:ro  # needed to get docker stats
+                    # - /var/lib/docker:/var/lib/docker:ro
+                    # - /var/run:/var/run:ro
+                    # # - /dev/kmsg:/dev/kmsg:ro  # Did not work either
+                  # devices:
+                  #   - /dev/kmsg # Permissions issue. Could need privileged: true mode but I do not need it
+                  labels:
+                    traefik.enable: "true"
+                    # * HTTP Routers
+                    traefik.http.routers.cadvisor-rtr.entrypoints: "websecure"
+                    traefik.http.routers.cadvisor-rtr.rule: "Host(`cadvisor-{{ dc_traefik_type }}.{{ domain_1 }}`)"
+                    # * Middlewares
+                    traefik.http.routers.cadvisor-rtr.middlewares: "chain-basic-auth@file" # For Basic HTTP Authentication
+                    # * HTTP Services
+                    traefik.http.routers.cadvisor-rtr.service: "cadvisor-svc"
+                    traefik.http.services.cadvisor-svc.loadbalancer.server.port: "{{ dc_cadvisor_port }}"
+
+# ! --------------------------- Notes --------------------------- ! #
+# cAdvisor (Container Advisor) provides container users an understanding of the resource usage and performance characteristics of their running containers.
+
+# cAdvisor is designed to run as a daemon process that collects, aggregates, processes, and exports information about running containers.
+# It's typically used in conjunction with Prometheus for storing the collected metrics and Grafana for visualization.
+
+# cAdvisor cant run with socket proxy. It needs direct access to the docker socket.
+# I tried a lot of different things. AAA LOTTTTTTT of things. But in the end it seams like cAdvisor cant run without the root user because of the docker socket.
+# After many tests again, my configuration results are the same as when using the default cAdvisor github recommended configuration but with less permissions.
+
+# cleaning:
+# sudo docker container rm -f grafana-cadvisor
+
+# Status: Done... finally

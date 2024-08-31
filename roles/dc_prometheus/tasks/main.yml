@@ -73,7 +73,9 @@
                 - '--log.level={{ dc_grafana_prometheus_log_level }}'
               extra_hosts:
                 - "nodeexporter-ingress.{{ domain_1 }}:{{ dc_dmz_net_vm10_ingress_ip }}"  # Has to be the internal ip of the traefik where the node-exporter are running
+                - "cadvisor-ingress.{{ domain_1 }}:{{ dc_dmz_net_vm10_ingress_ip }}"  # Has to be the internal ip of the traefik where the cadvisor are running
                 - "nodeexporter-application-1.{{ domain_1 }}:{{ dc_dmz_net_vm31_application_1_ip }}"  # Has to be the internal ip of the traefik where the node-exporter are running
+                - "cadvisor-application-1.{{ domain_1 }}:{{ dc_dmz_net_vm31_application_1_ip }}"  # Has to be the internal ip of the traefik where the cadvisor are running
               networks:
                 app_net: "{{ {'ipv4_address': dc_prometheus_net_ip} if dc_prometheus_net_ip is defined and dc_prometheus_net_ip | length > 0 and not dc_prometheus_standalone | default(false) | bool else omit }}"
                 traefik_net: "{{ {'ipv4_address': dc_traefik_net_prometheus_ip} if dc_traefik_net_prometheus_ip is defined and dc_traefik_net_prometheus_ip | length > 0 else {} }}"

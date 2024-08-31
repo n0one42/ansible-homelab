@@ -119,6 +119,17 @@ dc_promtail_socketproxy_net_cidr: "{{ dc_promtail_socketproxy_net_address }}/{{ 
 dc_promtail_socketproxy_net_app_ip: "{{ dc_promtail_socketproxy_net_base }}.12"  # 10.100.20.12
 dc_promtail_socketproxy_net_ip: "{{ dc_promtail_socketproxy_net_base }}.13"  # 10.100.20.13
 
+# ? -----------------------------------------------------------------------------
+# *                                   Cadvisor                                   *
+# ? -----------------------------------------------------------------------------
+dc_cadvisor_socketproxy_net_base: 10.100.20
+dc_cadvisor_socketproxy_net_address: "{{ dc_cadvisor_socketproxy_net_base }}.16"
+dc_cadvisor_socketproxy_net_prefix_length: 29 # 6 usable octets eg 10.100.20.18 - 10.100.20.22
+dc_cadvisor_socketproxy_net_cidr: "{{ dc_cadvisor_socketproxy_net_address }}/{{ dc_cadvisor_socketproxy_net_prefix_length }}"  # 10.100.20.16/29
+
+dc_cadvisor_socketproxy_net_app_ip: "{{ dc_cadvisor_socketproxy_net_base }}.20"  # 10.100.20.20
+dc_cadvisor_socketproxy_net_ip: "{{ dc_cadvisor_socketproxy_net_base }}.21"  # 10.100.20.21
+
 # ? ######################################################################################## #
 # *                                            Apps                                          #
 # ? ######################################################################################## #
@@ -190,6 +201,7 @@ dc_grafana_net_loki_ip: "{{ dc_grafana_net_base }}.165"
 dc_grafana_net_promtail_ip: "{{ dc_grafana_net_base }}.166"
 dc_grafana_net_prometheus_ip: "{{ dc_grafana_net_base }}.167"
 dc_grafana_net_nodeexporter_ip: "{{ dc_grafana_net_base }}.168"
+dc_grafana_net_cadvisor_ip: "{{ dc_grafana_net_base }}.169"
 
 # ? ######################################################################################## #
 # !                                   Standalone containers                                  #

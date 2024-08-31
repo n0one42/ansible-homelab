@@ -13,8 +13,9 @@
     - name: Create app --> {{ app_name }}
       vars:
         container_type: "app" # => app, db, redis
-        user: 9999  # !  such an odd container...
-        group: 9999 # !  such an odd container...
+        # ! to many problems... odd container... therefore host mode and root
+        user: "{{ (dc_crowdsec_create_with_userns | bool) | ternary(dc_crowdsec_u_g_id + 100000, dc_crowdsec_u_g_id) }}"
+        group: "{{ (dc_crowdsec_create_with_userns | bool) | ternary(dc_crowdsec_u_g_id + 100000, dc_crowdsec_u_g_id) }}"
       block:
         - name: '[Required] filesystem_manager role'
           ansible.builtin.import_role:
@@ -67,7 +68,8 @@
                   security_opt:
                     - no-new-privileges:true
                   privileged: false
-                  userns_mode: "host" # !  such an odd container...
+                  userns_mode: "{{ 'host' if dc_crowdsec_create_with_userns | bool == false else 'remap' }}"
+                  user: "{{ dc_crowdsec_u_g_id }}:{{ dc_crowdsec_u_g_id }}"
                   networks:
                     app_net: "{{ {'ipv4_address': dc_crowdsec_net_app_ip} if dc_crowdsec_net_app_ip is defined and dc_crowdsec_net_app_ip | length > 0 else {} }}"
                     traefik_net: "{{ {'ipv4_address': dc_traefik_net_crowdsec_ip} if dc_traefik_net_crowdsec_ip is defined and dc_traefik_net_crowdsec_ip | length > 0 else {} }}"

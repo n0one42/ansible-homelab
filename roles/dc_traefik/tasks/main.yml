@@ -215,7 +215,7 @@
                     # - "traefik.http.routers.ping.service=ping@internal"
                     # * HTTP Routers
                     traefik.http.routers.traefik-rtr.entrypoints: "websecure"
-                    traefik.http.routers.traefik-rtr.rule: "Host(`{{ app_name }}.{{ domain_1 }}`)"
+                    traefik.http.routers.traefik-rtr.rule: "Host(`{{ app_name }}-{{ dc_traefik_type }}.{{ domain_1 }}`)"
                     # * Services - API
                     traefik.http.routers.traefik-rtr.service: "api@internal"
                     # * Middlewares

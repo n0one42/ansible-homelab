@@ -18,13 +18,7 @@ rule_files:
 
 # A scrape configuration containing exactly one endpoint to scrape:
 scrape_configs:
-  - job_name: "prometheus-{{ dc_traefik_type }}"
-    scheme: http
-    static_configs:
-      - targets: ["localhost:9090"]
-    metrics_path: /metrics
-
-  # Scrape config for Node Exporter
+# ! ---- Scrape config for ingress vm ---- ! #
   - job_name: 'node-exporter-ingress'
     scheme: https
     tls_config:
@@ -34,19 +28,38 @@ scrape_configs:
       password: "{{ dc_prometheus_nodeexporter_basic_auth_password }}"
     static_configs:
       - targets: ['nodeexporter-ingress.{{ domain_1 }}']
-    metrics_path: /metrics
 
-  - job_name: "node-exporter-metrics"
+  - job_name: "cadvisor-ingress"
+    scheme: https
+    tls_config:
+      insecure_skip_verify: {{ dc_cadvisor_insecure_skip_verify }}
+    basic_auth:
+      username: "{{ dc_cadvisor_basic_auth_user }}"
+      password: "{{ dc_cadvisor_basic_auth_password }}"
     static_configs:
-      - targets: ["{{ dc_grafana_net_nodeexporter_ip }}:9100"]
+      - targets: ['cadvisor-ingress.{{ domain_1 }}']
 
+
+# ! ---- Scrape config for metrics vm (local) ---- ! #
+  - job_name: "prometheus-{{ dc_traefik_type }}"
+    static_configs:
+      - targets: ["localhost:{{ dc_grafana_prometheus_port }}"]
+
+  - job_name: "node-exporter-{{ dc_traefik_type }}"
+    static_configs:
+      - targets: ["{{ dc_grafana_net_nodeexporter_ip }}:{{ dc_grafana_nodeexporter_port }}"]
+
+  - job_name: "cadvisor-{{ dc_traefik_type }}"
+    static_configs:
+      - targets: ["{{ dc_grafana_net_cadvisor_ip }}:{{ dc_grafana_cadvisor_port }}"]
+
+
+# ! ---- Scrape config for application-1 vm ---- ! #
+# * Scrape config for Node Exporter
   # - job_name: "node-exporter-application-1"
-  #   scheme: https
-  #   tls_config:
-  #     insecure_skip_verify: {{ dc_prometheus_nodeexporter_insecure_skip_verify }}
-  #   basic_auth:
-  #     username: "{{ dc_prometheus_nodeexporter_basic_auth_user }}"
-  #     password: "{{ dc_prometheus_nodeexporter_basic_auth_password }}"
-  #   metrics_path: '/metrics'
-  #   static_configs:
-  #     - targets: ["https://nodeexporter-application-1.{{ domain_1 }}"]
+  # like node-exporter-ingress
+
+
+# ! --------------------------- Notes --------------------------- ! #
+# ! Except for Prometheus itself which can use localhost, all other containers have to be defined by the IP of the internal network ips eg {{ dc_grafana_net_cadvisor_ip }} to work.
+# ! To verify if the setup is successful, check the Grafana GUI under Explore --> Metrics. The data source should be Prometheus and the Job should be cadvisor-{{ dc_traefik_type }}. If it's not present, it indicates a failure.
