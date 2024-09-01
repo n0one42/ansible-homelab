@@ -109,7 +109,7 @@ graph TD
     subgraph "demo-VM1-Ingress"
         A[Main Traefik]
         B[CrowdSec]
-        C[CrowdSec-Traefik-Bouncer]
+        C[CrowdSec-Traefik-Bouncer/Plugin]
         D[Authelia]
         G[Authentik]
         H[AdGuard / PowerDNS]
