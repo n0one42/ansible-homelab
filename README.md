@@ -167,6 +167,49 @@ graph TD
     A --> Q
 ```
 
+## 🚀 Scalability and High Availability
+
+### 🔍 Evaluation and Decision-Making Process
+
+After extensive evaluation and years of hands-on testing, a decision was made to prioritize simplicity and control over complexity. Kubernetes, while powerful and widely adopted in large-scale environments, introduces a level of complexity that may not be necessary or desirable for a homelab or small business setup.
+
+#### **Why Not Kubernetes?**
+
+1. **Complexity**: Kubernetes is a complex system that often requires a steep learning curve and intricate management. For someone who prefers to maintain a deep understanding of the entire stack and where to troubleshoot when issues arise, this complexity can be a significant drawback.
+  
+2. **Resource Requirements**: Running Kubernetes, even with lightweight distributions like k3s or solutions like Rancher, demands considerable resources. Maintaining a minimal Kubernetes cluster typically requires at least three nodes to avoid split-brain issues, further complicating the setup and increasing overhead.
+
+3. **Control**: The desire for control over every aspect of the infrastructure led to a preference for Docker and Docker Compose. Docker provides a more straightforward approach, enabling fine-grained control over container behavior, networking, and resource allocation without the overhead of managing a full-fledged orchestration system.
+
+4. **High Availability Concerns**: While tools like kube-vip and MetalLB can help achieve high availability in Kubernetes clusters, they also add to the complexity and potential points of failure. In contrast, a simpler setup using Proxmox with Docker allows for effective management of resources without the need for complex orchestration layers.
+
+### 🛠 Why Docker and Not Kubernetes?
+
+- **Simplicity**: Docker, paired with Docker Compose, offers a straightforward, well-understood environment that aligns well with the needs of a homelab. It supports the rapid deployment of containerized applications while keeping the infrastructure simple and manageable.
+
+- **Resource Efficiency**: Docker is less resource-intensive compared to Kubernetes. This makes it a more suitable choice for environments with limited resources, such as a homelab or small business.
+
+- **Ease of Backup and Recovery**: Using Proxmox Backup Server (PBS) and RAID for persistent data storage simplifies backup and recovery processes. Snapshots can be created frequently, and persistent data is stored securely, reducing downtime and ensuring quick recovery in case of failure.
+
+- **Minimized Downtime**: Docker's simplicity and Proxmox's robust snapshot capabilities allow for minimal downtime. Even in scenarios where the system experiences issues, recovery is straightforward, and the impact on the overall infrastructure is minimized.
+
+### 🗂 Considerations for High Availability
+
+While the current setup is designed to be straightforward and manageable without the complexities of clustering, it remains flexible enough to be extended into a high-availability (HA) architecture if needed in the future:
+
+- **Single Node Simplicity**: The current approach avoids the complexities and potential pitfalls of clustering, reducing points of failure and ensuring that each component is easy to manage and troubleshoot.
+
+- **Proxmox Cluster**: In scenarios where clustering might be considered, a minimal Proxmox cluster with two nodes supplemented by an additional quorum device (e.g., a Raspberry Pi) can help minimize potential points of failure. However, quorum loss remains a critical concern, which is why a simpler, more controllable single-node setup is currently favored.
+
+- **Potential for High Availability**: Despite not using a cluster, this setup is designed with future expansion in mind. For instance:
+  - **PostgreSQL Database**: The setup can be extended to include a highly available PostgreSQL database cluster. By deploying additional VMs with replicated PostgreSQL instances, you can achieve database redundancy and failover capabilities without rearchitecting the entire system.
+  - **Shared Storage**: Shared storage solutions like NFS or GlusterFS can be added across multiple VMs to ensure persistent data is accessible and resilient, supporting HA without a significant overhaul.
+  - **Load Balancing with MetalLB and kube-vip**: Tools such as MetalLB and kube-vip, often used in Kubernetes environments, can be utilized independently to provide load balancing and IP failover. This enables HA capabilities for your services by distributing traffic across multiple VMs.
+
+- **Scalability and Flexibility**: The current setup allows for future enhancements without the need to redo everything from scratch. Whether you need to add more VMs, implement HA databases, or introduce load balancing, the infrastructure is flexible enough to support these upgrades incrementally.
+
+In conclusion, while the initial focus is on simplicity and control, the design allows for easy expansion into a high-availability architecture if and when your requirements evolve. This ensures that you can scale and enhance your infrastructure without the need for a complete rebuild.
+
 ## 🔒 Security Measures
 
 - User namespace remapping (userns-remap) is implemented by default, providing additional container isolation and further separating container users from host system users
