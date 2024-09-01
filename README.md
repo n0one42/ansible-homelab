@@ -7,6 +7,7 @@
 - [Key Features](#-key-features)
 - [Network Configuration](#-network-configuration)
 - [Architecture](#-architecture)
+- [Scalability and High Availability](#-scalability-and-high-availability)
 - [Security Measures](#-security-measures)
 - [Logging and Monitoring](#-logging-and-monitoring)
 - [Traffic Flow](#-traffic-flow)
