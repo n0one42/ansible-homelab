@@ -176,13 +176,13 @@ After extensive evaluation and years of hands-on testing, a decision was made to
 
 #### **Why Not Kubernetes?**
 
-1. **Complexity**: Kubernetes is a complex system that often requires a steep learning curve and intricate management. For someone who prefers to maintain a deep understanding of the entire stack and where to troubleshoot when issues arise, this complexity can be a significant drawback.
+- **Complexity**: Kubernetes is a complex system that often requires a steep learning curve and intricate management. For someone who prefers to maintain a deep understanding of the entire stack and where to troubleshoot when issues arise, this complexity can be a significant drawback.
   
-2. **Resource Requirements**: Running Kubernetes, even with lightweight distributions like k3s or solutions like Rancher, demands considerable resources. Maintaining a minimal Kubernetes cluster typically requires at least three nodes to avoid split-brain issues, further complicating the setup and increasing overhead.
+- **Resource Requirements**: Running Kubernetes, even with lightweight distributions like k3s or solutions like Rancher, demands considerable resources. Maintaining a minimal Kubernetes cluster typically requires at least three nodes to avoid split-brain issues, further complicating the setup and increasing overhead.
 
-3. **Control**: The desire for control over every aspect of the infrastructure led to a preference for Docker and Docker Compose. Docker provides a more straightforward approach, enabling fine-grained control over container behavior, networking, and resource allocation without the overhead of managing a full-fledged orchestration system.
+- **Control**: The desire for control over every aspect of the infrastructure led to a preference for Docker and Docker Compose. Docker provides a more straightforward approach, enabling fine-grained control over container behavior, networking, and resource allocation without the overhead of managing a full-fledged orchestration system.
 
-4. **High Availability Concerns**: While tools like kube-vip and MetalLB can help achieve high availability in Kubernetes clusters, they also add to the complexity and potential points of failure. In contrast, a simpler setup using Proxmox with Docker allows for effective management of resources without the need for complex orchestration layers.
+- **High Availability Concerns**: While tools like kube-vip and MetalLB can help achieve high availability in Kubernetes clusters, they also add to the complexity and potential points of failure. In contrast, a simpler setup using Proxmox with Docker allows for effective management of resources without the need for complex orchestration layers.
 
 ### 🛠 Why Docker and Not Kubernetes?
 
@@ -204,10 +204,11 @@ While the current setup is designed to be straightforward and manageable without
 
 - **Potential for High Availability**: Despite not using a cluster, this setup is designed with future expansion in mind. For instance:
   - **PostgreSQL Database**: The setup can be extended to include a highly available PostgreSQL database cluster. By deploying additional VMs with replicated PostgreSQL instances, you can achieve database redundancy and failover capabilities without rearchitecting the entire system.
-  - **Shared Storage**: Shared storage solutions like NFS or GlusterFS can be added across multiple VMs to ensure persistent data is accessible and resilient, supporting HA without a significant overhaul.
+  - **Shared Storage**: Shared storage solutions like NFS, GlusterFS, or Ceph can be added across multiple VMs to ensure persistent data is accessible and resilient, supporting HA without a significant overhaul. Ceph, in particular, can provide highly available and scalable storage that integrates well with Proxmox.
   - **Load Balancing with MetalLB and kube-vip**: Tools such as MetalLB and kube-vip, often used in Kubernetes environments, can be utilized independently to provide load balancing and IP failover. This enables HA capabilities for your services by distributing traffic across multiple VMs.
+  - **Proxmox Multi-Cluster Setup**: Proxmox can be expanded into a multi-cluster environment later on if desired. This allows for greater scalability and redundancy, ensuring that resources can be balanced across multiple nodes and that the infrastructure can recover from node failures without service disruption.
 
-- **Scalability and Flexibility**: The current setup allows for future enhancements without the need to redo everything from scratch. Whether you need to add more VMs, implement HA databases, or introduce load balancing, the infrastructure is flexible enough to support these upgrades incrementally.
+- **Scalability and Flexibility**: The current setup allows for future enhancements without the need to redo everything from scratch. Whether you need to add more VMs, implement HA databases, introduce load balancing, or expand to a Proxmox multi-cluster, the infrastructure is flexible enough to support these upgrades incrementally.
 
 In conclusion, while the initial focus is on simplicity and control, the design allows for easy expansion into a high-availability architecture if and when your requirements evolve. This ensures that you can scale and enhance your infrastructure without the need for a complete rebuild.
 
