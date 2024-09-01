@@ -37,7 +37,7 @@ The main goals of this project are:
 
 - **Ansible-Lint Compliant**: Ensures best practices in Ansible usage
 - **Enhanced Security**: Implements userns-remap, non-root users for Docker containers, isolated networks, and auto-generated secrets
-- **Centralized Logging and Metrics**: Uses Promtail and Loki for efficient log management and monitoring
+- **Centralized Logging and Metrics**: Uses Promtail and Loki for efficient log management and monitoring; integrates Prometheus, cAdvisor, and Node Exporter for comprehensive metrics and performance analysis
 - **Guided Proxmox Installation**: Manual setup with automated creation and installation of VMs and containers
 - **Highly Customizable**: Ready to use out-of-the-box with predefined defaults that can be overridden at any time
 - **Comprehensive Documentation**: Each role includes its own configuration and extensive comments for ease of customization and understanding
@@ -78,16 +78,18 @@ The setup consists of three main Virtual Machines, each with its own Traefik ins
 
 1. **demo-vm10-ingress**: Acts as the main entry point and security layer
    - Main Traefik: Primary reverse proxy, connected to Cloudflare
-   - CrowdSec & CrowdSec-Traefik-Bouncer(Traefik-Plugin): Intrusion detection and prevention
+   - CrowdSec & CrowdSec-Traefik-Bouncer (Traefik-Plugin): Intrusion detection and prevention
    - Authelia & Authentik: Authentication services
    - AdGuard DNS services
    - Promtail Agent: Log collection
 
-2. **demo-vm20-metrics**: Handles logging and monitoring
+2. **demo-vm20-metrics**: Handles logging, monitoring, and metrics collection
    - Traefik: Local reverse proxy for metrics services
    - Loki: Log aggregation system
    - Grafana: Visualization and monitoring
-   - Other metrics tools
+   - Prometheus: Metrics collection and alerting
+   - cAdvisor: Resource usage and performance analysis
+   - Node Exporter: Hardware and OS metrics exporter
    - Promtail Agent: Log collection
 
 3. **demo-vm31-application**: Hosts the actual applications
@@ -97,7 +99,7 @@ The setup consists of three main Virtual Machines, each with its own Traefik ins
    - Other containerized applications
    - Promtail Agent: Log collection
 
-The main Traefik instance on demo-vm10-ingress acts as the entrypoint for external traffic, routing requests to the appropriate VM based on the application. Each VM's local Traefik instance then handles internal routing to the specific services within that VM.
+The main Traefik instance on demo-vm10-ingress acts as the entry point for external traffic, routing requests to the appropriate VM based on the application. Each VM's local Traefik instance then handles internal routing to the specific services within that VM.
 
 ```mermaid
 graph TD
@@ -109,8 +111,6 @@ graph TD
         B[CrowdSec]
         C[CrowdSec-Traefik-Bouncer]
         D[Authelia]
-        E[Postgres]
-        F[Redis]
         G[Authentik]
         H[AdGuard / PowerDNS]
         I[Promtail Agent]
@@ -133,8 +133,6 @@ graph TD
     A -->|Ingress Traffic| B
     B --> C
     A --> D
-    D --> E
-    D --> F
     A --> G
     A --> H
     I -->|Logs| J
