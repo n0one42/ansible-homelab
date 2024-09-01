@@ -199,13 +199,16 @@ This setup allows for:
 
 ## 🛠 Technologies Used
 
-- Proxmox: As the virtualization platform
-- Ansible: For automating the deployment and configuration
-- Docker & Docker Compose: For containerization
-- Traefik: For both main and local reverse proxying
-- Promtail & Loki: For unified logging
-- Grafana: For metrics visualization and alerting
-- Webmin: For web-based system administration
+- **Proxmox**: As the virtualization platform
+- **Ansible**: For automating the deployment and configuration
+- **Docker & Docker Compose**: For containerization
+- **Traefik**: For both main and local reverse proxying
+- **Promtail & Loki**: For unified logging
+- **Grafana**: For metrics visualization and alerting
+- **Prometheus**: A time-series database and monitoring system that collects and stores metrics, allowing for detailed performance analysis and alerting on resource thresholds.
+- **cAdvisor**: A container monitoring solution that provides insights into resource usage and performance at the container level, integrated with Prometheus for detailed metrics.
+- **Node Exporter**: A Prometheus exporter that collects hardware and OS-level metrics from the virtual machines, contributing to a comprehensive monitoring setup.
+- **Webmin**: For web-based system administration
 
 ## 📋 Prerequisites
 
