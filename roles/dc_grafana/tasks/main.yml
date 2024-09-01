@@ -245,3 +245,6 @@
 # 3. **Avoid Redundancy**: If possible, avoid defining the same datasource across multiple files with different settings. This can lead to confusion and potential conflicts.
 
 # 4. **Reloading**: Grafana supports reloading datasource configurations without needing to restart the service. This means you can add new datasources by simply placing a new configuration file in the provisioning directory, and Grafana will pick it up.
+
+# Dashboards
+# https://voidquark.com/blog/promtail-grafana-dashboard/
