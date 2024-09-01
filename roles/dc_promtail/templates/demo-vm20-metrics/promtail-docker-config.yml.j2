@@ -32,6 +32,9 @@ scrape_configs:
         # filters:
         #   - name: label
         #     values: ["logging=promtail"]
+        # filters:
+        #   - name: __meta_docker_container_name
+        #     values: ["grafana"] # For testing purposes only
     relabel_configs:
       - source_labels: ['__meta_docker_container_name']
         regex: '/(.*)'

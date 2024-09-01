@@ -1,8 +1,8 @@
 ---
 # handlers file for roles/dc_prometheus
-- name: Restart container
-  community.docker.docker_container:
-    name: "{{ app_name }}-prometheus"
-    state: started
-    restart: true
-  when: dc_prometheus_restart_container_on_template_change | default(true)
+# - name: Restart container
+#   community.docker.docker_container:
+#     name: "{{ dc_grafana_container_name if not dc_prometheus_standalone else 'standalone' }}-prometheus"
+#     state: started
+#     restart: true
+#   when: dc_prometheus_restart_container_on_template_change | default(true)
