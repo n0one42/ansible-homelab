@@ -81,23 +81,30 @@ The setup consists of three main Virtual Machines, each with its own Traefik ins
    - CrowdSec & CrowdSec-Traefik-Bouncer (Traefik-Plugin): Intrusion detection and prevention
    - Authelia & Authentik: Authentication services
    - AdGuard DNS services
-   - Promtail Agent: Log collection
+   - Promtail: Log collection
+   - cAdvisor: Resource usage and performance analysis
+   - Node Exporter: Hardware and OS metrics exporter
+   - Webmin: Web-based interface for managing Unix systems
 
 2. **demo-vm20-metrics**: Handles logging, monitoring, and metrics collection
    - Traefik: Local reverse proxy for metrics services
-   - Loki: Log aggregation system
    - Grafana: Visualization and monitoring
+   - Loki: Log aggregation system
    - Prometheus: Metrics collection and alerting
+   - Promtail: Log collection
    - cAdvisor: Resource usage and performance analysis
    - Node Exporter: Hardware and OS metrics exporter
-   - Promtail Agent: Log collection
+   - Webmin: Web-based interface for managing Unix systems
 
 3. **demo-vm31-application**: Hosts the actual applications
    - Traefik: Local reverse proxy for applications
    - Vaultwarden: Password manager
    - WikiJS: Wiki system
    - Other containerized applications
-   - Promtail Agent: Log collection
+   - Promtail: Log collection
+   - cAdvisor: Resource usage and performance analysis
+   - Node Exporter: Hardware and OS metrics exporter
+   - Webmin: Web-based interface for managing Unix systems
 
 The main Traefik instance on demo-vm10-ingress acts as the entry point for external traffic, routing requests to the appropriate VM based on the application. Each VM's local Traefik instance then handles internal routing to the specific services within that VM.
 
@@ -163,6 +170,7 @@ graph TD
 ## 🔒 Security Measures
 
 - User namespace remapping (userns-remap) is implemented by default, providing additional container isolation and further separating container users from host system users
+- Webmin access is secured by Traefik's HTTPS enforcement, utilizing Cloudflare for additional protection. Traefik's routing ensures that Webmin is accessible only via the defined routes, protecting the web GUI from unauthorized access.
 - All Docker containers run as non-root users with specific UID:GID mappings, not associated with any existing users on the host system
 - An Ansible role automatically generates strong passwords for various services (e.g., PostgreSQL, Redis, user accounts, JWT tokens) if not explicitly set, storing them in container-specific secret files
 - Ansible playbooks follow ansible-lint best practices for secure and efficient configuration
@@ -197,6 +205,7 @@ This setup allows for:
 - Traefik: For both main and local reverse proxying
 - Promtail & Loki: For unified logging
 - Grafana: For metrics visualization and alerting
+- Webmin: For web-based system administration
 
 ## 📋 Prerequisites
 
