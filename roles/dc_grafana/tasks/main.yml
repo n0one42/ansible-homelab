@@ -100,11 +100,19 @@
           vars:
             filesystem_manager_appdata_directories_to_create:
               - path: "data"
+              - path: "data/dashboards"
               - path: "config/provisioning/datasources"
+              - path: "config/provisioning/dashboards"
             filesystem_manager_appdata_templates_to_copy:
               - src: "ds.yml.j2"
                 dest: "config/provisioning/datasources/ds.yml"
                 mode: '0660'
+              - src: "dashboards/dashboards.yml.j2"
+                dest: "config/provisioning/dashboards/dashboards.yml"
+                mode: '0660'
+            filesystem_manager_appdata_files_in_directory_to_copy:
+              - src: "{{ playbook_dir | dirname }}/roles/dc_grafana/files/dashboards"
+                dest: "data/dashboards"
             filesystem_manager_secret_files_to_create:
               - var_name: db_user_pw
                 content: "{{ db_user_pw }}"
@@ -145,6 +153,7 @@
                   volumes:
                     - "{{ appdata_type_path }}/data:/var/lib/grafana"
                     - "{{ appdata_type_path }}/config/provisioning/datasources/ds.yml:/etc/grafana/provisioning/datasources/ds.yml"
+                    - "{{ appdata_type_path }}/config/provisioning/dashboards:/etc/grafana/provisioning/dashboards"
                     - "{{ secrets_type_path }}:/run/secrets"
                   environment:
                     GF_INSTALL_PLUGINS: "grafana-clock-panel"

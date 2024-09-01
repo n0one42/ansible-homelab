@@ -60,6 +60,30 @@
       no_log: true  # could contain sensitive data like acme.json therefore no log
       loop: "{{ filesystem_manager_appdata_files_to_create | default([]) }}"
 
+    - name: Copy all files from a directory
+      when: filesystem_manager_appdata_files_in_directory_to_copy | default([]) | length > 0
+      block:
+        - name: Find all files in the directory
+          delegate_to: localhost
+          become: false
+          ansible.builtin.find:
+            paths: "{{ item.src }}"
+            file_type: file
+          register: found_files
+          loop: "{{ filesystem_manager_appdata_files_in_directory_to_copy }}"
+
+        - name: Copy files found in the directories
+          ansible.builtin.copy:
+            src: "{{ item.path }}"
+            dest: "{{ appdata_type_path }}/{{ item_dest }}"
+            owner: "{{ user }}"
+            group: "{{ group }}"
+            mode: "{{ item.mode | default('0440') }}"
+            force: "{{ item.force | default(true) }}"
+          loop: "{{ found_files.results | map(attribute='files') | flatten(levels=1) }}"
+          vars:
+            item_dest: "{{ filesystem_manager_appdata_files_in_directory_to_copy | selectattr('src', 'equalto', item.path | dirname) | map(attribute='dest') | first }}/{{ item.path | basename }}"
+
 
     - name: Copy template files
       when: filesystem_manager_appdata_templates_to_copy | default([]) | length > 0
@@ -72,9 +96,6 @@
         force: "{{ item.force | default(true) }}"
       loop: "{{ filesystem_manager_appdata_templates_to_copy | default([]) }}"
       notify: Restart container # ? This will triggers the handler from the specific role eg promtail. Check promtail handler for infos
-
-    - name: Flush handlers
-      ansible.builtin.meta: flush_handlers
 
     - name: Copy all files from a template directory
       when: filesystem_manager_appdata_templates_in_directory_to_copy | default([]) | length > 0
