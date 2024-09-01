@@ -113,21 +113,27 @@ graph TD
         D[Authelia]
         G[Authentik]
         H[AdGuard / PowerDNS]
-        I[Promtail Agent]
+        I[Promtail]
+        X[cAdvisor]
+        Y[Node Exporter]
     end
     subgraph "demo-VM2-Metrics"
         J[Loki]
         K[Grafana]
-        L[Other Metrics Tools]
+        L[Prometheus]
         M[Traefik VM2]
-        R[Promtail Agent]
+        R[Promtail]
+        X2[cAdvisor]
+        Y2[Node Exporter]
     end
     subgraph "demo-VM3-Application-1"
         N[Vaultwarden]
         O[WikiJS]
         P[Other Tools]
         Q[Traefik VM3]
-        T[Promtail Agent]
+        T[Promtail]
+        X3[cAdvisor]
+        Y3[Node Exporter]
     end
     CF -->|External Traffic| A
     A -->|Ingress Traffic| B
@@ -135,18 +141,23 @@ graph TD
     A --> D
     A --> G
     A --> H
-    I -->|Logs| J
-    R -->|Logs| J
-    T -->|Logs| J
-    J --> K
-    A -->|Internal Traffic| M
-    A -->|Internal Traffic| Q
-    M --> J
-    M --> K
-    M --> L
+    A --> X
+    A --> Y
+    A --> I
     Q --> N
     Q --> O
     Q --> P
+    Q --> T
+    Q --> X3
+    Q --> Y3
+    M --> J
+    M --> K
+    M --> L
+    M --> R
+    M --> X2
+    M --> Y2
+    A --> M
+    A --> Q
 ```
 
 ## 🔒 Security Measures
