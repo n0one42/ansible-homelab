@@ -1,6 +1,6 @@
 ---
 # handlers file for roles/dc_promtail
-- name: Restart container --> {{ (dc_grafana_container_name + '-promtail' if not dc_promtail_standalone else 'standalone-promtail') }}
+- name: Restart container
   community.docker.docker_container:
     name: "{{ dc_grafana_container_name if not dc_promtail_standalone else 'standalone' }}-promtail"
     state: started
