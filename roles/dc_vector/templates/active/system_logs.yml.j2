@@ -1,0 +1,38 @@
+sources:
+# ! Logs
+  vector_internal_logs:
+    type: internal_logs
+    # pid_key: "pid"
+    # host_key: "host"
+  # host_logs:
+  #   type: file
+  #   include:
+  #     # - /var/log/**/*.log
+
+sinks:
+  # console:
+  #   inputs:
+  #     - my_docker_file_logs
+  #   type: console
+  #   encoding:
+  #     codec: json
+
+
+  loki_system_logs:
+    type: loki
+    inputs:
+      - vector_internal_logs
+      # - host_logs
+    endpoint: "http://{{ dc_traefik_net_loki_ip }}:3100"
+    encoding:
+      codec: json # json
+    labels:
+      job: "vector-collector"
+      job_type: "system_logs"
+      parser: vector
+      host: "{{ ansible_hostname }}"  # eg: demo-vm20-metrics
+      instance: "{{ ansible_hostname }}:3100"
+    # auth:
+    #   strategy: basic
+    #   user: "{{ dc_promtail_basic_auth_user }}"
+    #   password: "{{ dc_promtail_basic_auth_password }}"

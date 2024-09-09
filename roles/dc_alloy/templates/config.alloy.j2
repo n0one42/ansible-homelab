@@ -1,0 +1,19 @@
+discovery.docker "linux" {
+  host = "unix:///var/run/docker.sock"
+}
+
+loki.source.docker "default" {
+  host       = "unix:///var/run/docker.sock"
+  targets    = discovery.docker.linux.targets
+  labels     = {
+    "job" = "alloy_docker_logs",
+    "instance" = "{{ ansible_hostname }}",
+  }
+  forward_to = [loki.relabel.custom.receiver]
+}
+
+loki.write "local" {
+  endpoint {
+    url = "http://grafana-loki:3100/loki/api/v1/push"
+  }
+}

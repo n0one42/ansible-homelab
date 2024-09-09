@@ -1,0 +1,686 @@
+
+vector.dev
+Remap with VRL transform
+15–19 minutes
+
+Modify your observability data as it passes through your topology using Vector Remap Language (VRL)
+
+status: beta egress: stream state: stateless
+
+Is the recommended transform for parsing, shaping, and transforming data in Vector. It implements the Vector Remap Language (VRL), an expression-oriented language designed for processing observability data (logs and metrics) in a safe and performant manner.
+
+Please refer to the VRL reference when writing VRL scripts.
+Configuration
+
+Example configurations
+
+transforms:
+  my_transform_id:
+    type: remap
+    inputs:
+      - my-source-or-transform-id
+
+drop_on_abort
+optional bool
+
+Drops any event that is manually aborted during processing.
+
+If a VRL program is manually aborted (using abort) when processing an event, this option controls whether the original, unmodified event is sent downstream without any modifications or if it is dropped.
+
+Additionally, dropped events can potentially be diverted to a specially-named output for further logging and analysis by setting reroute_dropped.
+
+drop_on_error
+optional bool
+
+Drops any event that encounters an error during processing.
+
+Normally, if a VRL program encounters an error when processing an event, the original, unmodified event is sent downstream. In some cases, you may not want to send the event any further, such as if certain transformation or enrichment is strictly required. Setting drop_on_error to true allows you to ensure these events do not get processed any further.
+
+Additionally, dropped events can potentially be diverted to a specially named output for further logging and analysis by setting reroute_dropped.
+
+file
+optional string literal
+
+File path to the Vector Remap Language (VRL) program to execute for each event.
+
+If a relative path is provided, its root is the current working directory.
+
+Required if source is missing.
+
+metric_tag_values
+optional string literal enum
+
+When set to single, metric tag values are exposed as single strings, the same as they were before this config option. Tags with multiple values show the last assigned value, and null values are ignored.
+
+When set to full, all metric tags are exposed as arrays of either string or null values.
+
+Enum options string literal
+Option	Description
+full	All tags are exposed as arrays of either string or null values.
+single	Tag values are exposed as single strings, the same as they were before this config option. Tags with multiple values show the last assigned value, and null values are ignored.
+
+reroute_dropped
+optional bool
+
+Reroutes dropped events to a named output instead of halting processing on them.
+
+When using drop_on_error or drop_on_abort, events that are “dropped” are processed no further. In some cases, it may be desirable to keep the events around for further analysis, debugging, or retrying.
+
+In these cases, reroute_dropped can be set to true which forwards the original event to a specially-named output, dropped. The original event is annotated with additional fields describing why the event was dropped.
+
+timezone
+optional string literal
+
+The name of the timezone to apply to timestamp conversions that do not contain an explicit time zone.
+
+This overrides the global timezone option. The time zone name may be any name in the TZ database, or local to indicate system local time.
+Outputs
+
+<component_id>
+
+Default output stream of the component. Use this component’s ID as an input to downstream transforms and sinks.
+
+dropped
+
+This transform also implements an additional dropped output. When the drop_on_error or drop_on_abort configuration values are set to true and reroute_dropped is also set to true, events that result in runtime errors or aborts will be dropped from the default output stream and sent to the dropped output instead. For a transform component named foo, this output can be accessed by specifying foo.dropped as the input to another component. Events sent to this output will be in their original form, omitting any partial modification that took place before the error or abort.
+Telemetry
+
+Metrics
+link
+
+component_discarded_events_total
+counter
+
+The number of events dropped by this component.
+
+component_id
+
+The Vector component ID.
+
+component_kind
+
+The Vector component kind.
+
+component_type
+
+The Vector component type.
+
+host optional
+
+The hostname of the system Vector is running on.
+
+intentional
+
+True if the events were discarded intentionally, like a filter transform, or false if due to an error.
+
+pid optional
+
+The process ID of the Vector instance.
+
+component_errors_total
+counter
+
+The total number of errors encountered by this component.
+
+component_id
+
+The Vector component ID.
+
+component_kind
+
+The Vector component kind.
+
+component_type
+
+The Vector component type.
+
+error_type
+
+The type of the error
+
+host optional
+
+The hostname of the system Vector is running on.
+
+pid optional
+
+The process ID of the Vector instance.
+
+stage
+
+The stage within the component at which the error occurred.
+
+component_received_event_bytes_total
+counter
+
+The number of event bytes accepted by this component either from tagged origins like file and uri, or cumulatively from other origins.
+
+component_id
+
+The Vector component ID.
+
+component_kind
+
+The Vector component kind.
+
+component_type
+
+The Vector component type.
+
+container_name optional
+
+The name of the container from which the data originated.
+
+file optional
+
+The file from which the data originated.
+
+host optional
+
+The hostname of the system Vector is running on.
+
+mode optional
+
+The connection mode used by the component.
+
+peer_addr optional
+
+The IP from which the data originated.
+
+peer_path optional
+
+The pathname from which the data originated.
+
+pid optional
+
+The process ID of the Vector instance.
+
+pod_name optional
+
+The name of the pod from which the data originated.
+
+uri optional
+
+The sanitized URI from which the data originated.
+
+component_received_events_count
+histogram
+
+A histogram of the number of events passed in each internal batch in Vector’s internal topology.
+
+Note that this is separate than sink-level batching. It is mostly useful for low level debugging performance issues in Vector due to small internal batches.
+
+component_id
+
+The Vector component ID.
+
+component_kind
+
+The Vector component kind.
+
+component_type
+
+The Vector component type.
+
+container_name optional
+
+The name of the container from which the data originated.
+
+file optional
+
+The file from which the data originated.
+
+host optional
+
+The hostname of the system Vector is running on.
+
+mode optional
+
+The connection mode used by the component.
+
+peer_addr optional
+
+The IP from which the data originated.
+
+peer_path optional
+
+The pathname from which the data originated.
+
+pid optional
+
+The process ID of the Vector instance.
+
+pod_name optional
+
+The name of the pod from which the data originated.
+
+uri optional
+
+The sanitized URI from which the data originated.
+
+component_received_events_total
+counter
+
+The number of events accepted by this component either from tagged origins like file and uri, or cumulatively from other origins.
+
+component_id
+
+The Vector component ID.
+
+component_kind
+
+The Vector component kind.
+
+component_type
+
+The Vector component type.
+
+container_name optional
+
+The name of the container from which the data originated.
+
+file optional
+
+The file from which the data originated.
+
+host optional
+
+The hostname of the system Vector is running on.
+
+mode optional
+
+The connection mode used by the component.
+
+peer_addr optional
+
+The IP from which the data originated.
+
+peer_path optional
+
+The pathname from which the data originated.
+
+pid optional
+
+The process ID of the Vector instance.
+
+pod_name optional
+
+The name of the pod from which the data originated.
+
+uri optional
+
+The sanitized URI from which the data originated.
+
+component_sent_event_bytes_total
+counter
+
+The total number of event bytes emitted by this component.
+
+component_id
+
+The Vector component ID.
+
+component_kind
+
+The Vector component kind.
+
+component_type
+
+The Vector component type.
+
+host optional
+
+The hostname of the system Vector is running on.
+
+output optional
+
+The specific output of the component.
+
+pid optional
+
+The process ID of the Vector instance.
+
+component_sent_events_total
+counter
+
+The total number of events emitted by this component.
+
+component_id
+
+The Vector component ID.
+
+component_kind
+
+The Vector component kind.
+
+component_type
+
+The Vector component type.
+
+host optional
+
+The hostname of the system Vector is running on.
+
+output optional
+
+The specific output of the component.
+
+pid optional
+
+The process ID of the Vector instance.
+
+utilization
+gauge
+
+A ratio from 0 to 1 of the load on a component. A value of 0 would indicate a completely idle component that is simply waiting for input. A value of 1 would indicate a that is never idle. This value is updated every 5 seconds.
+
+component_id
+
+The Vector component ID.
+
+component_kind
+
+The Vector component kind.
+
+component_type
+
+The Vector component type.
+
+host optional
+
+The hostname of the system Vector is running on.
+
+pid optional
+
+The process ID of the Vector instance.
+Examples
+
+Parse Syslog logs
+Given this event...
+
+{
+  "log": {
+    "message": "\u003c102\u003e1 2020-12-22T15:22:31.111Z vector-user.biz su 2666 ID389 - Something went wrong"
+  }
+}
+
+...and this configuration...
+
+transforms:
+  my_transform_id:
+    type: remap
+    inputs:
+      - my-source-or-transform-id
+    source: . |= parse_syslog!(.message)
+
+...this Vector event is produced:
+
+{
+  "appname": "su",
+  "facility": "ntp",
+  "hostname": "vector-user.biz",
+  "message": "Something went wrong",
+  "msgid": "ID389",
+  "procid": 2666,
+  "severity": "info",
+  "timestamp": "2020-12-22T15:22:31.111Z",
+  "version": 1
+}
+
+Parse key/value (logfmt) logs
+Given this event...
+
+{
+  "log": {
+    "message": "@timestamp=\"Sun Jan 10 16:47:39 EST 2021\" level=info msg=\"Stopping all fetchers\" tag#production=stopping_fetchers id=ConsumerFetcherManager-1382721708341 module=kafka.consumer.ConsumerFetcherManager"
+  }
+}
+
+...and this configuration...
+
+transforms:
+  my_transform_id:
+    type: remap
+    inputs:
+      - my-source-or-transform-id
+    source: . = parse_key_value!(.message)
+
+...this Vector event is produced:
+
+{
+  "@timestamp": "Sun Jan 10 16:47:39 EST 2021",
+  "id": "ConsumerFetcherManager-1382721708341",
+  "level": "info",
+  "module": "kafka.consumer.ConsumerFetcherManager",
+  "msg": "Stopping all fetchers",
+  "tag#production": "stopping_fetchers"
+}
+
+Parse custom logs
+Given this event...
+
+{
+  "log": {
+    "message": "2021/01/20 06:39:15 +0000 [error] 17755#17755: *3569904 open() \"/usr/share/nginx/html/test.php\" failed (2: No such file or directory), client: xxx.xxx.xxx.xxx, server: localhost, request: \"GET /test.php HTTP/1.1\", host: \"yyy.yyy.yyy.yyy\""
+  }
+}
+
+...and this configuration...
+
+transforms:
+  my_transform_id:
+    type: remap
+    inputs:
+      - my-source-or-transform-id
+    source: >-
+      . |= parse_regex!(.message, r'^(?P<timestamp>\d+/\d+/\d+ \d+:\d+:\d+
+      \+\d+) \[(?P<severity>\w+)\] (?P<pid>\d+)#(?P<tid>\d+):(?:
+      \*(?P<connid>\d+))? (?P<message>.*)$')
+
+
+      # Coerce parsed fields
+
+      .timestamp = parse_timestamp(.timestamp, "%Y/%m/%d %H:%M:%S %z") ?? now()
+
+      .pid = to_int!(.pid)
+
+      .tid = to_int!(.tid)
+
+
+      # Extract structured data
+
+      message_parts = split(.message, ", ", limit: 2)
+
+      structured = parse_key_value(message_parts[1], key_value_delimiter: ":", field_delimiter: ",") ?? {}
+
+      .message = message_parts[0]
+
+      . = merge(., structured)      
+
+...this Vector event is produced:
+
+{
+  "client": "xxx.xxx.xxx.xxx",
+  "connid": "3569904",
+  "host": "yyy.yyy.yyy.yyy",
+  "message": "open() \"/usr/share/nginx/html/test.php\" failed (2: No such file or directory)",
+  "pid": 17755,
+  "request": "GET /test.php HTTP/1.1",
+  "server": "localhost",
+  "severity": "error",
+  "tid": 17755,
+  "timestamp": "2021-01-20T06:39:15Z"
+}
+
+Multiple parsing strategies
+Given this event...
+
+{
+  "log": {
+    "message": "\u003c102\u003e1 2020-12-22T15:22:31.111Z vector-user.biz su 2666 ID389 - Something went wrong"
+  }
+}
+
+...and this configuration...
+
+transforms:
+  my_transform_id:
+    type: remap
+    inputs:
+      - my-source-or-transform-id
+    source: >-
+      structured =
+        parse_syslog(.message) ??
+        parse_common_log(.message) ??
+        parse_regex!(.message, r'^(?P<timestamp>\d+/\d+/\d+ \d+:\d+:\d+) \[(?P<severity>\w+)\] (?P<pid>\d+)#(?P<tid>\d+):(?: \*(?P<connid>\d+))? (?P<message>.*)$')
+      . = merge(., structured)      
+
+...this Vector event is produced:
+
+{
+  "appname": "su",
+  "facility": "ntp",
+  "hostname": "vector-user.biz",
+  "message": "Something went wrong",
+  "msgid": "ID389",
+  "procid": 2666,
+  "severity": "info",
+  "timestamp": "2020-12-22T15:22:31.111Z",
+  "version": 1
+}
+
+Modify metric tags
+Given this event...
+
+{
+  "metric": {
+    "counter": {
+      "value": 102
+    },
+    "kind": "incremental",
+    "name": "user_login_total",
+    "tags": {
+      "email": "vic@vector.dev",
+      "host": "my.host.com",
+      "instance_id": "abcd1234"
+    }
+  }
+}
+
+...and this configuration...
+
+transforms:
+  my_transform_id:
+    type: remap
+    inputs:
+      - my-source-or-transform-id
+    source: |-
+      .tags.environment = get_env_var!("ENV") # add
+      .tags.hostname = del(.tags.host) # rename
+      del(.tags.email)      
+
+...this Vector event is produced:
+
+{
+  "counter": {
+    "value": 102
+  },
+  "kind": "incremental",
+  "name": "user_login_total",
+  "tags": {
+    "environment": "production",
+    "hostname": "my.host.com",
+    "instance_id": "abcd1234"
+  }
+}
+
+Emitting multiple logs from JSON
+Given this event...
+
+{
+  "log": {
+    "message": "[{\"message\": \"first_log\"}, {\"message\": \"second_log\"}]"
+  }
+}
+
+...and this configuration...
+
+transforms:
+  my_transform_id:
+    type: remap
+    inputs:
+      - my-source-or-transform-id
+    source: ". = parse_json!(.message) # sets `.` to an array of objects"
+
+...this Vector event is produced:
+
+[{"log":{"message":"first_log"}},{"log":{"message":"second_log"}}]
+
+Emitting multiple non-object logs from JSON
+Given this event...
+
+{
+  "log": {
+    "message": "[5, true, \"hello\"]"
+  }
+}
+
+...and this configuration...
+
+transforms:
+  my_transform_id:
+    type: remap
+    inputs:
+      - my-source-or-transform-id
+    source: ". = parse_json!(.message) # sets `.` to an array"
+
+...this Vector event is produced:
+
+[{"log":{"message":5}},{"log":{"message":true}},{"log":{"message":"hello"}}]
+
+How it works
+
+Emitting multiple log events
+
+Multiple log events can be emitted from remap by assigning an array to the root path .. One log event is emitted for each input element of the array.
+
+If any of the array elements isn’t an object, a log event is created that uses the element’s value as the message key. For example, 123 is emitted as:
+
+Event Data Model
+
+You can use the remap transform to handle both log and metric events.
+
+Log events in the remap transform correspond directly to Vector’s log schema, which means that the transform has access to the whole event and no restrictions on how the event can be modified.
+
+With metric events, VRL is much more restrictive. Below is a field-by-field breakdown of VRL’s access to metrics:
+Field	Access	Specific restrictions (if any)
+type	Read only	
+kind	Read/write	You can set kind to either incremental or absolute but not to an arbitrary value.
+name	Read/write	
+timestamp	Read/write/delete	You assign only a valid VRL timestamp value, not a VRL string.
+namespace	Read/write/delete	
+tags	Read/write/delete	The tags field must be a VRL object in which all keys and values are strings.
+
+It’s important to note that if you try to perform a disallowed action, such as deleting the type field using del(.type), Vector doesn’t abort the VRL program or throw an error. Instead, it ignores the disallowed action.
+
+Lazy Event Mutation
+
+When you make changes to an event through VRL’s path assignment syntax, the change isn’t immediately applied to the actual event. If the program fails to run to completion, any changes made until that point are dropped and the event is kept in its original state.
+
+If you want to make sure your event is changed as expected, you have to rewrite your program to never fail at runtime (the compiler can help you with this).
+
+Alternatively, if you want to ignore/drop events that caused the program to fail, you can set the drop_on_error configuration value to true.
+
+Learn more about runtime errors in the Vector Remap Language reference.
+
+Vector Remap Language
+
+The Vector Remap Language (VRL) is a restrictive, fast, and safe language we designed specifically for mapping observability data. It avoids the need to chain together many fundamental Vector transforms to accomplish rudimentary reshaping of data.
+
+The intent is to offer the same robustness of full language runtime (ex: Lua) without paying the performance or safety penalty.
+
+Learn more about Vector’s Remap Language in the Vector Remap Language reference.
+
+State
+
+This component is stateless, meaning its behavior is consistent across each input.

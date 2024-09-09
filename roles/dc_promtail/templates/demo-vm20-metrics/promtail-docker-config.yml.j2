@@ -9,20 +9,21 @@ clients:
   - url: http://grafana-loki:3100/loki/api/v1/push
     external_labels:
       instance: {{ ansible_hostname }}
+      job: "promtail"
 
 scrape_configs:
-  - job_name: file_logs
-    static_configs:
-      - targets:
-          - localhost
-        labels:
-          job: var_logs
-          __path__: /var/log/*.log
-      - targets:
-          - localhost
-        labels:
-          job: docker_file_logs
-          __path__: /opt/docker/logs/**/*.log
+  # - job_name: file_logs
+  #   static_configs:
+  #     - targets:
+  #         - localhost
+  #       labels:
+  #         job: var_logs
+  #         __path__: /var/log/*.log
+  #     - targets:
+  #         - localhost
+  #       labels:
+  #         job: docker_file_logs
+  #         __path__: /opt/docker/logs/**/*.log
 
   - job_name: docker_logs
     docker_sd_configs:
@@ -41,8 +42,8 @@ scrape_configs:
         target_label: 'container'
       - source_labels: ['__meta_docker_container_log_stream']
         target_label: 'logstream'
-      - source_labels: ['__meta_docker_container_label_logging_jobname']
-        target_label: 'job'
+      # - source_labels: ['__meta_docker_container_label_logging_jobname']
+      #   target_label: 'job'
 
 
 # If using filters with logging=promtail

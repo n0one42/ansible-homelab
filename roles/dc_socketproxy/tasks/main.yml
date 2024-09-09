@@ -17,47 +17,57 @@
       # * ---------------------------- App ------------------------------ * #
       services:
         socketproxy:
-          image: tecnativa/docker-socket-proxy:{{ dc_socketproxy_image_version }}
+          image: lscr.io/linuxserver/socket-proxy:{{ dc_socketproxy_image_version }}
           container_name: "{{ dc_socketproxy_container_name | default(app_name) }}-socketproxy"  # eg: traefik-socketproxy
           restart: always
           security_opt:
             - no-new-privileges:true
           privileged: false
           userns_mode: "{{ 'host' if dc_socketproxy_create_with_userns | bool == false else 'remap' }}"
-          # read_only: true # uncomment after first start if wanted
+          read_only: true
           networks:
             app_socketproxy_net: "{{ {'ipv4_address': dc_socketproxy_net_ip} if dc_socketproxy_net_ip is defined and dc_socketproxy_net_ip | length > 0 else {} }}"
           volumes:
             - /var/run/docker.sock:/var/run/docker.sock:ro
+          tmpfs:
+            - /run
           environment:
-            LOG_LEVEL: "{{ dc_socketproxy_env_log_level }}"  # debug, info, notice, warning, err, crit, alert and emerg
+            LOG_LEVEL: "{{ dc_socketproxy_env_log_level | default('info') }}"  # debug, info, notice, warning, err, crit, alert and emerg
             # * Variables match the URL prefix (i.e. AUTH blocks access to /auth/* parts of the API, etc.).
             # 0 to revoke access.
             # 1 to grant access.
             ## Granted by Default
-            EVENTS: "{{ dc_socketproxy_env_events }}"
-            PING: "{{ dc_socketproxy_env_ping }}"
-            VERSION: "{{ dc_socketproxy_env_version }}"
+            EVENTS: "{{ dc_socketproxy_env_events | default(1) }}"
+            PING: "{{ dc_socketproxy_env_ping | default(1) }}"
+            VERSION: "{{ dc_socketproxy_env_version | default(1) }}"
             # ! Revoked by Default
             # ! Security critical - Maximum caution when enabling these.
-            AUTH: "{{ dc_socketproxy_env_auth }}"
-            SECRETS: "{{ dc_socketproxy_env_secrets }}"
-            POST: "{{ dc_socketproxy_env_post }}" # Portainer, Watchtower
+            AUTH: "{{ dc_socketproxy_env_auth | default(0) }}"
+            SECRETS: "{{ dc_socketproxy_env_secrets | default(0) }}"
+            POST: "{{ dc_socketproxy_env_post | default(0) }}" # Portainer, Watchtower  # When set to 0, only GET and HEAD operations are allowed, making API access read-only.
             # * Not always needed - Can expose some information that your service does not need.
-            BUILD: "{{ dc_socketproxy_env_build }}"
-            COMMIT: "{{ dc_socketproxy_env_commit }}"
-            CONFIGS: "{{ dc_socketproxy_env_configs }}"
-            CONTAINERS: "{{ dc_socketproxy_env_containers }}" # Traefik, portainer, etc.
-            DISTRIBUTION: "{{ dc_socketproxy_env_distribution }}"
-            EXEC: "{{ dc_socketproxy_env_exec }}"
-            IMAGES: "{{ dc_socketproxy_env_images }}" # Portainer
-            INFO: "{{ dc_socketproxy_env_info }}" # Portainer
-            NETWORKS: "{{ dc_socketproxy_env_networks }}" # Portainer
-            NODES: "{{ dc_socketproxy_env_nodes }}"
-            PLUGINS: "{{ dc_socketproxy_env_plugins }}"
-            SERVICES: "{{ dc_socketproxy_env_services }}" # Portainer
-            SESSION: "{{ dc_socketproxy_env_session }}"
-            SWARM: "{{ dc_socketproxy_env_swarm }}"
-            SYSTEM: "{{ dc_socketproxy_env_system }}"
-            TASKS: "{{ dc_socketproxy_env_tasks }}" # Portainer
-            VOLUMES: "{{ dc_socketproxy_env_volumes }}" # Portainer
+            BUILD: "{{ dc_socketproxy_env_build | default(0) }}"
+            COMMIT: "{{ dc_socketproxy_env_commit | default(0) }}"
+            CONFIGS: "{{ dc_socketproxy_env_configs | default(0) }}"
+            CONTAINERS: "{{ dc_socketproxy_env_containers | default(0) }}" # Traefik, portainer, etc.
+            DISTRIBUTION: "{{ dc_socketproxy_env_distribution | default(0) }}"
+            EXEC: "{{ dc_socketproxy_env_exec | default(0) }}"
+            IMAGES: "{{ dc_socketproxy_env_images | default(0) }}" # Portainer
+            INFO: "{{ dc_socketproxy_env_info | default(0) }}" # Portainer
+            NETWORKS: "{{ dc_socketproxy_env_networks | default(0) }}" # Portainer
+            NODES: "{{ dc_socketproxy_env_nodes | default(0) }}"
+            PLUGINS: "{{ dc_socketproxy_env_plugins | default(0) }}"
+            SERVICES: "{{ dc_socketproxy_env_services | default(0) }}" # Portainer
+            SESSION: "{{ dc_socketproxy_env_session | default(0) }}"
+            SWARM: "{{ dc_socketproxy_env_swarm | default(0) }}"
+            SYSTEM: "{{ dc_socketproxy_env_system | default(0) }}"
+            TASKS: "{{ dc_socketproxy_env_tasks | default(0) }}" # Portainer
+            VOLUMES: "{{ dc_socketproxy_env_volumes | default(0) }}" # Portainer
+
+
+# https://github.com/Tecnativa/docker-socket-proxy
+# https://hub.docker.com/r/linuxserver/socket-proxy
+# The container should be run on the same docker network as the service(s) using it.
+# Most containers that would normally connect to a mounted docker.sock can have their endpoint overridden using the
+# DOCKER_HOST environment variable if they do not offer the option in their configuration;
+# it should typically be pointed to tcp://socket-proxy:2375

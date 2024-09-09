@@ -1,0 +1,5 @@
+GET http://10.0.90.20:3100/loki/services HTTP/1.1
+###
+
+GET http://10.0.90.20:3100/loki/api/v1/labels HTTP/1.1
+###

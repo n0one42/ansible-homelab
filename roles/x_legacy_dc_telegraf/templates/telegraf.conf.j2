@@ -1,0 +1,85 @@
+# Global tags can be specified here in key="value" format.
+[global_tags]
+  dc_type = "{{ dc_traefik_type }}"
+
+# Configuration for telegraf agent. Only one agent is possible per container
+[agent]
+  debug = true
+  quiet = false
+  interval = "10s"
+  round_interval = true
+  metric_batch_size = 1000
+  metric_buffer_limit = 10000
+  collection_jitter = "0s"
+  flush_interval = "10s"
+  flush_jitter = "0s"
+  precision = ""
+  hostname = "{{ ansible_hostname }}"
+  omit_hostname = false
+
+# Output plugin for InfluxDB
+[[outputs.influxdb_v2]]
+  urls = ["http://grafana-influxdb:8086"]
+  token = "Pur#-rM#0idy@2V4@.nCZ2Ys3QcWhZJWGf@yLactoM30f6x^hpl5wb9%bD#0xEFT"
+  organization = "homelab"
+  bucket = "{{ dc_grafana_influxdb_user_bucket_name }}"
+
+# Input Plugins
+
+# # System metrics (replaces Node Exporter)
+# [[inputs.cpu]]
+#   percpu = true
+#   totalcpu = true
+# [[inputs.disk]]
+#   ignore_fs = ["tmpfs", "devtmpfs", "devfs", "iso9660", "overlay", "aufs", "squashfs"]
+# [[inputs.diskio]]
+# [[inputs.mem]]
+# [[inputs.net]]
+# [[inputs.processes]]
+# [[inputs.swap]]
+# [[inputs.system]]
+
+# # Additional system metrics (to cover more Node Exporter metrics)
+# [[inputs.kernel]]
+# [[inputs.kernel_vmstat]]
+# [[inputs.linux_sysctl_fs]]
+# [[inputs.netstat]]
+# [[inputs.interrupts]]
+# [[inputs.conntrack]]
+
+# # Docker metrics (replaces cAdvisor)
+# [[inputs.docker]]
+#   endpoint = "tcp://{{ app_name }}-telegraf-socketproxy:2375"
+#   gather_services = false
+#   source_tag = false
+#   tag_env = ["GOMAXPROCS", "HOSTNAME"]
+#   container_name_include = []
+#   container_name_exclude = []
+#   timeout = "5s"
+
+[[inputs.tail]]
+  files = ["/opt/docker/logs/traefik.log", "/opt/docker/logs/access.log"]
+  from_beginning = true
+  watch_method = "inotify"
+
+  # Use a specific grok pattern for each file type
+  data_format = "grok"
+
+  # Apply grok patterns for each type of log
+  grok_patterns = [
+    '''%{COMBINED_LOG_FORMAT}''',  # access.log pattern
+    '''%{TIMESTAMP_ISO8601:timestamp} %{LOGLEVEL:log_level} %{GREEDYDATA:message}'''  # traefik.log pattern
+  ]
+
+  # Custom tag to identify the source log file
+  tagexclude = ["filename"]
+
+  # Add the filename as a tag dynamically
+  [inputs.tail.tags]
+    source = "/opt/docker/logs/"
+
+  # Processor to add the filename as a tag based on the source file
+  [[processors.override]]
+    namepass = ["tail"]
+    [processors.override.tags]
+      filename = 'string(path_replace(source, "/opt/docker/logs/(.*)", "$1"))'

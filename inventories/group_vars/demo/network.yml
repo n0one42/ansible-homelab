@@ -73,6 +73,8 @@ dc_traefik_net_address: "{{ dc_traefik_net_base }}.0"
 dc_traefik_net_prefix_length: 24  # usable => 10.100.90.2 - 10.100.90.254
 dc_traefik_net_cidr: "{{ dc_traefik_net_address }}/{{ dc_traefik_net_prefix_length }}"  # 10.100.90.0/24
 
+dc_traefik_net_elasticsearch_ip: "{{ dc_traefik_net_base }}.243"  # 10.100.90.243
+dc_traefik_net_wud_ip: "{{ dc_traefik_net_base }}.244"  # 10.100.90.244
 dc_traefik_net_nodeexporter_ip: "{{ dc_traefik_net_base }}.245"  # 10.100.90.245
 dc_traefik_net_promethus_ip: "{{ dc_traefik_net_base }}.246"  # 10.100.90.246
 dc_traefik_net_promtail_ip: "{{ dc_traefik_net_base }}.247"  # 10.100.90.247
@@ -120,15 +122,37 @@ dc_promtail_socketproxy_net_app_ip: "{{ dc_promtail_socketproxy_net_base }}.12" 
 dc_promtail_socketproxy_net_ip: "{{ dc_promtail_socketproxy_net_base }}.13"  # 10.100.20.13
 
 # ? -----------------------------------------------------------------------------
-# *                                   Cadvisor                                   *
+# *                            Whats-Up-Docker (WUD)                            *
 # ? -----------------------------------------------------------------------------
-dc_cadvisor_socketproxy_net_base: 10.100.20
-dc_cadvisor_socketproxy_net_address: "{{ dc_cadvisor_socketproxy_net_base }}.16"
-dc_cadvisor_socketproxy_net_prefix_length: 29 # 6 usable octets eg 10.100.20.18 - 10.100.20.22
-dc_cadvisor_socketproxy_net_cidr: "{{ dc_cadvisor_socketproxy_net_address }}/{{ dc_cadvisor_socketproxy_net_prefix_length }}"  # 10.100.20.16/29
+dc_wud_socketproxy_net_base: 10.100.20
+dc_wud_socketproxy_net_address: "{{ dc_wud_socketproxy_net_base }}.16"
+dc_wud_socketproxy_net_prefix_length: 29 # 6 usable octets eg 10.100.20.18 - 10.100.20.22
+dc_wud_socketproxy_net_cidr: "{{ dc_wud_socketproxy_net_address }}/{{ dc_wud_socketproxy_net_prefix_length }}"  # 10.100.20.16/29
 
-dc_cadvisor_socketproxy_net_app_ip: "{{ dc_cadvisor_socketproxy_net_base }}.20"  # 10.100.20.20
-dc_cadvisor_socketproxy_net_ip: "{{ dc_cadvisor_socketproxy_net_base }}.21"  # 10.100.20.21
+dc_wud_socketproxy_net_app_ip: "{{ dc_wud_socketproxy_net_base }}.20"  # 10.100.20.20
+dc_wud_socketproxy_net_ip: "{{ dc_wud_socketproxy_net_base }}.21"  # 10.100.20.21
+
+# ? -----------------------------------------------------------------------------
+# *                                  Telegraf                                   *
+# ? -----------------------------------------------------------------------------
+dc_telegraf_socketproxy_net_base: 10.100.20
+dc_telegraf_socketproxy_net_address: "{{ dc_telegraf_socketproxy_net_base }}.24"
+dc_telegraf_socketproxy_net_prefix_length: 29 # 6 usable octets eg 10.100.20.26 - 10.100.20.30
+dc_telegraf_socketproxy_net_cidr: "{{ dc_telegraf_socketproxy_net_address }}/{{ dc_telegraf_socketproxy_net_prefix_length }}"  # 10.100.20.24/29
+
+dc_telegraf_socketproxy_net_app_ip: "{{ dc_telegraf_socketproxy_net_base }}.28"  # 10.100.20.28
+dc_telegraf_socketproxy_net_ip: "{{ dc_telegraf_socketproxy_net_base }}.29"  # 10.100.20.29
+
+# ? -----------------------------------------------------------------------------
+# *                                   Vector                                    *
+# ? -----------------------------------------------------------------------------
+dc_vector_socketproxy_net_base: 10.100.20
+dc_vector_socketproxy_net_address: "{{ dc_vector_socketproxy_net_base }}.32"
+dc_vector_socketproxy_net_prefix_length: 29 # 6 usable octets eg 10.100.20.34 - 10.100.20.38
+dc_vector_socketproxy_net_cidr: "{{ dc_vector_socketproxy_net_address }}/{{ dc_vector_socketproxy_net_prefix_length }}"  # 10.100.20.32/29
+
+dc_vector_socketproxy_net_app_ip: "{{ dc_vector_socketproxy_net_base }}.36"  # 10.100.20.36
+dc_vector_socketproxy_net_ip: "{{ dc_vector_socketproxy_net_base }}.37"  # 10.100.20.37
 
 # ? ######################################################################################## #
 # *                                            Apps                                          #
@@ -202,6 +226,9 @@ dc_grafana_net_promtail_ip: "{{ dc_grafana_net_base }}.166"
 dc_grafana_net_prometheus_ip: "{{ dc_grafana_net_base }}.167"
 dc_grafana_net_nodeexporter_ip: "{{ dc_grafana_net_base }}.168"
 dc_grafana_net_cadvisor_ip: "{{ dc_grafana_net_base }}.169"
+dc_grafana_net_influxdb_ip: "{{ dc_grafana_net_base }}.170"
+dc_grafana_net_vector_ip: "{{ dc_grafana_net_base }}.171"
+dc_grafana_net_elasticsearch_ip: "{{ dc_grafana_net_base }}.172"
 
 # ? ######################################################################################## #
 # !                                   Standalone containers                                  #

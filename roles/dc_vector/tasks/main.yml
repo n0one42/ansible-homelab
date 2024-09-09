@@ -1,0 +1,138 @@
+---
+# tasks file for roles/dc_vector
+# TODO: Variables which has to be passed through the playbook or on import of this task file
+# ! Mandatory variables
+  # vars:
+  #   app_name: => traefik, portainer, grafana, netbox
+# ? Optional variables
+
+- name: Create Vector & Socket Proxy
+  block:
+    - name: Set facts app_name for Vector standalone
+      ansible.builtin.set_fact:
+        app_name: "standalone"
+      when: dc_vector_standalone | default(false)
+
+  # ? Does not work correctly with the socketproxy.
+
+  # * --------------------------- App --------------------------- *
+    - name: Create vector for --> {{ app_name }}
+      vars:
+        container_type: "vector" # => app, db, redis, loki, vector
+        user: "{{ (dc_vector_create_with_userns | bool) | ternary(dc_vector_u_g_id + 100000, dc_vector_u_g_id) }}"
+        group: "{{ (dc_vector_create_with_userns | bool) | ternary(dc_vector_u_g_id + 100000, dc_vector_u_g_id) }}"
+      block:
+        - name: '[Required] filesystem_manager role'
+          ansible.builtin.import_role:
+            name: filesystem_manager
+          vars:
+            filesystem_manager_appdata_directories_to_create:
+              - path: "config"
+            filesystem_manager_appdata_templates_in_directory_to_copy:
+              - src: "{{ playbook_dir | dirname }}/roles/dc_vector/templates/active"
+                dest: "config"
+            # filesystem_manager_appdata_templates_to_copy:
+            #   - src: "vector.yml.j2"
+            #     dest: "vector.yml"
+              # - src: "docker_metrics.yml.j2"
+              #   dest: "docker_metrics.yml"
+          notify:
+            - Restart vector
+
+        - name: Install docker compose vector with inline definition
+          vars:
+            docker_networks: >-
+              {{
+                {
+                  "traefik_net": {
+                    "name": dc_traefik_net_name,
+                    "external": true
+                  },
+                }
+                | combine(
+                  {
+                    "app_net": {
+                      "name": app_name ~ "_net",
+                      "external": true
+                    }
+                  } if not dc_vector_standalone else {}
+                )
+              }}
+
+          community.docker.docker_compose_v2:
+            project_name: "{{ app_name }}-vector" # eg: grafana-vector
+            definition:
+              # ! --------------------------- Networks --------------------------- ! #
+              networks: "{{ docker_networks }}"
+
+
+              # * ---------------------------- App ------------------------------ * #
+              services:
+                vector:
+                  image: timberio/vector:{{ dc_vector_image_version }}
+                  container_name: "{{ app_name }}-vector"  # eg: grafana-vector
+                  restart: unless-stopped
+                  security_opt:
+                    - no-new-privileges:true
+                  privileged: false
+                  # userns_mode: "{{ 'host' if dc_vector_create_with_userns | bool == false else 'remap' }}"
+                  # user: "{{ dc_vector_u_g_id }}:{{ dc_vector_u_g_id }}"
+                  userns_mode: "host" # Until im sure everything works
+                  # user: "0:0" # Until im sure everything works
+                  deploy:
+                    resources:
+                      limits:
+                        cpus: '0.50'
+                  command: ["-c", "/etc/vector/*.yml"]
+                  # extra_hosts:
+                  #   - "loki-metrics.{{ domain_1 }}:{{ dc_vector_loki_traefik_ip | default('127.0.0.1') }}"  # Has to be the internal ip of the traefik where loki is running
+                  networks:
+                    app_net: "{{ {'ipv4_address': dc_vector_net_ip} if dc_vector_net_ip is defined and dc_vector_net_ip | length > 0 and not dc_vector_standalone | default(false) | bool else omit }}"
+                    traefik_net: "{{ {'ipv4_address': dc_traefik_net_vector_ip} if dc_traefik_net_vector_ip is defined and dc_traefik_net_vector_ip | length > 0 else {} }}"
+                  # ports:
+                    # - "{{ dc_vector_port }}:8686"
+                    # - 9598:9598 # Prometheus Exporter default port
+                  volumes:
+                    # - "{{ appdata_type_path }}/config:/etc/vector"
+                    - "{{ appdata_type_path }}/config/common.yml:/etc/vector/common.yml:ro"
+                    - "{{ appdata_type_path }}/config/system_metrics.yml:/etc/vector/system_metrics.yml:ro"
+                    - "{{ appdata_type_path }}/config/system_logs.yml:/etc/vector/system_logs.yml:ro"
+                    - "{{ appdata_type_path }}/config/docker_logs.yml:/etc/vector/docker_logs.yml:ro"
+                    # - /sys/fs/cgroup:/sys/fs/cgroup:ro
+                    # - /proc:/rootfs/proc:ro
+                    # - /sys:/rootfs/sys:ro
+                    # - /var/log:/var/log:ro
+                    - /opt/docker/logs:/opt/docker/logs:ro
+                    - /var/run/docker.sock:/var/run/docker.sock:ro
+                  environment:
+                    # DOCKER_HOST: "{{ dc_vector_socketproxy_net_ip }}:2375"
+                    VECTOR_LOG: info  # trace, debug, info, warn, error, off default: info
+                    # HOST_PROC: /rootfs/proc
+                    # HOST_SYS: /rootfs/sys
+                    # HOST_ETC: /rootfs/etc
+
+        - name: Flush handlers
+          ansible.builtin.meta: flush_handlers
+
+
+# ! --------------------------- Notes --------------------------- ! #
+# Depending on the logs wanted, it is best to use this container as root. Since this will not be exposed, this should be acceptable.
+# Seams not to work correctly with the socketproxy.
+# ? It is recommended to use the namespace: node to make it compatible with other dashboards made for like the node exporter and additional an extra label like parser: vector or node-exporter
+
+# Vector is more than enough for system metrics compared to node exporter. Therefore I decided to use vector and not node exporter.
+
+# Recommended to use all logs (systems, containers, services, etc.) to at least info level
+# https://vector.dev/docs/reference/api/
+# http://10.0.90.20:8686/playground to test
+# https://playground.vrl.dev/
+# https://vector.dev/docs/reference/vrl/examples/
+
+# When using the api request, the source is the important part which will be shown in Grafana. Not the _index, _id or _score.
+
+# Promtail works at a message level, Vector includes also the metadata and then the message as a own field.
+# Vector also seams to include by default all metadata fields while promtail needs to be exctracted like the container name from __meta_docker_container_name
+# The Logs in Grafana always works at the message level. Therefore this is what gets splitted as a single log entry.
+# Therefore if I want good Logs, I have to manipulate the message field, or declare a own one and set this in grafana to be used when using Elasticsearch as datasource.
+# The message part has still to be parsed to get the collors based on log level (error, info, warn, ...)
+# ? also a important message. Labels are meant to be the fields in grafana. Not to be confused with docker labels.

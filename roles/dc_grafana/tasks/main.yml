@@ -20,6 +20,7 @@
 
   # * ------------------------ Grafana DB ------------------------ * #
     - name: Include postgresql role
+      when: not dc_grafana_use_sqlite
       ansible.builtin.import_role:
         name: dc_postgresql_bitnami
       vars:
@@ -43,26 +44,26 @@
         dc_loki_port: "{{ dc_grafana_loki_port }}"
 
 
-  # * ------------------------ Grafana Promtail ------------------------ * #
-    - name: Include promtail role
-      ansible.builtin.import_role:
-        name: dc_promtail
-      vars:
-        dc_promtail_create_with_userns: "{{ dc_grafana_promtail_create_with_userns }}"
-        dc_promtail_image_version: "{{ dc_grafana_promtail_image_version }}"
-        dc_promtail_net_ip: "{{ dc_grafana_net_promtail_ip }}"
-        dc_promtail_port: "{{ dc_grafana_promtail_port }}"
+  # # * ------------------------ Grafana Promtail ------------------------ * #
+  #   - name: Include promtail role
+  #     ansible.builtin.import_role:
+  #       name: dc_promtail
+  #     vars:
+  #       dc_promtail_create_with_userns: "{{ dc_grafana_promtail_create_with_userns }}"
+  #       dc_promtail_image_version: "{{ dc_grafana_promtail_image_version }}"
+  #       dc_promtail_net_ip: "{{ dc_grafana_net_promtail_ip }}"
+  #       dc_promtail_port: "{{ dc_grafana_promtail_port }}"
 
 
-  # * ------------------------ Grafana Node Exporter ------------------------ * #
-    - name: Include node-exporter role
-      ansible.builtin.import_role:
-        name: dc_node-exporter
-      vars:
-        dc_nodeexporter_create_with_userns: "{{ dc_grafana_nodeexporter_create_with_userns }}"
-        dc_nodeexporter_image_version: "{{ dc_grafana_nodeexporter_image_version }}"
-        dc_nodeexporter_net_ip: "{{ dc_grafana_net_nodeexporter_ip }}"
-        dc_nodeexporter_port: "{{ dc_grafana_nodeexporter_port }}"
+  # # * ------------------------ Grafana Node Exporter ------------------------ * #
+  #   - name: Include node-exporter role
+  #     ansible.builtin.import_role:
+  #       name: dc_node-exporter
+  #     vars:
+  #       dc_nodeexporter_create_with_userns: "{{ dc_grafana_nodeexporter_create_with_userns }}"
+  #       dc_nodeexporter_image_version: "{{ dc_grafana_nodeexporter_image_version }}"
+  #       dc_nodeexporter_net_ip: "{{ dc_grafana_net_nodeexporter_ip }}"
+  #       dc_nodeexporter_port: "{{ dc_grafana_nodeexporter_port }}"
 
 
   # * ------------------------ Grafana Cadvisor ------------------------ * #
@@ -85,6 +86,54 @@
         dc_prometheus_image_version: "{{ dc_grafana_prometheus_image_version }}"
         dc_prometheus_net_ip: "{{ dc_grafana_net_prometheus_ip }}"
         dc_prometheus_port: "{{ dc_grafana_prometheus_port }}"
+
+
+  # * ------------------------ Grafana Vector ------------------------ * #
+    - name: Include vector role
+      ansible.builtin.import_role:
+        name: dc_vector
+      vars:
+        dc_vector_create_with_userns: "{{ dc_grafana_vector_create_with_userns }}"
+        dc_vector_image_version: "{{ dc_grafana_vector_image_version }}"
+        dc_vector_net_ip: "{{ dc_grafana_net_vector_ip }}"
+        dc_vector_port: "{{ dc_grafana_vector_port }}"
+
+
+  # # * ------------------------ Grafana Alloy ------------------------ * #
+  #   - name: Include alloy role
+  #     ansible.builtin.import_role:
+  #       name: dc_alloy
+  #     vars:
+  #       dc_alloy_create_with_userns: "{{ dc_grafana_alloy_create_with_userns }}"
+  #       dc_alloy_image_version: "{{ dc_grafana_alloy_image_version }}"
+  #       dc_alloy_net_ip: "{{ dc_grafana_net_alloy_ip }}"
+  #       dc_alloy_port: "{{ dc_grafana_alloy_port }}"
+
+
+  # # * ------------------------ Grafana InfluxDB ------------------------ * #
+  #   - name: Include InfluxDB role
+  #     ansible.builtin.import_role:
+  #       name: dc_influxdb_bitnami
+  #     vars:
+  #       dc_influxdb_bitnami_create_with_userns: "{{ dc_grafana_influxdb_create_with_userns }}"
+  #       dc_influxdb_bitnami_image_version: "{{ dc_grafana_influxdb_image_version }}"
+  #       dc_influxdb_bitnami_admin_pw: "{{ dc_grafana_influxdb_admin_pw }}"
+  #       dc_influxdb_bitnami_user_bucket_name: "{{ dc_grafana_influxdb_user_bucket_name }}"
+  #       dc_influxdb_bitnami_user_name: "{{ dc_grafana_influxdb_user_name }}"
+  #       dc_influxdb_bitnami_user_pw: "{{ dc_grafana_influxdb_user_pw }}"
+  #       dc_influxdb_bitnami_net_ip: "{{ dc_grafana_net_influxdb_ip }}"
+
+
+  # # * ------------------------ Grafana Elasticsearch ------------------------ * #
+  #   - name: Include Elasticsearch role
+  #     ansible.builtin.import_role:
+  #       name: dc_elasticsearch_bitnami
+  #     vars:
+  #       dc_elasticsearch_bitnami_create_with_userns: "{{ dc_grafana_elasticsearch_create_with_userns }}"
+  #       dc_elasticsearch_bitnami_image_version: "{{ dc_grafana_elasticsearch_image_version }}"
+  #       dc_elasticsearch_bitnami_admin_user_name: "{{ dc_grafana_elasticsearch_admin_user_name }}"
+  #       dc_elasticsearch_bitnami_admin_user_pw: "{{ dc_grafana_elasticsearch_admin_user_pw }}"
+  #       dc_elasticsearch_bitnami_net_ip: "{{ dc_grafana_net_elasticsearch_ip }}"
 
 
   # * ----------------------- Grafana App ------------------------- *
@@ -114,12 +163,20 @@
               - src: "{{ playbook_dir | dirname }}/roles/dc_grafana/files/dashboards"
                 dest: "data/dashboards"
             filesystem_manager_secret_files_to_create:
-              - var_name: db_user_pw
-                content: "{{ db_user_pw }}"
               - var_name: dc_grafana_admin_user
                 content: "{{ dc_grafana_admin_user }}"
               - var_name: dc_grafana_admin_pw
                 content: "{{ dc_grafana_admin_pw }}"
+
+        - name: '[Required] filesystem_manager role for db credentials'
+          when: not dc_grafana_use_sqlite
+          ansible.builtin.import_role:
+            name: filesystem_manager
+          vars:
+            filesystem_manager_secret_files_to_create:
+              - var_name: db_user_pw
+                content: "{{ db_user_pw }}"
+
 
         - name: Install docker compose grafana with inline definition
           community.docker.docker_compose_v2:
@@ -162,12 +219,12 @@
                     GF_SECURITY_ADMIN_USER__FILE: "/run/secrets/dc_grafana_admin_user"
                     GF_SECURITY_ADMIN_PASSWORD__FILE: "/run/secrets/dc_grafana_admin_pw"
 
-                    GF_DATABASE_TYPE: postgres
-                    GF_DATABASE_HOST: "{{ dc_grafana_net_db_ip }}"
-                    GF_DATABASE_PORT: "{{ db_port }}"
-                    GF_DATABASE_NAME: "{{ db_name }}"
-                    GF_DATABASE_USER: "{{ db_user_name }}"
-                    GF_DATABASE_PASSWORD__FILE: "/run/secrets/db_user_pw"
+                    GF_DATABASE_TYPE: "{{ 'postgres' if not dc_grafana_use_sqlite else omit }}"
+                    GF_DATABASE_HOST: "{{ dc_grafana_net_db_ip if not dc_grafana_use_sqlite else omit }}"
+                    GF_DATABASE_PORT: "{{ db_port if not dc_grafana_use_sqlite else omit }}"
+                    GF_DATABASE_NAME: "{{ db_name if not dc_grafana_use_sqlite else omit }}"
+                    GF_DATABASE_USER: "{{ db_user_name if not dc_grafana_use_sqlite else omit }}"
+                    GF_DATABASE_PASSWORD__FILE: "{{ '/run/secrets/db_user_pw' if not dc_grafana_use_sqlite else omit }}"
                   labels:
                     traefik.enable: "true"
                     ## HTTP Routers

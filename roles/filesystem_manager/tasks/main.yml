@@ -95,7 +95,7 @@
         mode: "{{ item.mode | default('0440') }}"  # 0550 for executable
         force: "{{ item.force | default(true) }}"
       loop: "{{ filesystem_manager_appdata_templates_to_copy | default([]) }}"
-      notify: Restart container # ? This will triggers the handler from the specific role eg promtail. Check promtail handler for infos
+      # notify: Restart container # ? This will triggers the handler from the specific role eg promtail. Check promtail handler for infos
 
     - name: Copy all files from a template directory
       when: filesystem_manager_appdata_templates_in_directory_to_copy | default([]) | length > 0

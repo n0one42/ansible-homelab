@@ -19,3 +19,18 @@ datasources:
     isDefault: false
     version: 1
     editable: false
+  - name: Elasticsearch
+    type: elasticsearch
+    access: proxy
+    orgId: 1
+    url: http://{{ app_name }}-elasticsearch:9200
+    jsonData:
+      # index: 'docker-logs-YYYY.MM.DD'
+      # interval: Daily
+      timeField: 'timestamp'
+      logMessageField: message
+      logLevelField: level.keyword
+    basicAuth: false
+    isDefault: false
+    version: 1
+    editable: true

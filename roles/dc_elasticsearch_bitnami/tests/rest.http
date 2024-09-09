@@ -1,0 +1,29 @@
+GET http://10.0.90.20:9200/_cluster/health HTTP/1.1
+###
+
+GET http://10.0.90.20:9200/_cat/indices?v HTTP/1.1
+###
+
+# http://<your-elasticsearch-server>:9200/my-index/_search
+# POST http://10.0.90.20:9200/docker-logs/_search HTTP/1.1
+# POST http://10.0.90.20:9200/vector-2024.09.04/_search HTTP/1.1
+POST http://10.0.90.20:9200/docker-logs-2024-09-07/_search HTTP/1.1
+Content-Type: application/json
+
+{
+  "query": {
+    "match_all": {}
+  }
+}
+###
+
+POST http://10.0.90.20:9200/docker-logs-test1/_search HTTP/1.1
+Content-Type: application/json
+
+{
+  "_source": ["container_name"],
+  "query": {
+    "match_all": {}
+  }
+}
+###

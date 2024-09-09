@@ -74,6 +74,7 @@ logs_type_path: "{{ docker_logs }}/{{ app_name }}/{{ container_type }}" # eg: lo
 
 dc_crowdsec_u_g_id: 0 # !  such an odd container... # ! to many problems... odd container... therefore host mode and root
 dc_cadvisor_u_g_id: 0 # with userns --> 122030 # ! needs root sadly
+dc_wud_u_g_id: 22001 # with userns --> 122001
 dc_authelia_u_g_id: 22002 # with userns --> 122002
 dc_traefik_u_g_id: 22003 # with userns --> 122003
 dc_adguard_u_g_id: 22007 # with userns --> 122007
@@ -84,6 +85,10 @@ dc_loki_u_g_id: 22026 # with userns --> 122026
 dc_promtail_u_g_id: 22027 # with userns --> 122027
 dc_prometheus_u_g_id: 22028 # with userns --> 122028
 dc_nodeexporter_u_g_id: 22029 # with userns --> 122029
+dc_influxdb_u_g_id: 22030 # with userns --> 122030
+dc_telegraf_u_g_id: 22031 # with userns --> 122031
+dc_vector_u_g_id: 22032 # with userns --> 122032
+dc_alloy_u_g_id: 22033 # with userns --> 122033
 
 # ? -----------------------------------------------------------------------------
 # *                                  dc_adguard                                 *
@@ -262,6 +267,8 @@ dc_grafana_admin_user: "{{ demo_auth_user }}"
 dc_grafana_admin_pw: "{{ demo_auth_user_pw }}"  # Empty for generated password
 dc_grafana_port: 3000
 
+dc_grafana_use_sqlite: true  # because not many users and data therefore postgresql = overhead
+
 # * ---------------->>> DB Configuration <<<---------------- * #
 # * >>> Container variables
 dc_grafana_db_create_with_userns: true
@@ -342,10 +349,117 @@ dc_cadvisor_insecure_skip_verify: "{{ dc_traefik_acme_staging_mode }}"
 dc_cadvisor_basic_auth_user: "{{ demo_auth_user }}" # traefik basic auth credentials
 dc_cadvisor_basic_auth_password: "{{ demo_auth_user_pw }}"  # traefik basic auth credentials
 
+# * ------------>>> Alloy Configuration <<<------------ * #
+# * >>> Container variables
+dc_grafana_alloy_create_with_userns: true
+dc_grafana_alloy_image_version: "v1.3.1"
+dc_grafana_alloy_log_level: "info" # default: info [debug, info, warn, error]
+# dc_grafana_alloy_port: 9080
+
+## ? Environment variables if used in standalone mode (external alloy)
+dc_alloy_standalone: false
+dc_alloy_insecure_skip_verify: "{{ dc_traefik_acme_staging_mode }}"
+dc_alloy_basic_auth_user: "{{ demo_auth_user }}" # traefik basic auth credentials
+dc_alloy_basic_auth_password: "{{ demo_auth_user_pw }}"  # traefik basic auth credentials
+
+## ? Environment variables for socketproxy
+dc_alloy_socketproxy_env_log_level: "info"  # debug, info, notice, warning, err, crit, alert and emerg
+
+# * Not always needed - Can expose some information that your service does not need
+dc_alloy_socketproxy_env_containers: "1"
+dc_alloy_socketproxy_env_networks: "1"
+dc_alloy_socketproxy_env_nodes: "1"
+dc_alloy_socketproxy_env_services: "1"
+dc_alloy_socketproxy_env_tasks: "1"
+
+# * ---------------->>> InfluxDB Configuration <<<---------------- * #
+# * >>> Container variables
+dc_grafana_influxdb_create_with_userns: true
+dc_grafana_influxdb_image_version: "2"
+dc_grafana_influxdb_admin_pw: ""  # Empty for generated password ; superuser name --> postgres
+dc_grafana_influxdb_user_bucket_name: "grafana"
+dc_grafana_influxdb_user_name: "grafana"
+dc_grafana_influxdb_user_pw: ""  # Empty for generated password
+
+# * ---------------->>> Elasticsearch Configuration <<<---------------- * #
+# * >>> Container variables
+dc_grafana_elasticsearch_create_with_userns: true
+dc_grafana_elasticsearch_image_version: "latest"
+dc_grafana_elasticsearch_admin_user_name: "elastic"
+dc_grafana_elasticsearch_admin_user_pw: ""  # Empty for generated password
+
+# * ------------>>> Telegraf Configuration <<<------------ * #
+# * >>> Container variables
+dc_grafana_telegraf_create_with_userns: true
+dc_grafana_telegraf_image_version: "latest"
+dc_grafana_telegraf_log_level: "info" # default: info [debug, info, warn, error]
+dc_grafana_telegraf_port: 8125
+
+## ? Environment variables if used in standalone mode (external promtail)
+dc_telegraf_standalone: false
+dc_telegraf_insecure_skip_verify: "{{ dc_traefik_acme_staging_mode }}"
+dc_telegraf_basic_auth_user: "{{ demo_auth_user }}" # traefik basic auth credentials
+dc_telegraf_basic_auth_password: "{{ demo_auth_user_pw }}"  # traefik basic auth credentials
+
+## ? Environment variables for socketproxy
+dc_telegraf_socketproxy_env_log_level: "info"  # debug, info, notice, warning, err, crit, alert and emerg
+
+# * Not always needed - Can expose some information that your service does not need
+dc_telegraf_socketproxy_env_containers: "1"
+dc_telegraf_socketproxy_env_networks: "1"
+dc_telegraf_socketproxy_env_nodes: "1"
+dc_telegraf_socketproxy_env_services: "1"
+dc_telegraf_socketproxy_env_tasks: "1"
+
+# * ------------>>> Vector Configuration <<<------------ * #
+# * >>> Container variables
+dc_grafana_vector_create_with_userns: true
+dc_grafana_vector_image_version: "0.40.1-debian"
+dc_grafana_vector_log_level: "info" # default: info [debug, info, warn, error]
+dc_grafana_vector_port: 8686
+
+## ? Environment variables if used in standalone mode (external promtail)
+dc_vector_standalone: false
+dc_vector_insecure_skip_verify: "{{ dc_traefik_acme_staging_mode }}"
+dc_vector_basic_auth_user: "{{ demo_auth_user }}" # traefik basic auth credentials
+dc_vector_basic_auth_password: "{{ demo_auth_user_pw }}"  # traefik basic auth credentials
+
+# # ? Does not work correctly with the socketproxy.
 
 # ? -----------------------------------------------------------------------------
 # *                                dc_whoami                                    *
 # ? -----------------------------------------------------------------------------
+
+
+# ? -----------------------------------------------------------------------------
+# *                             dc_whats-up-docker                              *
+# ? -----------------------------------------------------------------------------
+# * ------------->>> Container Configuration <<<------------ * #
+# * >>> Container variables
+dc_wud_container_name: "whats-up-docker"
+dc_wud_create_with_userns: true
+dc_wud_image_version: "latest"
+dc_wud_log_level: "info"
+dc_wud_port: 3000
+
+## ? Environment variables if used in standalone mode (external wud)
+dc_wud_insecure_skip_verify: "{{ dc_traefik_acme_staging_mode }}"
+dc_wud_basic_auth_user: "{{ demo_auth_user }}" # traefik basic auth credentials
+dc_wud_basic_auth_password: "{{ demo_auth_user_pw }}"  # traefik basic auth credentials
+
+## ? Environment variables for socketproxy
+dc_wud_socketproxy_env_log_level: "info"  # debug, info, notice, warning, err, crit, alert and emerg
+dc_wud_socketproxy_env_ping: "1"
+
+# * Not always needed - Can expose some information that your service does not need
+dc_wud_socketproxy_env_containers: "1"
+dc_wud_socketproxy_env_networks: "1"
+dc_wud_socketproxy_env_nodes: "1"
+dc_wud_socketproxy_env_services: "1"
+dc_wud_socketproxy_env_tasks: "1"
+dc_wud_socketproxy_env_info: "1"
+dc_wud_socketproxy_env_volumes: "1"
+dc_wud_socketproxy_env_images: "1"  # 100% needed
 
 
 ####################################################################################################################################################

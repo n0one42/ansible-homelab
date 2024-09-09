@@ -1,0 +1,31 @@
+sources:
+# # ! Metrics
+  vector_internal_metrics:
+    type: internal_metrics
+    namespace: "vector" # default: vector
+    # tags:
+    #   pid_key: "pid"
+    #   host_key: "host"
+
+  host_metrics:
+    type: host_metrics
+    namespace: "node" # to make it compatible with other dashboards made for like the node exporter and additional an extra label like parser: vector or node-exporter
+
+sinks:
+  system_metrics:
+    type: prometheus_exporter
+    inputs:
+      - vector_internal_metrics
+      - host_metrics
+    address: "0.0.0.0:9598"
+
+  # influxdb_v2:
+  #   type: influxdb_metrics
+  #   inputs:
+  #     - host_metrics
+  #   endpoint: "http://{{ app_name }}-influxdb:8086"
+  #   org: "{{ dc_influxdb_bitnami_user_org | default(dc_influxdb_bitnami_org_name | default('homelab')) }}"
+  #   bucket: "grafana"
+  #   token: "Pur#-rM#0idy@2V4@.nCZ2Ys3QcWhZJWGf@yLactoM30f6x^hpl5wb9%bD#0xEFT"
+  #   tags:
+  #     host: "{{ ansible_hostname }}"

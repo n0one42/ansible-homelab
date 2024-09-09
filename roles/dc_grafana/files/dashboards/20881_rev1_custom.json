@@ -20,21 +20,8 @@
   "fiscalYearStartMonth": 0,
   "gnetId": 20881,
   "graphTooltip": 0,
-  "id": 8,
-  "links": [
-    {
-      "asDropdown": false,
-      "icon": "doc",
-      "includeVars": false,
-      "keepTime": false,
-      "tags": [],
-      "targetBlank": true,
-      "title": "Github Source",
-      "tooltip": "Github Source",
-      "type": "link",
-      "url": "https://github.com/voidquark/grafana-dashboards"
-    }
-  ],
+  "id": 7,
+  "links": [],
   "panels": [
     {
       "collapsed": false,
@@ -46,11 +33,12 @@
       },
       "id": 3,
       "panels": [],
-      "title": "Promtail - Stats",
+      "title": "Vector - Stats",
       "type": "row"
     },
     {
       "datasource": {
+        "default": true,
         "type": "loki",
         "uid": "P8E80F9AEF21F6940"
       },
@@ -115,7 +103,7 @@
             "uid": "P8E80F9AEF21F6940"
           },
           "editorMode": "code",
-          "expr": "sum by(instance) (count_over_time({$label_name=~\"$label_value\", job=~\"$job\", instance=~\"$instance\"} | logfmt | level=\"debug\" | __error__=\"\" [$__range]))",
+          "expr": "sum by(host) (count_over_time({$label_name=~\"$label_value\", job=~\"$job\", host=~\"$host\"} | logfmt | level=\"debug\" | __error__=\"\" [$__range]))",
           "queryType": "instant",
           "refId": "A"
         }
@@ -125,6 +113,7 @@
     },
     {
       "datasource": {
+        "default": true,
         "type": "loki",
         "uid": "P8E80F9AEF21F6940"
       },
@@ -189,7 +178,7 @@
             "uid": "P8E80F9AEF21F6940"
           },
           "editorMode": "code",
-          "expr": "sum by(instance) (count_over_time({$label_name=~\"$label_value\", job=~\"$job\", instance=~\"$instance\"} | logfmt | level=\"info\" | __error__=\"\" [$__range]))",
+          "expr": "sum by(host) (count_over_time({$label_name=~\"$label_value\", job=~\"$job\", host=~\"$host\"} | logfmt | level=\"info\" | __error__=\"\" [$__range]))",
           "queryType": "instant",
           "refId": "A"
         }
@@ -199,6 +188,7 @@
     },
     {
       "datasource": {
+        "default": true,
         "type": "loki",
         "uid": "P8E80F9AEF21F6940"
       },
@@ -263,7 +253,7 @@
             "uid": "P8E80F9AEF21F6940"
           },
           "editorMode": "code",
-          "expr": "sum by(instance) (count_over_time({$label_name=~\"$label_value\", job=~\"$job\", instance=~\"$instance\"} | logfmt | level=\"warn\" | __error__=\"\" [$__range]))",
+          "expr": "sum by(host) (count_over_time({$label_name=~\"$label_value\", job=~\"$job\", host=~\"$host\"} | logfmt | level=\"warn\" | __error__=\"\" [$__range]))",
           "queryType": "instant",
           "refId": "A"
         }
@@ -273,6 +263,7 @@
     },
     {
       "datasource": {
+        "default": true,
         "type": "loki",
         "uid": "P8E80F9AEF21F6940"
       },
@@ -337,7 +328,7 @@
             "uid": "P8E80F9AEF21F6940"
           },
           "editorMode": "code",
-          "expr": "sum by(instance) (count_over_time({$label_name=~\"$label_value\", job=~\"$job\", instance=~\"$instance\"} | logfmt | level=\"error\" | __error__=\"\" [$__range]))",
+          "expr": "sum by(host) (count_over_time({$label_name=~\"$label_value\", job=~\"$job\", host=~\"$host\"} | logfmt | level=\"error\" | __error__=\"\" [$__range]))",
           "queryType": "instant",
           "refId": "A"
         }
@@ -347,6 +338,7 @@
     },
     {
       "datasource": {
+        "default": true,
         "type": "loki",
         "uid": "P8E80F9AEF21F6940"
       },
@@ -411,16 +403,17 @@
             "uid": "P8E80F9AEF21F6940"
           },
           "editorMode": "code",
-          "expr": "sum(count_over_time({$label_name=~\"$label_value\", job=~\"$job\", instance=~\"$instance\"} | __error__=\"\" [$__range]))",
+          "expr": "sum(count_over_time({$label_name=~\"$label_value\", job=~\"$job\", host=~\"$host\"} | __error__=\"\" [$__range]))",
           "queryType": "instant",
           "refId": "A"
         }
       ],
-      "title": "Promtail Log Lines",
+      "title": "Total Log Lines",
       "type": "stat"
     },
     {
       "datasource": {
+        "default": true,
         "type": "loki",
         "uid": "P8E80F9AEF21F6940"
       },
@@ -487,16 +480,17 @@
             "uid": "P8E80F9AEF21F6940"
           },
           "editorMode": "code",
-          "expr": "sum(bytes_over_time({$label_name=~\"$label_value\", job=~\"$job\", instance=~\"$instance\"} | __error__=\"\" [$__range]))",
+          "expr": "sum(bytes_over_time({$label_name=~\"$label_value\", job=~\"$job\", host=~\"$host\"} | __error__=\"\" [$__range]))",
           "queryType": "instant",
           "refId": "A"
         }
       ],
-      "title": "Promtail Log in bytes",
+      "title": "Log in bytes",
       "type": "stat"
     },
     {
       "datasource": {
+        "default": false,
         "type": "prometheus",
         "uid": "PBFA97CFB590B2093"
       },
@@ -551,7 +545,7 @@
           },
           "editorMode": "code",
           "exemplar": false,
-          "expr": "promtail_build_info{job=~\"$job\", instance=~\"$instance.*\"} ",
+          "expr": "vector_build_info{job=~\"$job\", host=~\"$host.*\"} ",
           "format": "time_series",
           "instant": true,
           "interval": "",
@@ -560,78 +554,12 @@
           "refId": "A"
         }
       ],
-      "title": "Promtail Version",
+      "title": "Vector Version",
       "type": "stat"
     },
     {
       "datasource": {
-        "type": "prometheus",
-        "uid": "PBFA97CFB590B2093"
-      },
-      "description": "Number of active files.",
-      "fieldConfig": {
-        "defaults": {
-          "mappings": [],
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "#77a0ed",
-                "value": null
-              }
-            ]
-          },
-          "unit": "short"
-        },
-        "overrides": []
-      },
-      "gridPos": {
-        "h": 3,
-        "w": 2,
-        "x": 17,
-        "y": 1
-      },
-      "id": 16,
-      "options": {
-        "colorMode": "value",
-        "graphMode": "area",
-        "justifyMode": "auto",
-        "orientation": "auto",
-        "percentChangeColorMode": "standard",
-        "reduceOptions": {
-          "calcs": [
-            "lastNotNull"
-          ],
-          "fields": "",
-          "values": false
-        },
-        "showPercentChange": false,
-        "textMode": "auto",
-        "wideLayout": true
-      },
-      "pluginVersion": "11.2.0",
-      "targets": [
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "PBFA97CFB590B2093"
-          },
-          "editorMode": "code",
-          "exemplar": false,
-          "expr": "promtail_files_active_total{job=~\"$job\", instance=~\"$instance.*\"} ",
-          "format": "time_series",
-          "instant": true,
-          "interval": "",
-          "legendFormat": "__auto",
-          "range": false,
-          "refId": "A"
-        }
-      ],
-      "title": "Active Files",
-      "type": "stat"
-    },
-    {
-      "datasource": {
+        "default": false,
         "type": "prometheus",
         "uid": "PBFA97CFB590B2093"
       },
@@ -654,8 +582,8 @@
       },
       "gridPos": {
         "h": 3,
-        "w": 3,
-        "x": 19,
+        "w": 5,
+        "x": 17,
         "y": 1
       },
       "id": 30,
@@ -685,7 +613,7 @@
           },
           "editorMode": "code",
           "exemplar": false,
-          "expr": "rate(promtail_sent_bytes_total{job=~\"$job\", instance=~\"$instance.*\"}[$interval])",
+          "expr": "rate(vector_component_sent_event_bytes_total{job=~\"$job\", host=~\"$host.*\"}[$interval])",
           "format": "time_series",
           "instant": true,
           "interval": "",
@@ -699,6 +627,7 @@
     },
     {
       "datasource": {
+        "default": true,
         "type": "loki",
         "uid": "P8E80F9AEF21F6940"
       },
@@ -727,7 +656,7 @@
             "uid": "P8E80F9AEF21F6940"
           },
           "editorMode": "code",
-          "expr": "{$label_name=~\"$label_value\", job=~\"$job\", instance=~\"$instance\"} | logfmt | level=\"debug\" |= \"$filter\" | line_format `➡️ 🔵 {{regexReplaceAll \"level=debug|ts=[^\\\\s]+\\\\s\" __line__ \"$1\" | trim  }}`",
+          "expr": "{$label_name=~\"$label_value\", job=~\"$job\", host=~\"$host\"} | logfmt | level=\"debug\" |= \"$filter\" | line_format `➡️ 🔵 {{regexReplaceAll \"level=debug|ts=[^\\\\s]+\\\\s\" __line__ \"$1\" | trim  }}`",
           "queryType": "range",
           "refId": "A"
         },
@@ -737,7 +666,7 @@
             "uid": "P8E80F9AEF21F6940"
           },
           "editorMode": "code",
-          "expr": "{$label_name=~\"$label_value\", job=~\"$job\", instance=~\"$instance\"} | logfmt | level=\"info\" |= \"$filter\" | line_format `➡️ 🟢 {{regexReplaceAll \"level=info|ts=[^\\\\s]+\\\\s\" __line__ \"$1\" | trim }}`",
+          "expr": "{$label_name=~\"$label_value\", job=~\"$job\", host=~\"$host\"} | logfmt | level=\"info\" |= \"$filter\" | line_format `➡️ 🟢 {{regexReplaceAll \"level=info|ts=[^\\\\s]+\\\\s\" __line__ \"$1\" | trim }}`",
           "hide": false,
           "queryType": "range",
           "refId": "B"
@@ -748,7 +677,7 @@
             "uid": "P8E80F9AEF21F6940"
           },
           "editorMode": "code",
-          "expr": "{$label_name=~\"$label_value\", job=~\"$job\", instance=~\"$instance\"} | logfmt | level=\"warn\" |= \"$filter\" | line_format `➡️ 🟡 {{regexReplaceAll \"level=warn|ts=[^\\\\s]+\\\\s\" __line__ \"$1\" | trim  }}`",
+          "expr": "{$label_name=~\"$label_value\", job=~\"$job\", host=~\"$host\"} | logfmt | level=\"warn\" |= \"$filter\" | line_format `➡️ 🟡 {{regexReplaceAll \"level=warn|ts=[^\\\\s]+\\\\s\" __line__ \"$1\" | trim  }}`",
           "hide": false,
           "queryType": "range",
           "refId": "C"
@@ -759,17 +688,58 @@
             "uid": "P8E80F9AEF21F6940"
           },
           "editorMode": "code",
-          "expr": "{$label_name=~\"$label_value\", job=~\"$job\", instance=~\"$instance\"} | logfmt | level=\"error\" |= \"$filter\" | line_format `➡️ 🔴 {{regexReplaceAll \"level=error|ts=[^\\\\s]+\\\\s\" __line__ \"$1\" | trim  }}`",
+          "expr": "{$label_name=~\"$label_value\", job=~\"$job\", host=~\"$host\"} | logfmt | level=\"error\" |= \"$filter\" | line_format `➡️ 🔴 {{regexReplaceAll \"level=error|ts=[^\\\\s]+\\\\s\" __line__ \"$1\" | trim  }}`",
           "hide": false,
           "queryType": "range",
           "refId": "D"
         }
       ],
-      "title": "Promtail Recent Logs",
+      "title": "Vector Recent Logs",
       "type": "logs"
     },
     {
       "datasource": {
+        "default": true,
+        "type": "loki",
+        "uid": "P8E80F9AEF21F6940"
+      },
+      "description": "Use LogQL Filter to filter information.",
+      "gridPos": {
+        "h": 12,
+        "w": 22,
+        "x": 0,
+        "y": 16
+      },
+      "id": 34,
+      "options": {
+        "dedupStrategy": "none",
+        "enableLogDetails": true,
+        "prettifyLogMessage": false,
+        "showCommonLabels": false,
+        "showLabels": false,
+        "showTime": true,
+        "sortOrder": "Descending",
+        "wrapLogMessage": false
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "loki",
+            "uid": "P8E80F9AEF21F6940"
+          },
+          "editorMode": "builder",
+          "expr": "{$label_name=~\"$label_value\", job=~\"$job\", level=\"$level\"} | logfmt |= `$filter`",
+          "hide": false,
+          "queryType": "range",
+          "refId": "D"
+        }
+      ],
+      "title": "Logs by level",
+      "type": "logs"
+    },
+    {
+      "datasource": {
+        "default": false,
         "type": "datasource",
         "uid": "-- Mixed --"
       },
@@ -889,7 +859,7 @@
         "h": 8,
         "w": 22,
         "x": 0,
-        "y": 16
+        "y": 28
       },
       "id": 33,
       "options": {
@@ -916,7 +886,7 @@
           },
           "editorMode": "code",
           "exemplar": false,
-          "expr": "100 * sum(rate(promtail_request_duration_seconds_count{job=~\"$job\", instance=~\"$instance.*\",status_code=~\"5.*\"}[$interval])) by (job, instance) / sum(rate(promtail_request_duration_seconds_count{job=~\"$job\", instance=~\"$instance.*\"}[$interval])) by (job, instance)",
+          "expr": "100 * sum(rate(promtail_request_duration_seconds_count{job=~\"$job\", host=~\"$host.*\",status_code=~\"5.*\"}[$interval])) by (job, host) / sum(rate(promtail_request_duration_seconds_count{job=~\"$job\", host=~\"$host.*\"}[$interval])) by (job, host)",
           "hide": false,
           "instant": false,
           "legendFormat": "Error Requests",
@@ -929,7 +899,7 @@
             "uid": "P8E80F9AEF21F6940"
           },
           "editorMode": "code",
-          "expr": "sum by (level) (count_over_time({$label_name=~\"$label_value\", job=~\"$job\", instance=~\"$instance\"} | logfmt | level=\"warn\" | __error__=\"\"[$__auto]))",
+          "expr": "sum by (level) (count_over_time({$label_name=~\"$label_value\", job=~\"$job\", host=~\"$host\"} | logfmt | level=\"warn\" | __error__=\"\"[$__auto]))",
           "hide": false,
           "legendFormat": "Warning Logs Lines",
           "queryType": "range",
@@ -941,7 +911,7 @@
             "uid": "P8E80F9AEF21F6940"
           },
           "editorMode": "code",
-          "expr": "sum by (level) (count_over_time({$label_name=~\"$label_value\", job=~\"$job\", instance=~\"$instance\"} | logfmt | level=\"error\" | __error__=\"\"[$__auto]))",
+          "expr": "sum by (level) (count_over_time({$label_name=~\"$label_value\", job=~\"$job\", host=~\"$host\"} | logfmt | level=\"error\" | __error__=\"\"[$__auto]))",
           "hide": false,
           "legendFormat": "Error Logs Lines",
           "queryType": "range",
@@ -952,848 +922,850 @@
       "type": "timeseries"
     },
     {
-      "collapsed": false,
+      "collapsed": true,
       "gridPos": {
         "h": 1,
         "w": 24,
         "x": 0,
-        "y": 24
+        "y": 36
       },
       "id": 19,
-      "panels": [],
+      "panels": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "PBFA97CFB590B2093"
+          },
+          "description": "Number of bytes read. - Overtime",
+          "fieldConfig": {
+            "defaults": {
+              "color": {
+                "mode": "palette-classic"
+              },
+              "custom": {
+                "axisBorderShow": false,
+                "axisCenteredZero": false,
+                "axisColorMode": "text",
+                "axisLabel": "",
+                "axisPlacement": "auto",
+                "barAlignment": 0,
+                "barWidthFactor": 0.6,
+                "drawStyle": "line",
+                "fillOpacity": 0,
+                "gradientMode": "none",
+                "hideFrom": {
+                  "legend": false,
+                  "tooltip": false,
+                  "viz": false
+                },
+                "insertNulls": false,
+                "lineInterpolation": "linear",
+                "lineWidth": 1,
+                "pointSize": 5,
+                "scaleDistribution": {
+                  "type": "linear"
+                },
+                "showPoints": "auto",
+                "spanNulls": false,
+                "stacking": {
+                  "group": "A",
+                  "mode": "none"
+                },
+                "thresholdsStyle": {
+                  "mode": "off"
+                }
+              },
+              "mappings": [],
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "purple"
+                  }
+                ]
+              },
+              "unit": "Bps"
+            },
+            "overrides": [
+              {
+                "matcher": {
+                  "id": "byName",
+                  "options": "promtail_read_bytes_total"
+                },
+                "properties": [
+                  {
+                    "id": "color"
+                  }
+                ]
+              }
+            ]
+          },
+          "gridPos": {
+            "h": 12,
+            "w": 12,
+            "x": 0,
+            "y": 25
+          },
+          "id": 18,
+          "options": {
+            "legend": {
+              "calcs": [
+                "lastNotNull",
+                "max"
+              ],
+              "displayMode": "table",
+              "placement": "right",
+              "showLegend": true,
+              "width": 350
+            },
+            "tooltip": {
+              "mode": "multi",
+              "sort": "none"
+            }
+          },
+          "pluginVersion": "10.4.1",
+          "targets": [
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "PBFA97CFB590B2093"
+              },
+              "editorMode": "code",
+              "exemplar": false,
+              "expr": "rate(promtail_read_bytes_total{job=~\"$job\", instance=~\"$instance.*\"}[$interval])",
+              "format": "time_series",
+              "instant": false,
+              "interval": "",
+              "legendFormat": "{{path}}",
+              "range": true,
+              "refId": "A"
+            }
+          ],
+          "title": "Read Bytes - Overtime",
+          "type": "timeseries"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "PBFA97CFB590B2093"
+          },
+          "description": "",
+          "fieldConfig": {
+            "defaults": {
+              "color": {
+                "mode": "thresholds"
+              },
+              "custom": {
+                "align": "auto",
+                "cellOptions": {
+                  "type": "auto"
+                },
+                "filterable": false,
+                "inspect": false
+              },
+              "mappings": [],
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "green"
+                  }
+                ]
+              },
+              "unit": "decbytes"
+            },
+            "overrides": [
+              {
+                "matcher": {
+                  "id": "byName",
+                  "options": "Value #C"
+                },
+                "properties": [
+                  {
+                    "id": "unit",
+                    "value": "Lines"
+                  }
+                ]
+              },
+              {
+                "matcher": {
+                  "id": "byName",
+                  "options": "Value #B"
+                },
+                "properties": [
+                  {
+                    "id": "unit",
+                    "value": "Bps"
+                  }
+                ]
+              }
+            ]
+          },
+          "gridPos": {
+            "h": 12,
+            "w": 10,
+            "x": 12,
+            "y": 25
+          },
+          "id": 28,
+          "options": {
+            "cellHeight": "md",
+            "footer": {
+              "countRows": false,
+              "enablePagination": false,
+              "fields": [
+                "Value"
+              ],
+              "reducer": [
+                "lastNotNull"
+              ],
+              "show": false
+            },
+            "showHeader": true
+          },
+          "pluginVersion": "11.2.0",
+          "targets": [
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "PBFA97CFB590B2093"
+              },
+              "editorMode": "code",
+              "exemplar": false,
+              "expr": "promtail_read_bytes_total{job=~\"$job\", instance=~\"$instance.*\"} ",
+              "format": "table",
+              "hide": false,
+              "instant": true,
+              "interval": "",
+              "legendFormat": "",
+              "range": false,
+              "refId": "A"
+            },
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "PBFA97CFB590B2093"
+              },
+              "editorMode": "code",
+              "exemplar": false,
+              "expr": "rate(promtail_read_bytes_total{job=~\"$job\", instance=~\"$instance.*\"}[$interval])",
+              "format": "table",
+              "hide": false,
+              "instant": false,
+              "legendFormat": "",
+              "range": true,
+              "refId": "B"
+            },
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "PBFA97CFB590B2093"
+              },
+              "editorMode": "code",
+              "expr": "rate(promtail_read_lines_total{job=~\"$job\", instance=~\"$instance.*\"}[$interval])",
+              "format": "table",
+              "hide": false,
+              "instant": false,
+              "legendFormat": "",
+              "range": true,
+              "refId": "C"
+            },
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "PBFA97CFB590B2093"
+              },
+              "editorMode": "code",
+              "expr": "increase(promtail_read_bytes_total{job=~\"$job\", instance=~\"$instance.*\"}[24h])",
+              "format": "table",
+              "hide": false,
+              "instant": false,
+              "interval": "24h",
+              "legendFormat": "",
+              "range": true,
+              "refId": "D"
+            }
+          ],
+          "title": "Read Bytes - Details",
+          "transformations": [
+            {
+              "id": "joinByField",
+              "options": {
+                "byField": "path",
+                "mode": "outer"
+              }
+            },
+            {
+              "id": "organize",
+              "options": {
+                "excludeByName": {
+                  "Time": true,
+                  "Time 1": true,
+                  "__name__": true,
+                  "instance": true,
+                  "job": true,
+                  "job 1": false
+                },
+                "includeByName": {},
+                "indexByName": {},
+                "renameByName": {
+                  "Value": "Read Bytes Total",
+                  "Value #A": "Total Read",
+                  "Value #B": "Current Read",
+                  "Value #C": "Current Lines Read",
+                  "Value #D": "Total Read in 24h",
+                  "instance": "",
+                  "job": "",
+                  "path": "Path"
+                }
+              }
+            }
+          ],
+          "type": "table"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "PBFA97CFB590B2093"
+          },
+          "description": "- Encoded: Number of bytes encoded and ready to send.\n- Send: Number of bytes sent. ",
+          "fieldConfig": {
+            "defaults": {
+              "color": {
+                "mode": "palette-classic"
+              },
+              "custom": {
+                "axisBorderShow": false,
+                "axisCenteredZero": false,
+                "axisColorMode": "text",
+                "axisLabel": "",
+                "axisPlacement": "auto",
+                "barAlignment": 0,
+                "barWidthFactor": 0.6,
+                "drawStyle": "line",
+                "fillOpacity": 0,
+                "gradientMode": "none",
+                "hideFrom": {
+                  "legend": false,
+                  "tooltip": false,
+                  "viz": false
+                },
+                "insertNulls": false,
+                "lineInterpolation": "linear",
+                "lineWidth": 1,
+                "pointSize": 5,
+                "scaleDistribution": {
+                  "type": "linear"
+                },
+                "showPoints": "auto",
+                "spanNulls": false,
+                "stacking": {
+                  "group": "A",
+                  "mode": "none"
+                },
+                "thresholdsStyle": {
+                  "mode": "off"
+                }
+              },
+              "mappings": [],
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "purple"
+                  }
+                ]
+              },
+              "unit": "Bps"
+            },
+            "overrides": []
+          },
+          "gridPos": {
+            "h": 8,
+            "w": 12,
+            "x": 0,
+            "y": 37
+          },
+          "id": 27,
+          "options": {
+            "legend": {
+              "calcs": [
+                "lastNotNull",
+                "max"
+              ],
+              "displayMode": "table",
+              "placement": "right",
+              "showLegend": true
+            },
+            "tooltip": {
+              "mode": "multi",
+              "sort": "none"
+            }
+          },
+          "pluginVersion": "10.4.1",
+          "targets": [
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "PBFA97CFB590B2093"
+              },
+              "editorMode": "code",
+              "exemplar": false,
+              "expr": "rate(promtail_encoded_bytes_total{job=~\"$job\", instance=~\"$instance.*\"}[$interval])",
+              "format": "time_series",
+              "instant": false,
+              "interval": "",
+              "legendFormat": "Encoded Bytes",
+              "range": true,
+              "refId": "A"
+            },
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "PBFA97CFB590B2093"
+              },
+              "editorMode": "code",
+              "expr": "rate(promtail_sent_bytes_total{job=~\"$job\", instance=~\"$instance.*\"}[$interval])",
+              "hide": false,
+              "instant": false,
+              "legendFormat": "Send Bytes",
+              "range": true,
+              "refId": "B"
+            }
+          ],
+          "title": "Encoded and Send Bytes - Overtime",
+          "type": "timeseries"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "PBFA97CFB590B2093"
+          },
+          "description": "",
+          "fieldConfig": {
+            "defaults": {
+              "color": {
+                "mode": "thresholds"
+              },
+              "custom": {
+                "align": "auto",
+                "cellOptions": {
+                  "type": "auto"
+                },
+                "filterable": false,
+                "inspect": false
+              },
+              "mappings": [],
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "green"
+                  }
+                ]
+              },
+              "unit": "decbytes"
+            },
+            "overrides": [
+              {
+                "matcher": {
+                  "id": "byName",
+                  "options": "Value #C"
+                },
+                "properties": [
+                  {
+                    "id": "unit",
+                    "value": "Lines"
+                  }
+                ]
+              },
+              {
+                "matcher": {
+                  "id": "byName",
+                  "options": "Value #B"
+                },
+                "properties": [
+                  {
+                    "id": "unit",
+                    "value": "decbytes"
+                  }
+                ]
+              },
+              {
+                "matcher": {
+                  "id": "byName",
+                  "options": "Value #C"
+                },
+                "properties": [
+                  {
+                    "id": "unit",
+                    "value": "Bps"
+                  }
+                ]
+              },
+              {
+                "matcher": {
+                  "id": "byName",
+                  "options": "Value #A"
+                },
+                "properties": [
+                  {
+                    "id": "unit",
+                    "value": "Bps"
+                  }
+                ]
+              }
+            ]
+          },
+          "gridPos": {
+            "h": 8,
+            "w": 10,
+            "x": 12,
+            "y": 37
+          },
+          "id": 29,
+          "options": {
+            "cellHeight": "md",
+            "footer": {
+              "countRows": false,
+              "enablePagination": false,
+              "fields": [
+                "Value"
+              ],
+              "reducer": [
+                "lastNotNull"
+              ],
+              "show": false
+            },
+            "showHeader": true
+          },
+          "pluginVersion": "11.2.0",
+          "targets": [
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "PBFA97CFB590B2093"
+              },
+              "editorMode": "code",
+              "exemplar": false,
+              "expr": "rate(promtail_sent_bytes_total{job=~\"$job\", instance=~\"$instance.*\"}[$interval])",
+              "format": "table",
+              "hide": false,
+              "instant": false,
+              "legendFormat": "",
+              "range": true,
+              "refId": "A"
+            },
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "PBFA97CFB590B2093"
+              },
+              "editorMode": "code",
+              "expr": "increase(promtail_sent_bytes_total{job=~\"$job\", instance=~\"$instance.*\"}[24h])",
+              "format": "table",
+              "hide": false,
+              "instant": false,
+              "interval": "24h",
+              "legendFormat": "",
+              "range": true,
+              "refId": "B"
+            },
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "PBFA97CFB590B2093"
+              },
+              "editorMode": "code",
+              "exemplar": false,
+              "expr": "rate(promtail_encoded_bytes_total{job=~\"$job\", instance=~\"$instance.*\"}[$interval])",
+              "format": "table",
+              "hide": false,
+              "instant": false,
+              "legendFormat": "",
+              "range": true,
+              "refId": "C"
+            },
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "PBFA97CFB590B2093"
+              },
+              "editorMode": "code",
+              "expr": "increase(promtail_encoded_bytes_total{job=~\"$job\", instance=~\"$instance.*\"}[24h])",
+              "format": "table",
+              "hide": false,
+              "instant": false,
+              "interval": "24h",
+              "legendFormat": "",
+              "range": true,
+              "refId": "D"
+            }
+          ],
+          "title": "Encoded and Send - Details",
+          "transformations": [
+            {
+              "id": "joinByField",
+              "options": {
+                "byField": "host",
+                "mode": "outer"
+              }
+            },
+            {
+              "id": "organize",
+              "options": {
+                "excludeByName": {
+                  "Time": true,
+                  "Time 1": true,
+                  "__name__": true,
+                  "instance": true,
+                  "job": true,
+                  "job 1": false
+                },
+                "includeByName": {},
+                "indexByName": {},
+                "renameByName": {
+                  "Value": "Read Bytes Total",
+                  "Value #A": "Current Send Bytes",
+                  "Value #B": "Send Bytes 24h",
+                  "Value #C": "Current Encoded Bytes",
+                  "Value #D": "Encoded Bytes 24h",
+                  "host": "Loki Endpoint",
+                  "instance": "",
+                  "job": "",
+                  "path": "Path"
+                }
+              }
+            }
+          ],
+          "type": "table"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "PBFA97CFB590B2093"
+          },
+          "description": "- Dropped Bytes: Number of bytes dropped because failed to be sent to the ingester after all retries.\n- Dropped Entries: Number of log entries dropped because failed to be sent to the ingester after all retries.",
+          "fieldConfig": {
+            "defaults": {
+              "color": {
+                "mode": "palette-classic"
+              },
+              "custom": {
+                "axisBorderShow": false,
+                "axisCenteredZero": false,
+                "axisColorMode": "text",
+                "axisLabel": "",
+                "axisPlacement": "auto",
+                "barAlignment": 0,
+                "barWidthFactor": 0.6,
+                "drawStyle": "line",
+                "fillOpacity": 0,
+                "gradientMode": "none",
+                "hideFrom": {
+                  "legend": false,
+                  "tooltip": false,
+                  "viz": false
+                },
+                "insertNulls": false,
+                "lineInterpolation": "linear",
+                "lineWidth": 1,
+                "pointSize": 5,
+                "scaleDistribution": {
+                  "type": "linear"
+                },
+                "showPoints": "auto",
+                "spanNulls": false,
+                "stacking": {
+                  "group": "A",
+                  "mode": "none"
+                },
+                "thresholdsStyle": {
+                  "mode": "off"
+                }
+              },
+              "mappings": [],
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "purple"
+                  }
+                ]
+              },
+              "unit": "Bps"
+            },
+            "overrides": [
+              {
+                "matcher": {
+                  "id": "byFrameRefID",
+                  "options": "B"
+                },
+                "properties": [
+                  {
+                    "id": "unit",
+                    "value": "Entries"
+                  }
+                ]
+              }
+            ]
+          },
+          "gridPos": {
+            "h": 8,
+            "w": 12,
+            "x": 0,
+            "y": 45
+          },
+          "id": 22,
+          "options": {
+            "legend": {
+              "calcs": [
+                "lastNotNull"
+              ],
+              "displayMode": "table",
+              "placement": "right",
+              "showLegend": true
+            },
+            "tooltip": {
+              "mode": "multi",
+              "sort": "none"
+            }
+          },
+          "pluginVersion": "10.4.1",
+          "targets": [
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "PBFA97CFB590B2093"
+              },
+              "editorMode": "code",
+              "exemplar": false,
+              "expr": "rate(promtail_dropped_bytes_total{job=~\"$job\", instance=~\"$instance.*\"}[$interval])",
+              "hide": false,
+              "instant": false,
+              "legendFormat": "Dropped Bytes - {{reason}}",
+              "range": true,
+              "refId": "A"
+            },
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "PBFA97CFB590B2093"
+              },
+              "editorMode": "code",
+              "exemplar": false,
+              "expr": "rate(promtail_dropped_entries_total{job=~\"$job\", instance=~\"$instance.*\"}[$interval])",
+              "hide": false,
+              "instant": false,
+              "legendFormat": "Dropped Entries - {{reason}}",
+              "range": true,
+              "refId": "B"
+            }
+          ],
+          "title": "Dropped Bytes - Overtime",
+          "type": "timeseries"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "PBFA97CFB590B2093"
+          },
+          "description": "99th percentile latency",
+          "fieldConfig": {
+            "defaults": {
+              "color": {
+                "mode": "palette-classic"
+              },
+              "custom": {
+                "axisBorderShow": false,
+                "axisCenteredZero": false,
+                "axisColorMode": "text",
+                "axisLabel": "",
+                "axisPlacement": "auto",
+                "barAlignment": 0,
+                "barWidthFactor": 0.6,
+                "drawStyle": "line",
+                "fillOpacity": 0,
+                "gradientMode": "none",
+                "hideFrom": {
+                  "legend": false,
+                  "tooltip": false,
+                  "viz": false
+                },
+                "insertNulls": false,
+                "lineInterpolation": "linear",
+                "lineWidth": 1,
+                "pointSize": 5,
+                "scaleDistribution": {
+                  "type": "linear"
+                },
+                "showPoints": "auto",
+                "spanNulls": false,
+                "stacking": {
+                  "group": "A",
+                  "mode": "none"
+                },
+                "thresholdsStyle": {
+                  "mode": "off"
+                }
+              },
+              "mappings": [],
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "purple"
+                  }
+                ]
+              },
+              "unit": "s"
+            },
+            "overrides": []
+          },
+          "gridPos": {
+            "h": 8,
+            "w": 10,
+            "x": 12,
+            "y": 45
+          },
+          "id": 23,
+          "options": {
+            "legend": {
+              "calcs": [],
+              "displayMode": "list",
+              "placement": "bottom",
+              "showLegend": true
+            },
+            "tooltip": {
+              "mode": "single",
+              "sort": "none"
+            }
+          },
+          "pluginVersion": "10.4.1",
+          "targets": [
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "PBFA97CFB590B2093"
+              },
+              "editorMode": "code",
+              "exemplar": false,
+              "expr": "histogram_quantile(0.99, sum(rate(promtail_request_duration_seconds_bucket{job=~\"$job\", instance=~\"$instance.*\"}[5m])) by (le))",
+              "format": "time_series",
+              "hide": false,
+              "instant": false,
+              "interval": "",
+              "legendFormat": "Request Latency",
+              "range": true,
+              "refId": "A"
+            }
+          ],
+          "title": "Request Latency - 99th Percentile Latency",
+          "type": "timeseries"
+        }
+      ],
       "title": "Promtail Details",
       "type": "row"
-    },
-    {
-      "datasource": {
-        "type": "prometheus",
-        "uid": "PBFA97CFB590B2093"
-      },
-      "description": "Number of bytes read. - Overtime",
-      "fieldConfig": {
-        "defaults": {
-          "color": {
-            "mode": "palette-classic"
-          },
-          "custom": {
-            "axisBorderShow": false,
-            "axisCenteredZero": false,
-            "axisColorMode": "text",
-            "axisLabel": "",
-            "axisPlacement": "auto",
-            "barAlignment": 0,
-            "barWidthFactor": 0.6,
-            "drawStyle": "line",
-            "fillOpacity": 0,
-            "gradientMode": "none",
-            "hideFrom": {
-              "legend": false,
-              "tooltip": false,
-              "viz": false
-            },
-            "insertNulls": false,
-            "lineInterpolation": "linear",
-            "lineWidth": 1,
-            "pointSize": 5,
-            "scaleDistribution": {
-              "type": "linear"
-            },
-            "showPoints": "auto",
-            "spanNulls": false,
-            "stacking": {
-              "group": "A",
-              "mode": "none"
-            },
-            "thresholdsStyle": {
-              "mode": "off"
-            }
-          },
-          "mappings": [],
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "purple",
-                "value": null
-              }
-            ]
-          },
-          "unit": "Bps"
-        },
-        "overrides": [
-          {
-            "matcher": {
-              "id": "byName",
-              "options": "promtail_read_bytes_total"
-            },
-            "properties": [
-              {
-                "id": "color"
-              }
-            ]
-          }
-        ]
-      },
-      "gridPos": {
-        "h": 12,
-        "w": 12,
-        "x": 0,
-        "y": 25
-      },
-      "id": 18,
-      "options": {
-        "legend": {
-          "calcs": [
-            "lastNotNull",
-            "max"
-          ],
-          "displayMode": "table",
-          "placement": "right",
-          "showLegend": true,
-          "width": 350
-        },
-        "tooltip": {
-          "mode": "multi",
-          "sort": "none"
-        }
-      },
-      "pluginVersion": "10.4.1",
-      "targets": [
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "PBFA97CFB590B2093"
-          },
-          "editorMode": "code",
-          "exemplar": false,
-          "expr": "rate(promtail_read_bytes_total{job=~\"$job\", instance=~\"$instance.*\"}[$interval])",
-          "format": "time_series",
-          "instant": false,
-          "interval": "",
-          "legendFormat": "{{path}}",
-          "range": true,
-          "refId": "A"
-        }
-      ],
-      "title": "Read Bytes - Overtime",
-      "type": "timeseries"
-    },
-    {
-      "datasource": {
-        "type": "prometheus",
-        "uid": "PBFA97CFB590B2093"
-      },
-      "description": "",
-      "fieldConfig": {
-        "defaults": {
-          "color": {
-            "mode": "thresholds"
-          },
-          "custom": {
-            "align": "auto",
-            "cellOptions": {
-              "type": "auto"
-            },
-            "filterable": false,
-            "inspect": false
-          },
-          "mappings": [],
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "green",
-                "value": null
-              }
-            ]
-          },
-          "unit": "decbytes"
-        },
-        "overrides": [
-          {
-            "matcher": {
-              "id": "byName",
-              "options": "Value #C"
-            },
-            "properties": [
-              {
-                "id": "unit",
-                "value": "Lines"
-              }
-            ]
-          },
-          {
-            "matcher": {
-              "id": "byName",
-              "options": "Value #B"
-            },
-            "properties": [
-              {
-                "id": "unit",
-                "value": "Bps"
-              }
-            ]
-          }
-        ]
-      },
-      "gridPos": {
-        "h": 12,
-        "w": 10,
-        "x": 12,
-        "y": 25
-      },
-      "id": 28,
-      "options": {
-        "cellHeight": "md",
-        "footer": {
-          "countRows": false,
-          "enablePagination": false,
-          "fields": [
-            "Value"
-          ],
-          "reducer": [
-            "lastNotNull"
-          ],
-          "show": false
-        },
-        "showHeader": true
-      },
-      "pluginVersion": "11.2.0",
-      "targets": [
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "PBFA97CFB590B2093"
-          },
-          "editorMode": "code",
-          "exemplar": false,
-          "expr": "promtail_read_bytes_total{job=~\"$job\", instance=~\"$instance.*\"} ",
-          "format": "table",
-          "hide": false,
-          "instant": true,
-          "interval": "",
-          "legendFormat": "",
-          "range": false,
-          "refId": "A"
-        },
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "PBFA97CFB590B2093"
-          },
-          "editorMode": "code",
-          "exemplar": false,
-          "expr": "rate(promtail_read_bytes_total{job=~\"$job\", instance=~\"$instance.*\"}[$interval])",
-          "format": "table",
-          "hide": false,
-          "instant": false,
-          "legendFormat": "",
-          "range": true,
-          "refId": "B"
-        },
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "PBFA97CFB590B2093"
-          },
-          "editorMode": "code",
-          "expr": "rate(promtail_read_lines_total{job=~\"$job\", instance=~\"$instance.*\"}[$interval])",
-          "format": "table",
-          "hide": false,
-          "instant": false,
-          "legendFormat": "",
-          "range": true,
-          "refId": "C"
-        },
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "PBFA97CFB590B2093"
-          },
-          "editorMode": "code",
-          "expr": "increase(promtail_read_bytes_total{job=~\"$job\", instance=~\"$instance.*\"}[24h])",
-          "format": "table",
-          "hide": false,
-          "instant": false,
-          "interval": "24h",
-          "legendFormat": "",
-          "range": true,
-          "refId": "D"
-        }
-      ],
-      "title": "Read Bytes - Details",
-      "transformations": [
-        {
-          "id": "joinByField",
-          "options": {
-            "byField": "path",
-            "mode": "outer"
-          }
-        },
-        {
-          "id": "organize",
-          "options": {
-            "excludeByName": {
-              "Time": true,
-              "Time 1": true,
-              "__name__": true,
-              "instance": true,
-              "job": true,
-              "job 1": false
-            },
-            "includeByName": {},
-            "indexByName": {},
-            "renameByName": {
-              "Value": "Read Bytes Total",
-              "Value #A": "Total Read",
-              "Value #B": "Current Read",
-              "Value #C": "Current Lines Read",
-              "Value #D": "Total Read in 24h",
-              "instance": "",
-              "job": "",
-              "path": "Path"
-            }
-          }
-        }
-      ],
-      "type": "table"
-    },
-    {
-      "datasource": {
-        "type": "prometheus",
-        "uid": "PBFA97CFB590B2093"
-      },
-      "description": "- Encoded: Number of bytes encoded and ready to send.\n- Send: Number of bytes sent. ",
-      "fieldConfig": {
-        "defaults": {
-          "color": {
-            "mode": "palette-classic"
-          },
-          "custom": {
-            "axisBorderShow": false,
-            "axisCenteredZero": false,
-            "axisColorMode": "text",
-            "axisLabel": "",
-            "axisPlacement": "auto",
-            "barAlignment": 0,
-            "drawStyle": "line",
-            "fillOpacity": 0,
-            "gradientMode": "none",
-            "hideFrom": {
-              "legend": false,
-              "tooltip": false,
-              "viz": false
-            },
-            "insertNulls": false,
-            "lineInterpolation": "linear",
-            "lineWidth": 1,
-            "pointSize": 5,
-            "scaleDistribution": {
-              "type": "linear"
-            },
-            "showPoints": "auto",
-            "spanNulls": false,
-            "stacking": {
-              "group": "A",
-              "mode": "none"
-            },
-            "thresholdsStyle": {
-              "mode": "off"
-            }
-          },
-          "mappings": [],
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "purple"
-              }
-            ]
-          },
-          "unit": "Bps"
-        },
-        "overrides": []
-      },
-      "gridPos": {
-        "h": 8,
-        "w": 12,
-        "x": 0,
-        "y": 37
-      },
-      "id": 27,
-      "options": {
-        "legend": {
-          "calcs": [
-            "lastNotNull",
-            "max"
-          ],
-          "displayMode": "table",
-          "placement": "right",
-          "showLegend": true
-        },
-        "tooltip": {
-          "mode": "multi",
-          "sort": "none"
-        }
-      },
-      "pluginVersion": "10.4.1",
-      "targets": [
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "PBFA97CFB590B2093"
-          },
-          "editorMode": "code",
-          "exemplar": false,
-          "expr": "rate(promtail_encoded_bytes_total{job=~\"$job\", instance=~\"$instance.*\"}[$interval])",
-          "format": "time_series",
-          "instant": false,
-          "interval": "",
-          "legendFormat": "Encoded Bytes",
-          "range": true,
-          "refId": "A"
-        },
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "PBFA97CFB590B2093"
-          },
-          "editorMode": "code",
-          "expr": "rate(promtail_sent_bytes_total{job=~\"$job\", instance=~\"$instance.*\"}[$interval])",
-          "hide": false,
-          "instant": false,
-          "legendFormat": "Send Bytes",
-          "range": true,
-          "refId": "B"
-        }
-      ],
-      "title": "Encoded and Send Bytes - Overtime",
-      "type": "timeseries"
-    },
-    {
-      "datasource": {
-        "type": "prometheus",
-        "uid": "PBFA97CFB590B2093"
-      },
-      "description": "",
-      "fieldConfig": {
-        "defaults": {
-          "color": {
-            "mode": "thresholds"
-          },
-          "custom": {
-            "align": "auto",
-            "cellOptions": {
-              "type": "auto"
-            },
-            "filterable": false,
-            "inspect": false
-          },
-          "mappings": [],
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "green"
-              }
-            ]
-          },
-          "unit": "decbytes"
-        },
-        "overrides": [
-          {
-            "matcher": {
-              "id": "byName",
-              "options": "Value #C"
-            },
-            "properties": [
-              {
-                "id": "unit",
-                "value": "Lines"
-              }
-            ]
-          },
-          {
-            "matcher": {
-              "id": "byName",
-              "options": "Value #B"
-            },
-            "properties": [
-              {
-                "id": "unit",
-                "value": "decbytes"
-              }
-            ]
-          },
-          {
-            "matcher": {
-              "id": "byName",
-              "options": "Value #C"
-            },
-            "properties": [
-              {
-                "id": "unit",
-                "value": "Bps"
-              }
-            ]
-          },
-          {
-            "matcher": {
-              "id": "byName",
-              "options": "Value #A"
-            },
-            "properties": [
-              {
-                "id": "unit",
-                "value": "Bps"
-              }
-            ]
-          }
-        ]
-      },
-      "gridPos": {
-        "h": 8,
-        "w": 10,
-        "x": 12,
-        "y": 37
-      },
-      "id": 29,
-      "options": {
-        "cellHeight": "md",
-        "footer": {
-          "countRows": false,
-          "enablePagination": false,
-          "fields": [
-            "Value"
-          ],
-          "reducer": [
-            "lastNotNull"
-          ],
-          "show": false
-        },
-        "showHeader": true
-      },
-      "pluginVersion": "10.4.1",
-      "targets": [
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "PBFA97CFB590B2093"
-          },
-          "editorMode": "code",
-          "exemplar": false,
-          "expr": "rate(promtail_sent_bytes_total{job=~\"$job\", instance=~\"$instance.*\"}[$interval])",
-          "format": "table",
-          "hide": false,
-          "instant": false,
-          "legendFormat": "",
-          "range": true,
-          "refId": "A"
-        },
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "PBFA97CFB590B2093"
-          },
-          "editorMode": "code",
-          "expr": "increase(promtail_sent_bytes_total{job=~\"$job\", instance=~\"$instance.*\"}[24h])",
-          "format": "table",
-          "hide": false,
-          "instant": false,
-          "interval": "24h",
-          "legendFormat": "",
-          "range": true,
-          "refId": "B"
-        },
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "PBFA97CFB590B2093"
-          },
-          "editorMode": "code",
-          "exemplar": false,
-          "expr": "rate(promtail_encoded_bytes_total{job=~\"$job\", instance=~\"$instance.*\"}[$interval])",
-          "format": "table",
-          "hide": false,
-          "instant": false,
-          "legendFormat": "",
-          "range": true,
-          "refId": "C"
-        },
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "PBFA97CFB590B2093"
-          },
-          "editorMode": "code",
-          "expr": "increase(promtail_encoded_bytes_total{job=~\"$job\", instance=~\"$instance.*\"}[24h])",
-          "format": "table",
-          "hide": false,
-          "instant": false,
-          "interval": "24h",
-          "legendFormat": "",
-          "range": true,
-          "refId": "D"
-        }
-      ],
-      "title": "Encoded and Send - Details",
-      "transformations": [
-        {
-          "id": "joinByField",
-          "options": {
-            "byField": "host",
-            "mode": "outer"
-          }
-        },
-        {
-          "id": "organize",
-          "options": {
-            "excludeByName": {
-              "Time": true,
-              "Time 1": true,
-              "__name__": true,
-              "instance": true,
-              "job": true,
-              "job 1": false
-            },
-            "includeByName": {},
-            "indexByName": {},
-            "renameByName": {
-              "Value": "Read Bytes Total",
-              "Value #A": "Current Send Bytes",
-              "Value #B": "Send Bytes 24h",
-              "Value #C": "Current Encoded Bytes",
-              "Value #D": "Encoded Bytes 24h",
-              "host": "Loki Endpoint",
-              "instance": "",
-              "job": "",
-              "path": "Path"
-            }
-          }
-        }
-      ],
-      "type": "table"
-    },
-    {
-      "datasource": {
-        "type": "prometheus",
-        "uid": "PBFA97CFB590B2093"
-      },
-      "description": "- Dropped Bytes: Number of bytes dropped because failed to be sent to the ingester after all retries.\n- Dropped Entries: Number of log entries dropped because failed to be sent to the ingester after all retries.",
-      "fieldConfig": {
-        "defaults": {
-          "color": {
-            "mode": "palette-classic"
-          },
-          "custom": {
-            "axisBorderShow": false,
-            "axisCenteredZero": false,
-            "axisColorMode": "text",
-            "axisLabel": "",
-            "axisPlacement": "auto",
-            "barAlignment": 0,
-            "drawStyle": "line",
-            "fillOpacity": 0,
-            "gradientMode": "none",
-            "hideFrom": {
-              "legend": false,
-              "tooltip": false,
-              "viz": false
-            },
-            "insertNulls": false,
-            "lineInterpolation": "linear",
-            "lineWidth": 1,
-            "pointSize": 5,
-            "scaleDistribution": {
-              "type": "linear"
-            },
-            "showPoints": "auto",
-            "spanNulls": false,
-            "stacking": {
-              "group": "A",
-              "mode": "none"
-            },
-            "thresholdsStyle": {
-              "mode": "off"
-            }
-          },
-          "mappings": [],
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "purple"
-              }
-            ]
-          },
-          "unit": "Bps"
-        },
-        "overrides": [
-          {
-            "matcher": {
-              "id": "byFrameRefID",
-              "options": "B"
-            },
-            "properties": [
-              {
-                "id": "unit",
-                "value": "Entries"
-              }
-            ]
-          }
-        ]
-      },
-      "gridPos": {
-        "h": 8,
-        "w": 12,
-        "x": 0,
-        "y": 45
-      },
-      "id": 22,
-      "options": {
-        "legend": {
-          "calcs": [
-            "lastNotNull"
-          ],
-          "displayMode": "table",
-          "placement": "right",
-          "showLegend": true
-        },
-        "tooltip": {
-          "mode": "multi",
-          "sort": "none"
-        }
-      },
-      "pluginVersion": "10.4.1",
-      "targets": [
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "PBFA97CFB590B2093"
-          },
-          "editorMode": "code",
-          "exemplar": false,
-          "expr": "rate(promtail_dropped_bytes_total{job=~\"$job\", instance=~\"$instance.*\"}[$interval])",
-          "hide": false,
-          "instant": false,
-          "legendFormat": "Dropped Bytes - {{reason}}",
-          "range": true,
-          "refId": "A"
-        },
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "PBFA97CFB590B2093"
-          },
-          "editorMode": "code",
-          "exemplar": false,
-          "expr": "rate(promtail_dropped_entries_total{job=~\"$job\", instance=~\"$instance.*\"}[$interval])",
-          "hide": false,
-          "instant": false,
-          "legendFormat": "Dropped Entries - {{reason}}",
-          "range": true,
-          "refId": "B"
-        }
-      ],
-      "title": "Dropped Bytes - Overtime",
-      "type": "timeseries"
-    },
-    {
-      "datasource": {
-        "type": "prometheus",
-        "uid": "PBFA97CFB590B2093"
-      },
-      "description": "99th percentile latency",
-      "fieldConfig": {
-        "defaults": {
-          "color": {
-            "mode": "palette-classic"
-          },
-          "custom": {
-            "axisBorderShow": false,
-            "axisCenteredZero": false,
-            "axisColorMode": "text",
-            "axisLabel": "",
-            "axisPlacement": "auto",
-            "barAlignment": 0,
-            "drawStyle": "line",
-            "fillOpacity": 0,
-            "gradientMode": "none",
-            "hideFrom": {
-              "legend": false,
-              "tooltip": false,
-              "viz": false
-            },
-            "insertNulls": false,
-            "lineInterpolation": "linear",
-            "lineWidth": 1,
-            "pointSize": 5,
-            "scaleDistribution": {
-              "type": "linear"
-            },
-            "showPoints": "auto",
-            "spanNulls": false,
-            "stacking": {
-              "group": "A",
-              "mode": "none"
-            },
-            "thresholdsStyle": {
-              "mode": "off"
-            }
-          },
-          "mappings": [],
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "purple"
-              }
-            ]
-          },
-          "unit": "s"
-        },
-        "overrides": []
-      },
-      "gridPos": {
-        "h": 8,
-        "w": 10,
-        "x": 12,
-        "y": 45
-      },
-      "id": 23,
-      "options": {
-        "legend": {
-          "calcs": [],
-          "displayMode": "list",
-          "placement": "bottom",
-          "showLegend": true
-        },
-        "tooltip": {
-          "mode": "single",
-          "sort": "none"
-        }
-      },
-      "pluginVersion": "10.4.1",
-      "targets": [
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "PBFA97CFB590B2093"
-          },
-          "editorMode": "code",
-          "exemplar": false,
-          "expr": "histogram_quantile(0.99, sum(rate(promtail_request_duration_seconds_bucket{job=~\"$job\", instance=~\"$instance.*\"}[5m])) by (le))",
-          "format": "time_series",
-          "hide": false,
-          "instant": false,
-          "interval": "",
-          "legendFormat": "Request Latency",
-          "range": true,
-          "refId": "A"
-        }
-      ],
-      "title": "Request Latency - 99th Percentile Latency",
-      "type": "timeseries"
     }
   ],
   "refresh": "",
@@ -1852,9 +1824,9 @@
       },
       {
         "current": {
-          "selected": true,
-          "text": "adguard",
-          "value": "adguard"
+          "selected": false,
+          "text": "grafana",
+          "value": "grafana"
         },
         "datasource": {
           "type": "loki",
@@ -1881,16 +1853,15 @@
       },
       {
         "current": {
-          "isNone": true,
           "selected": false,
-          "text": "None",
-          "value": ""
+          "text": "vector-collector",
+          "value": "vector-collector"
         },
         "datasource": {
           "type": "prometheus",
           "uid": "PBFA97CFB590B2093"
         },
-        "definition": "label_values(promtail_build_info,job)",
+        "definition": "label_values(vector_build_info,job)",
         "description": "Job label from Prometheus datasource.",
         "hide": 0,
         "includeAll": false,
@@ -1900,7 +1871,7 @@
         "options": [],
         "query": {
           "qryType": 1,
-          "query": "label_values(promtail_build_info,job)",
+          "query": "label_values(vector_build_info,job)",
           "refId": "PrometheusVariableQueryEditor-VariableQuery"
         },
         "refresh": 1,
@@ -1912,8 +1883,8 @@
       {
         "current": {
           "selected": false,
-          "text": "demo-vm10-ingress",
-          "value": "demo-vm10-ingress"
+          "text": "demo-vm20-metrics",
+          "value": "demo-vm20-metrics"
         },
         "datasource": {
           "type": "loki",
@@ -1923,12 +1894,12 @@
         "description": "Instance label from Loki datasource.",
         "hide": 0,
         "includeAll": false,
-        "label": "Instance",
+        "label": "Host",
         "multi": false,
-        "name": "instance",
+        "name": "host",
         "options": [],
         "query": {
-          "label": "instance",
+          "label": "host",
           "refId": "LokiVariableQueryEditor-VariableQuery",
           "stream": "",
           "type": 1
@@ -2014,6 +1985,36 @@
         "type": "interval"
       },
       {
+        "allValue": "All",
+        "current": {
+          "selected": false,
+          "text": "All",
+          "value": "$__all"
+        },
+        "datasource": {
+          "type": "loki",
+          "uid": "P8E80F9AEF21F6940"
+        },
+        "definition": "",
+        "hide": 0,
+        "includeAll": true,
+        "label": "Level",
+        "multi": false,
+        "name": "level",
+        "options": [],
+        "query": {
+          "label": "level",
+          "refId": "LokiVariableQueryEditor-VariableQuery",
+          "stream": "",
+          "type": 1
+        },
+        "refresh": 1,
+        "regex": "",
+        "skipUrlSync": false,
+        "sort": 0,
+        "type": "query"
+      },
+      {
         "current": {
           "selected": false,
           "text": "",
@@ -2036,13 +2037,13 @@
     ]
   },
   "time": {
-    "from": "now-24h",
+    "from": "now-1h",
     "to": "now"
   },
   "timepicker": {},
   "timezone": "browser",
   "title": "Promtail Monitoring - Metrics and Logs (n0one42)",
   "uid": "promtailntfc0a2",
-  "version": 1,
+  "version": 13,
   "weekStart": ""
 }

@@ -1,0 +1,134 @@
+---
+# tasks file for roles/dc_alloy
+# TODO: Variables which has to be passed through the playbook or on import of this task file
+# ! Mandatory variables
+  # vars:
+  #   app_name: => traefik, portainer, grafana, netbox
+# ? Optional variables
+
+- name: Create Alloy & Socket Proxy
+  block:
+    - name: Set facts app_name for standalone
+      ansible.builtin.set_fact:
+        app_name: "standalone"
+      when: dc_alloy_standalone | default(false)
+
+  # # * ------------------------ Socket Proxy ------------------------ * #
+  #   - name: Include Socket Proxy role
+  #     ansible.builtin.import_role:
+  #       name: dc_socketproxy
+  #     vars:
+  #       dc_socketproxy_container_name: "{{ app_name }}-alloy"
+  #       dc_socketproxy_net_cidr: "{{ dc_alloy_socketproxy_net_cidr }}"
+  #       dc_socketproxy_net_ip: "{{ dc_alloy_socketproxy_net_ip }}"
+
+  #       dc_socketproxy_env_log_level: "{{ dc_alloy_socketproxy_env_log_level }}"
+  #       dc_socketproxy_env_containers: "{{ dc_alloy_socketproxy_env_containers }}"
+  #       dc_socketproxy_env_networks: "{{ dc_alloy_socketproxy_env_networks }}"
+  #       dc_socketproxy_env_nodes: "{{ dc_alloy_socketproxy_env_nodes }}"
+  #       dc_socketproxy_env_services: "{{ dc_alloy_socketproxy_env_services }}"
+  #       dc_socketproxy_env_tasks: "{{ dc_alloy_socketproxy_env_tasks }}"
+
+  # * --------------------------- App --------------------------- *
+    - name: Create alloy for --> {{ app_name }}
+      vars:
+        container_type: "alloy" # => app, db, redis, loki, alloy
+        user: "{{ (dc_alloy_create_with_userns | bool) | ternary(dc_alloy_u_g_id + 100000, dc_alloy_u_g_id) }}"
+        group: "{{ (dc_alloy_create_with_userns | bool) | ternary(dc_alloy_u_g_id + 100000, dc_alloy_u_g_id) }}"
+      block:
+        - name: '[Required] filesystem_manager role'
+          ansible.builtin.import_role:
+            name: filesystem_manager
+          vars:
+            # filesystem_manager_appdata_directories_to_create:
+            #   - path: "data"
+            #   - path: "config"
+            filesystem_manager_appdata_templates_to_copy:
+              - src: "config.alloy.j2"
+                dest: "config.alloy"
+            # filesystem_manager_give_full_read_access_to_path:
+            #   - path: "{{ docker_logs }}"
+            #   - path: /var/log
+          notify:
+            - Restart alloy
+
+        - name: Install docker compose alloy with inline definition
+          vars:
+            docker_networks: >-
+              {{
+                {
+                  "traefik_net": {
+                    "name": dc_traefik_net_name,
+                    "external": true
+                  },
+                }
+                | combine(
+                  {
+                    "app_net": {
+                      "name": app_name ~ "_net",
+                      "external": true
+                    }
+                  } if not dc_alloy_standalone else {}
+                )
+              }}
+
+          community.docker.docker_compose_v2:
+            project_name: "{{ app_name }}-alloy" # eg: grafana-alloy
+            definition:
+              # ! --------------------------- Networks --------------------------- ! #
+              networks: "{{ docker_networks }}"
+
+
+              # * ---------------------------- App ------------------------------ * #
+              services:
+                alloy:
+                  image: grafana/alloy:{{ dc_alloy_image_version }}
+                  container_name: "{{ app_name }}-alloy"  # eg: grafana-alloy
+                  restart: unless-stopped
+                  security_opt:
+                    - no-new-privileges:true
+                  privileged: false
+                  # userns_mode: "{{ 'host' if dc_alloy_create_with_userns | bool == false else 'remap' }}"
+                  # user: "{{ dc_alloy_u_g_id }}:{{ dc_alloy_u_g_id }}"
+                  userns_mode: "host"
+                  command: [
+                    "run",
+                    "--server.http.listen-addr=0.0.0.0:12345",
+                    # "--stability.level=public-preview",
+                    # "--storage.path=/var/lib/alloy/data",
+                    "/etc/alloy/config.alloy",
+                  ]
+                  # extra_hosts:
+                  #   - "loki-metrics.{{ domain_1 }}:{{ dc_alloy_loki_traefik_ip | default('127.0.0.1') }}"  # Has to be the internal ip of the traefik where loki is running
+                  networks:
+                    app_net: "{{ {'ipv4_address': dc_alloy_net_ip} if dc_alloy_net_ip is defined and dc_alloy_net_ip | length > 0 and not dc_alloy_standalone | default(false) | bool else omit }}"
+                    # socketproxy_net: "{{ {'ipv4_address': dc_alloy_socketproxy_net_app_ip} if dc_alloy_socketproxy_net_app_ip is defined and dc_alloy_socketproxy_net_app_ip | length > 0 else {} }}"
+                    traefik_net: "{{ {'ipv4_address': dc_traefik_net_alloy_ip} if dc_traefik_net_alloy_ip is defined and dc_traefik_net_alloy_ip | length > 0 else {} }}"
+                  ports:
+                    - "12345:12345"
+                    - "12348:12348"
+                    - "6832:6832"
+                    - "55679:55679"
+                  volumes:
+                    # - "{{ appdata_type_path }}/data:/var/lib/alloy/data"
+                    # - "{{ appdata_type_path }}/config:/etc/alloy"
+                    - "{{ appdata_type_path }}/config.alloy:/etc/alloy/config.alloy"
+                    # - "{{ docker_logs }}:/opt/docker/logs:ro"
+                    # - /var/log:/var/log:ro
+                    - /var/run/docker.sock:/var/run/docker.sock:ro
+                  # environment:
+                  labels:
+                    traefik.enable: "true"
+                    # * HTTP Routers
+                    traefik.http.routers.alloy-rtr.entrypoints: "websecure"
+                    traefik.http.routers.alloy-rtr.rule: "Host(`alloy-{{ dc_traefik_type }}.{{ domain_1 }}`)"
+                    # * Middlewares
+                    traefik.http.routers.alloy-rtr.middlewares: "chain-basic-auth@file" # For Basic HTTP Authentication
+                    # * HTTP Services
+                    traefik.http.routers.alloy-rtr.service: "alloy-svc"
+                    traefik.http.services.alloy-svc.loadbalancer.server.port: "12345"
+
+
+# ! --------------------------- Notes --------------------------- ! #
+
+# cleaning:

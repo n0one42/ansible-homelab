@@ -19,39 +19,79 @@ rule_files:
 # A scrape configuration containing exactly one endpoint to scrape:
 scrape_configs:
 # ! ---- Scrape config for ingress vm ---- ! #
-  - job_name: 'node-exporter-ingress'
-    scheme: https
-    tls_config:
-      insecure_skip_verify: {{ dc_prometheus_nodeexporter_insecure_skip_verify }}
-    basic_auth:
-      username: "{{ dc_prometheus_nodeexporter_basic_auth_user }}"
-      password: "{{ dc_prometheus_nodeexporter_basic_auth_password }}"
-    static_configs:
-      - targets: ['nodeexporter-ingress.{{ domain_1 }}']
+  # - job_name: 'node-exporter-ingress'
+  #   scheme: https
+  #   tls_config:
+  #     insecure_skip_verify: {{ dc_prometheus_nodeexporter_insecure_skip_verify }}
+  #   basic_auth:
+  #     username: "{{ dc_prometheus_nodeexporter_basic_auth_user }}"
+  #     password: "{{ dc_prometheus_nodeexporter_basic_auth_password }}"
+  #   static_configs:
+  #     - targets: ['nodeexporter-ingress.{{ domain_1 }}']
 
-  - job_name: "cadvisor-ingress"
-    scheme: https
-    tls_config:
-      insecure_skip_verify: {{ dc_cadvisor_insecure_skip_verify }}
-    basic_auth:
-      username: "{{ dc_cadvisor_basic_auth_user }}"
-      password: "{{ dc_cadvisor_basic_auth_password }}"
-    static_configs:
-      - targets: ['cadvisor-ingress.{{ domain_1 }}']
+  # - job_name: "cadvisor-ingress"
+  #   scheme: https
+  #   tls_config:
+  #     insecure_skip_verify: {{ dc_cadvisor_insecure_skip_verify }}
+  #   basic_auth:
+  #     username: "{{ dc_cadvisor_basic_auth_user }}"
+  #     password: "{{ dc_cadvisor_basic_auth_password }}"
+  #   static_configs:
+  #     - targets: ['cadvisor-ingress.{{ domain_1 }}']
+
+  # - job_name: "wud-ingress"
+  #   scheme: https
+  #   tls_config:
+  #     insecure_skip_verify: {{ dc_wud_insecure_skip_verify }}
+  #   basic_auth:
+  #     username: "{{ dc_wud_basic_auth_user }}"
+  #     password: "{{ dc_wud_basic_auth_password }}"
+  #   static_configs:
+  #     - targets: ['wud-ingress.{{ domain_1 }}']
 
 
 # ! ---- Scrape config for metrics vm (local) ---- ! #
-  - job_name: "prometheus-{{ dc_traefik_type }}"
+  - job_name: "prometheus-{{ dc_traefik_type }}"  # represents job label
     static_configs:
       - targets: ["localhost:{{ dc_grafana_prometheus_port }}"]
+        labels:
+          parser: prometheus
+          instance: "{{ ansible_hostname }}"
 
-  - job_name: "node-exporter-{{ dc_traefik_type }}"
-    static_configs:
-      - targets: ["{{ dc_grafana_net_nodeexporter_ip }}:{{ dc_grafana_nodeexporter_port }}"]
+  # ? using vector instead of node exporter
+  # - job_name: "node-exporter-{{ dc_traefik_type }}"  # represents job label
+  #   static_configs:
+  #     - targets: ["{{ dc_grafana_net_nodeexporter_ip }}:{{ dc_grafana_nodeexporter_port }}"]
+  #       labels:
+  #         parser: "node-exporter"
+  #         instance: "{{ ansible_hostname }}"
 
-  - job_name: "cadvisor-{{ dc_traefik_type }}"
+  - job_name: "cadvisor-{{ dc_traefik_type }}"  # represents job label
     static_configs:
       - targets: ["{{ dc_grafana_net_cadvisor_ip }}:{{ dc_grafana_cadvisor_port }}"]
+        labels:
+          parser: "cadvisor"
+          instance: "{{ ansible_hostname }}"
+
+  # ? To much overhead and not rly needed
+  # - job_name: "whats-up-docker-{{ dc_traefik_type }}" # represents job label
+  #   static_configs:
+  #     - targets: ["{{ dc_traefik_net_wud_ip }}:{{ dc_wud_port }}"]
+
+  # ? using vector instead of promtail
+  # - job_name: "promtail"
+  #   static_configs:
+  #     - targets: ["{{ dc_grafana_net_promtail_ip }}:{{ dc_grafana_promtail_port }}"]
+
+  - job_name: "vector-{{ dc_traefik_type }}"  # represents job label
+    static_configs:
+      - targets: ["{{ dc_grafana_net_vector_ip }}:9598"]
+        labels:
+          job: "vector-collector"
+          job_type: "system_metrics"
+          parser: vector
+          host: "{{ ansible_hostname }}"  # eg: demo-vm20-metrics
+          instance: "{{ ansible_hostname }}:9598"
 
 
 # ! ---- Scrape config for application-1 vm ---- ! #

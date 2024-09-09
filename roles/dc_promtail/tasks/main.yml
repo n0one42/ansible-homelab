@@ -46,6 +46,8 @@
             filesystem_manager_give_full_read_access_to_path:
               - path: "{{ docker_logs }}"
               - path: /var/log
+          notify:
+            - Restart promtail
 
         - name: Install docker compose promtail with inline definition
           vars:
@@ -113,6 +115,9 @@
                     # * HTTP Services
                     traefik.http.routers.promtail-rtr.service: "promtail-svc"
                     traefik.http.services.promtail-svc.loadbalancer.server.port: "{{ dc_promtail_port }}"
+
+        - name: Flush handlers
+          ansible.builtin.meta: flush_handlers
 
 
 # ! --------------------------- Notes --------------------------- ! #
