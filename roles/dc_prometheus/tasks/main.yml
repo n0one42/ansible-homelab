@@ -108,3 +108,6 @@
 # ! --------------------------- Notes --------------------------- ! #
 # Prometheus /metrics: This endpoint provides metrics related to the Prometheus server itself.
 # Node Exporter: This provides detailed system-level metrics of the VM.
+
+# cleanup:
+# sudo docker rm -f grafana-prometheus && sudo rm -r $APPDATA_DIR/grafana/prometheus

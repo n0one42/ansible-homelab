@@ -25,6 +25,40 @@ schema_config:
         prefix: index_
         period: 24h
 
+limits_config:
+  split_queries_by_interval: 24h
+  max_query_parallelism: 64
+  max_entries_limit_per_query: 5000
+
+query_scheduler:
+  max_outstanding_requests_per_tenant: 32000  # This seams to affect the query_range
+
+frontend:
+  max_outstanding_per_tenant: 1024
+  log_queries_longer_than: 5s
+  compress_responses: true
+
+query_range:
+  cache_results: true
+
+ingester:
+  chunk_idle_period: 30m
+  chunk_target_size: 1572864
+  max_chunk_age: 2h
+  wal:
+    enabled: true
+
+
+# storage_config:
+#   index_queries_cache_config:
+#     enable_fifocache: true
+#     fifocache:
+#       max_size_bytes: 1073741824
+
+# chunk_store_config:
+#   max_look_back_period: 336h
+
+
 ruler:
   alertmanager_url: http://localhost:9093
 

@@ -28,7 +28,8 @@
           - src: "{{ ansible_hostname }}/loki-docker-config.yml.j2"
             dest: "loki-docker-config.yml"
             mode: '0660'
-
+      notify:
+        - Restart loki
 
     - name: Install docker compose loki with inline definition
       vars:
@@ -68,7 +69,8 @@
               privileged: false
               userns_mode: "{{ 'host' if dc_loki_create_with_userns | bool == false else 'remap' }}"
               user: "{{ dc_loki_u_g_id }}:{{ dc_loki_u_g_id }}"
-              # command: -config.file=/etc/loki/loki-docker-config.yml
+              command: -config.file=/etc/loki/local-config.yaml
+              # command: -config.file=/etc/loki/local-config.yaml -log-config-reverse-order <-- if you want to output the entire config to logs
               networks:
                 app_net: "{{ {'ipv4_address': dc_loki_net_ip} if dc_loki_net_ip is defined and dc_loki_net_ip | length > 0 and not dc_loki_standalone | default(false) | bool else {} }}"
                 traefik_net: "{{ {'ipv4_address': dc_traefik_net_loki_ip} if dc_traefik_net_loki_ip is defined and dc_traefik_net_loki_ip | length > 0 else {} }}"
@@ -89,6 +91,9 @@
                 traefik.http.routers.loki-rtr.service: "loki-svc"
                 traefik.http.services.loki-svc.loadbalancer.server.port: "{{ dc_loki_port }}"
 
+    - name: Flush handlers
+      ansible.builtin.meta: flush_handlers
+
 
 # ! --------------------------- Notes --------------------------- ! #
 # https://github.com/grafana/loki/blob/main/cmd/loki/loki-docker-config.yaml
@@ -96,3 +101,6 @@
 
 # http://10.0.90.20:3100/ready    # https://loki.your.dom/ready
 # http://10.0.90.20:3100/metrics  # https://loki.your.dom/metrics
+
+# Cleaning
+# sudo docker rm -f grafana-loki && sudo rm -r $APPDATA_DIR/grafana/loki

@@ -133,7 +133,7 @@
                     - --entrypoints.websecure.forwardedHeaders.trustedIPs={{ dc_traefik_cloudflare_ip_ranges }}{{ ',' + dc_traefik_local_ip_ranges if dc_traefik_local_ip_ranges is defined and dc_traefik_local_ip_ranges | length > 0 }}
                     - --log=true
                     - --log.filePath=/logs/traefik.log  # (Default: stdout)
-                    - --log.level={{ dc_traefik_log_level }} # (Default: error) DEBUG, INFO, WARN, ERROR, FATAL, PANIC
+                    - --log.level={{ dc_traefik_log_level }} # (Default: error)(info for grafana & crowdsec logs) DEBUG, INFO, WARN, ERROR, FATAL, PANIC
                     - --accessLog=true
                     - --accessLog.filePath=/logs/access.log # (Default: stdout)
                     # - --accessLog.bufferingSize=100 # Configuring a buffer of 100 lines

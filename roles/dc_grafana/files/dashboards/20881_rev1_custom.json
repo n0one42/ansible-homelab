@@ -20,7 +20,7 @@
   "fiscalYearStartMonth": 0,
   "gnetId": 20881,
   "graphTooltip": 0,
-  "id": 7,
+  "id": 4,
   "links": [],
   "panels": [
     {
@@ -705,7 +705,7 @@
       },
       "description": "Use LogQL Filter to filter information.",
       "gridPos": {
-        "h": 12,
+        "h": 5,
         "w": 22,
         "x": 0,
         "y": 16
@@ -859,7 +859,7 @@
         "h": 8,
         "w": 22,
         "x": 0,
-        "y": 28
+        "y": 21
       },
       "id": 33,
       "options": {
@@ -927,7 +927,7 @@
         "h": 1,
         "w": 24,
         "x": 0,
-        "y": 36
+        "y": 29
       },
       "id": 19,
       "panels": [
@@ -1824,7 +1824,7 @@
       },
       {
         "current": {
-          "selected": false,
+          "selected": true,
           "text": "grafana",
           "value": "grafana"
         },
@@ -1853,7 +1853,7 @@
       },
       {
         "current": {
-          "selected": false,
+          "selected": true,
           "text": "vector-collector",
           "value": "vector-collector"
         },
@@ -1987,9 +1987,9 @@
       {
         "allValue": "All",
         "current": {
-          "selected": false,
-          "text": "All",
-          "value": "$__all"
+          "selected": true,
+          "text": "error",
+          "value": "error"
         },
         "datasource": {
           "type": "loki",
@@ -2044,6 +2044,6 @@
   "timezone": "browser",
   "title": "Promtail Monitoring - Metrics and Logs (n0one42)",
   "uid": "promtailntfc0a2",
-  "version": 13,
+  "version": 2,
   "weekStart": ""
 }
