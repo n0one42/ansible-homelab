@@ -299,9 +299,6 @@ dc_grafana_promtail_grpc_port: 9043
 
 ## ? Environment variables if used in standalone mode (external promtail)
 dc_promtail_standalone: false
-dc_promtail_insecure_skip_verify: "{{ dc_traefik_acme_staging_mode }}"
-dc_promtail_basic_auth_user: "{{ demo_auth_user }}" # traefik basic auth credentials
-dc_promtail_basic_auth_password: "{{ demo_auth_user_pw }}"  # traefik basic auth credentials
 
 ## ? Environment variables for socketproxy
 dc_promtail_socketproxy_env_log_level: "info"  # debug, info, notice, warning, err, crit, alert and emerg
@@ -322,9 +319,6 @@ dc_grafana_prometheus_port: 9090
 
 ## ? Environment variables if used in standalone mode (external prometheus)
 dc_prometheus_standalone: false
-dc_prometheus_nodeexporter_insecure_skip_verify: "{{ dc_traefik_acme_staging_mode }}"
-dc_prometheus_nodeexporter_basic_auth_user: "{{ demo_auth_user }}" # traefik basic auth credentials
-dc_prometheus_nodeexporter_basic_auth_password: "{{ demo_auth_user_pw }}"  # traefik basic auth credentials
 
 # * ------------>>> Node-Exporter Configuration <<<------------ * #
 # * >>> Container variables
@@ -345,9 +339,6 @@ dc_grafana_cadvisor_port: 8080
 
 ## ? Environment variables if used in standalone mode (external cadvisor)
 dc_cadvisor_standalone: false
-dc_cadvisor_insecure_skip_verify: "{{ dc_traefik_acme_staging_mode }}"
-dc_cadvisor_basic_auth_user: "{{ demo_auth_user }}" # traefik basic auth credentials
-dc_cadvisor_basic_auth_password: "{{ demo_auth_user_pw }}"  # traefik basic auth credentials
 
 # * ------------>>> Alloy Configuration <<<------------ * #
 # * >>> Container variables
@@ -358,9 +349,6 @@ dc_grafana_alloy_log_level: "info" # default: info [debug, info, warn, error]
 
 ## ? Environment variables if used in standalone mode (external alloy)
 dc_alloy_standalone: false
-dc_alloy_insecure_skip_verify: "{{ dc_traefik_acme_staging_mode }}"
-dc_alloy_basic_auth_user: "{{ demo_auth_user }}" # traefik basic auth credentials
-dc_alloy_basic_auth_password: "{{ demo_auth_user_pw }}"  # traefik basic auth credentials
 
 ## ? Environment variables for socketproxy
 dc_alloy_socketproxy_env_log_level: "info"  # debug, info, notice, warning, err, crit, alert and emerg

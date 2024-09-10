@@ -165,11 +165,6 @@ sinks:
       logstream: "{{ .stream }}"
       level: "{{ .level }}"
 {% endraw %}
-    # auth:
-    #   strategy: basic
-    #   user: "{{ dc_promtail_basic_auth_user }}"
-    #   password: "{{ dc_promtail_basic_auth_password }}"
-
 
   loki_docker_file_logs:
     type: loki

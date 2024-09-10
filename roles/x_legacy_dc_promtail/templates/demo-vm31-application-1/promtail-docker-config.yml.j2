@@ -8,10 +8,10 @@ positions:
 clients:
   - url: https://loki.{{ domain_1 }}/loki/api/v1/push
     tls_config:
-      insecure_skip_verify: {{ dc_promtail_insecure_skip_verify }}
+      insecure_skip_verify: {{ dc_traefik_acme_staging_mode }}
     basic_auth:
-      username: "{{ dc_promtail_basic_auth_user }}"
-      password: "{{ dc_promtail_basic_auth_password }}"
+      username: "{{ dc_traefik_basic_auth_user }}"
+      password: "{{ dc_traefik_basic_auth_password_hashed }}"
     external_labels:
       instance: "{{ ansible_hostname }}"
 
