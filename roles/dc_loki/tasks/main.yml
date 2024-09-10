@@ -101,6 +101,7 @@
 
 # http://10.0.90.20:3100/ready    # https://loki.your.dom/ready
 # http://10.0.90.20:3100/metrics  # https://loki.your.dom/metrics
+# http://10.0.90.20:3100/config   # https://loki.your.dom/config
 
 # Cleaning
 # sudo docker rm -f grafana-loki && sudo rm -r $APPDATA_DIR/grafana/loki

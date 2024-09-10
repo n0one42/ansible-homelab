@@ -29,25 +29,31 @@ scrape_configs:
   #   static_configs:
   #     - targets: ['nodeexporter-ingress.{{ domain_1 }}']
 
-  # - job_name: "cadvisor-ingress"
-  #   scheme: https
-  #   tls_config:
-  #     insecure_skip_verify: {{ dc_cadvisor_insecure_skip_verify }}
-  #   basic_auth:
-  #     username: "{{ dc_cadvisor_basic_auth_user }}"
-  #     password: "{{ dc_cadvisor_basic_auth_password }}"
-  #   static_configs:
-  #     - targets: ['cadvisor-ingress.{{ domain_1 }}']
+  - job_name: "cadvisor-ingress"
+    scheme: https
+    tls_config:
+      insecure_skip_verify: {{ dc_cadvisor_insecure_skip_verify }}
+    basic_auth:
+      username: "{{ dc_cadvisor_basic_auth_user }}"
+      password: "{{ dc_cadvisor_basic_auth_password }}"
+    static_configs:
+      - targets: ['cadvisor-ingress.{{ domain_1 }}']
 
-  # - job_name: "wud-ingress"
+  # - job_name: "vector-{{ dc_traefik_type }}"  # represents job label
   #   scheme: https
   #   tls_config:
-  #     insecure_skip_verify: {{ dc_wud_insecure_skip_verify }}
+  #     insecure_skip_verify: {{ dc_vector_insecure_skip_verify }}
   #   basic_auth:
-  #     username: "{{ dc_wud_basic_auth_user }}"
-  #     password: "{{ dc_wud_basic_auth_password }}"
+  #     username: "{{ dc_vector_basic_auth_user }}"
+  #     password: "{{ dc_vector_basic_auth_password }}"    
   #   static_configs:
-  #     - targets: ['wud-ingress.{{ domain_1 }}']
+  #     - targets: ['vector-ingress.{{ domain_1 }}']
+  #       labels:
+  #         job: "vector-collector"
+  #         job_type: "system_metrics"
+  #         parser: vector
+  #         host: "{{ ansible_hostname }}"  # eg: demo-vm20-metrics
+  #         instance: "{{ ansible_hostname }}:9598"
 
 
 # ! ---- Scrape config for metrics vm (local) ---- ! #

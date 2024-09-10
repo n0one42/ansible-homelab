@@ -1,0 +1,110 @@
+sinks:
+  # console:
+  #   inputs:
+  #     - traefik_access_log_parser
+  #     - traefik_log_parser
+  #   type: console
+  #   encoding:
+  #     codec: json
+
+  # elasticsearch:
+  #   type: elasticsearch
+  #   inputs:
+  #     # - my_docker_logs
+  #     - remove_label
+  #     # - remove_label
+  #     # - file_source # works
+  #   endpoints: 
+  #     - "http://{{ app_name }}-elasticsearch:9200"
+  #   auth:
+  #     strategy: basic
+  #     user: elastic
+  #     password: Temp#1234
+  #   bulk:
+  #     index: "docker-logs-%Y-%m-%d"
+  #     # batch:
+  #     #   max_bytes: 10485760  # 10MB
+  #     #   timeout_secs: 1
+
+  loki_docker_logs:
+    type: loki
+    inputs:
+      - remove_label
+    endpoint: "http://{{ dc_traefik_net_loki_ip }}:3100"
+    encoding:
+      codec: json # json
+    labels:
+      job: "vector-collector"
+      job_type: "docker_logs"
+      parser: vector
+      host: "{{ ansible_hostname }}"  # eg: demo-vm20-metrics
+      instance: "{{ ansible_hostname }}:3100"
+      {% raw %}
+      container: "{{ .container_name }}"
+      logstream: "{{ .stream }}"
+      level: "{{ .level }}"
+      {% endraw %}
+    # auth:
+    #   strategy: basic
+    #   user: "{{ dc_promtail_basic_auth_user }}"
+    #   password: "{{ dc_promtail_basic_auth_password }}"
+
+
+  loki_docker_file_logs:
+    type: loki
+    inputs:
+      - traefik_access_log_parser
+      - traefik_log_parser
+    endpoint: "http://{{ dc_traefik_net_loki_ip }}:3100"
+    encoding:
+      codec: json # json
+    labels:
+      job: "vector-collector"
+      job_type: "docker_logs"
+      parser: vector
+      host: "{{ ansible_hostname }}"  # eg: demo-vm20-metrics
+      instance: "{{ ansible_hostname }}:3100"
+      logstream: "file"
+      {% raw %}
+      container: "{{ .container_name }}"
+      level: "{{ .level }}"
+      file: "{{ .file }}"
+      {% endraw %}
+
+
+  loki_system_logs:
+    type: loki
+    inputs:
+      - vector_internal_logs
+      # - host_logs
+    endpoint: "http://{{ dc_traefik_net_loki_ip }}:3100"
+    encoding:
+      codec: json # json
+    labels:
+      job: "vector-collector"
+      job_type: "system_logs"
+      parser: vector
+      host: "{{ ansible_hostname }}"  # eg: demo-vm20-metrics
+      instance: "{{ ansible_hostname }}:3100"
+    # auth:
+    #   strategy: basic
+    #   user: "{{ dc_promtail_basic_auth_user }}"
+    #   password: "{{ dc_promtail_basic_auth_password }}"
+
+  system_metrics:
+    type: prometheus_exporter
+    inputs:
+      - vector_internal_metrics
+      - host_metrics
+    address: "0.0.0.0:9598"
+
+  # influxdb_v2:
+  #   type: influxdb_metrics
+  #   inputs:
+  #     - host_metrics
+  #   endpoint: "http://{{ app_name }}-influxdb:8086"
+  #   org: "{{ dc_influxdb_bitnami_user_org | default(dc_influxdb_bitnami_org_name | default('homelab')) }}"
+  #   bucket: "grafana"
+  #   token: "Pur#-rM#0idy@2V4@.nCZ2Ys3QcWhZJWGf@yLactoM30f6x^hpl5wb9%bD#0xEFT"
+  #   tags:
+  #     host: "{{ ansible_hostname }}"

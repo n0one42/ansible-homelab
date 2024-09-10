@@ -29,7 +29,9 @@
             filesystem_manager_appdata_directories_to_create:
               - path: "config"
             filesystem_manager_appdata_templates_in_directory_to_copy:
-              - src: "{{ playbook_dir | dirname }}/roles/dc_vector/templates/active"
+              - src: "{{ playbook_dir | dirname }}/roles/dc_vector/templates/shared"
+                dest: "config"
+              - src: "{{ playbook_dir | dirname }}/roles/dc_vector/templates/{{ dc_traefik_type }}"
                 dest: "config"
             # filesystem_manager_appdata_templates_to_copy:
             #   - src: "vector.yml.j2"
@@ -84,8 +86,8 @@
                       limits:
                         cpus: '0.50'
                   command: ["-c", "/etc/vector/*.yml"]
-                  # extra_hosts:
-                  #   - "loki-metrics.{{ domain_1 }}:{{ dc_vector_loki_traefik_ip | default('127.0.0.1') }}"  # Has to be the internal ip of the traefik where loki is running
+                  extra_hosts:
+                    - "loki-metrics.{{ domain_1 }}:{{ dc_dmz_net_vm20_metrics_ip if (dc_vector_standalone | default(false) | bool) else dc_grafana_net_loki_ip }}"
                   networks:
                     app_net: "{{ {'ipv4_address': dc_vector_net_ip} if dc_vector_net_ip is defined and dc_vector_net_ip | length > 0 and not dc_vector_standalone | default(false) | bool else omit }}"
                     traefik_net: "{{ {'ipv4_address': dc_traefik_net_vector_ip} if dc_traefik_net_vector_ip is defined and dc_traefik_net_vector_ip | length > 0 else {} }}"
@@ -98,6 +100,7 @@
                     - "{{ appdata_type_path }}/config/system_metrics.yml:/etc/vector/system_metrics.yml:ro"
                     - "{{ appdata_type_path }}/config/system_logs.yml:/etc/vector/system_logs.yml:ro"
                     - "{{ appdata_type_path }}/config/docker_logs.yml:/etc/vector/docker_logs.yml:ro"
+                    - "{{ appdata_type_path }}/config/sinks.yml:/etc/vector/sinks.yml:ro"
                     # - /sys/fs/cgroup:/sys/fs/cgroup:ro
                     # - /proc:/rootfs/proc:ro
                     # - /sys:/rootfs/sys:ro

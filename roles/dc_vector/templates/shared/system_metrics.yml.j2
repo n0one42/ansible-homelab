@@ -1,0 +1,12 @@
+sources:
+# # ! Metrics
+  vector_internal_metrics:
+    type: internal_metrics
+    namespace: "vector" # default: vector
+    # tags:
+    #   pid_key: "pid"
+    #   host_key: "host"
+
+  host_metrics:
+    type: host_metrics
+    namespace: "node" # to make it compatible with other dashboards made for like the node exporter and additional an extra label like parser: vector or node-exporter
