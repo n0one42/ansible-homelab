@@ -22,7 +22,7 @@ sinks:
       - vector_internal_logs
       # - host_logs
     tls:
-      verify_certificate: {{ dc_traefik_acme_staging_mode }}
+      verify_certificate: {{ not dc_traefik_acme_staging_mode }}
     endpoint: "https://loki-metrics.{{ domain_1 }}"
     auth:
       strategy: basic
@@ -44,7 +44,7 @@ sinks:
     inputs:
       - remove_label
     tls:
-      verify_certificate: {{ dc_traefik_acme_staging_mode }}
+      verify_certificate: {{ not dc_traefik_acme_staging_mode }}
     endpoint: "https://loki-metrics.{{ domain_1 }}"
     auth:
       strategy: basic
@@ -71,7 +71,7 @@ sinks:
       - traefik_access_log_parser
       - traefik_log_parser
     tls:
-      verify_certificate: {{ dc_traefik_acme_staging_mode }}
+      verify_certificate: {{ not dc_traefik_acme_staging_mode }}
     endpoint: "https://loki-metrics.{{ domain_1 }}"
     auth:
       strategy: basic
