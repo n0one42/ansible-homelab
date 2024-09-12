@@ -35,5 +35,4 @@
     # - role: app_webmin
     # - role: docker_provisioning
     # - role: dc_traefik
-    # - role: dc_whats-up-docker
     - role: dc_grafana

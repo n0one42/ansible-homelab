@@ -5,7 +5,7 @@ datasources:
     type: loki
     access: proxy
     orgId: 1
-    url: http://{{ app_name }}-loki:{{ dc_grafana_loki_port }}
+    url: http://{{ app_name }}-loki:{{ dc_loki_port }}
     basicAuth: false
     isDefault: true
     version: 1

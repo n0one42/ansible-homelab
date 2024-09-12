@@ -16,68 +16,80 @@ rule_files:
   # - "first_rules.yml"
   # - "second_rules.yml"
 
+# ! LABELS NEEDS TO BE SET PROPERLY !!!!!
+
 # A scrape configuration containing exactly one endpoint to scrape:
 scrape_configs:
 # ! ---- Scrape config for ingress vm ---- ! #
-  # - job_name: 'node-exporter-ingress'
-  #   scheme: https
-  #   tls_config:
-  #     insecure_skip_verify: {{ dc_traefik_acme_staging_mode }}
-  #   basic_auth:
-  #     username: "{{ dc_traefik_basic_auth_user }}"
-  #     password: "{{ dc_traefik_basic_auth_password_hashed }}"
-  #   static_configs:
-  #     - targets: ['nodeexporter-ingress.{{ domain_1 }}']
-
-  - job_name: "cadvisor-ingress"
+  - job_name: "vector-ingress"  # represents job label
     scheme: https
     tls_config:
       insecure_skip_verify: {{ dc_traefik_acme_staging_mode }}
     basic_auth:
-      username: "{{ dc_traefik_basic_auth_user }}"
-      password: "{{ dc_traefik_basic_auth_password_hashed }}"
+      username: "{{ demo_auth_user }}"
+      password: "{{ demo_auth_user_pw }}"
+    # metrics_path: "/ingress/vector/metrics" # ? Just if usng traefik to traefik with forwarding
     static_configs:
-      - targets: ['cadvisor-ingress.{{ domain_1 }}']
+      # - targets: ["traefik-metrics.{{ domain_1 }}"] # ? Just if usng traefik to traefik with forwarding
+      - targets: ["vector-ingress.{{ domain_1 }}"]
+        labels:
+          # job: # same as job_name
+          job_type: "system_metrics"
+          parser: "vector_prometheus"
+          service: "vector"
+          host: "{{ dc_dmz_net_vm10_ingress_hostname }}"
+          instance: "vector-ingress.{{ domain_1 }}"
 
-  - job_name: "vector-ingress"  # represents job label
+  - job_name: "cadvisor-ingress"  # represents job label
     scheme: https
     tls_config:
-      insecure_skip_verify: {{ dc_vector_insecure_skip_verify }}
+      insecure_skip_verify: {{ dc_traefik_acme_staging_mode }}
     basic_auth:
-      username: "{{ dc_vector_basic_auth_user }}"
-      password: "{{ dc_vector_basic_auth_password }}"
+      username: "{{ demo_auth_user }}"
+      password: "{{ demo_auth_user_pw }}"
+    # metrics_path: "/ingress/cadvisor/metrics"
     static_configs:
-      - targets: ['vector-ingress.{{ domain_1 }}']
+      # - targets: ['traefik-metrics.{{ domain_1 }}']
+      - targets: ["cadvisor-ingress.{{ domain_1 }}"]
         labels:
-          job: "vector-collector"
-          job_type: "system_metrics"
-          parser: vector
-          host: "{{ ansible_hostname }}"
-          instance: "{{ ansible_hostname }}:9598"
+          job_type: "docker_metrics"
+          parser: "cadvisor_prometheus"
+          service: "cadvisor"
+          host: "{{ dc_dmz_net_vm10_ingress_hostname }}"
+          instance: "cadvisor-ingress.{{ domain_1 }}"
 
 
 # ! ---- Scrape config for metrics vm (local) ---- ! #
-  - job_name: "prometheus-{{ dc_traefik_type }}"  # represents job label
+  - job_name: "prometheus-metrics" # represents job label
     static_configs:
-      - targets: ["localhost:{{ dc_grafana_prometheus_port }}"]
+      - targets: ["localhost:{{ dc_prometheus_port }}"]
         labels:
-          parser: prometheus
-          instance: "{{ ansible_hostname }}"
+          job_type: "prometheus_metrics"
+          parser: "prometheus_self"
+          service: "prometheus"
+          host: "{{ dc_dmz_net_vm20_metrics_hostname }}"
+          instance: "prometheus-metrics.{{ domain_1 }}"
 
   # ? using vector instead of node exporter
-  # - job_name: "node-exporter-{{ dc_traefik_type }}"  # represents job label
-  #   static_configs:
-  #     - targets: ["{{ dc_grafana_net_nodeexporter_ip }}:{{ dc_grafana_nodeexporter_port }}"]
-  #       labels:
-  #         parser: "node-exporter"
-  #         instance: "{{ ansible_hostname }}"
-
-  - job_name: "cadvisor-{{ dc_traefik_type }}"  # represents job label
+  - job_name: "vector-metrics"  # represents job label
     static_configs:
-      - targets: ["{{ dc_grafana_net_cadvisor_ip }}:{{ dc_grafana_cadvisor_port }}"]
+      - targets: ["{{ dc_grafana_net_vector_ip }}:{{ dc_vector_prometheus_exporter_port }}"]
         labels:
-          parser: "cadvisor"
-          instance: "{{ ansible_hostname }}"
+          job_type: "system_metrics"
+          parser: "vector_prometheus"
+          service: "vector"
+          host: "{{ dc_dmz_net_vm20_metrics_hostname }}"
+          instance: "vector-metrics.{{ domain_1 }}"
+
+  - job_name: "cadvisor-metrics"  # represents job label
+    static_configs:
+      - targets: ["{{ dc_grafana_net_cadvisor_ip }}:{{ dc_cadvisor_port }}"]
+        labels:
+          job_type: "docker_metrics"
+          parser: "cadvisor_prometheus"
+          service: "cadvisor"
+          host: "{{ dc_dmz_net_vm20_metrics_hostname }}"
+          instance: "cadvisor-metrics.{{ domain_1 }}"
 
   # ? To much overhead and not rly needed
   # - job_name: "whats-up-docker-{{ dc_traefik_type }}" # represents job label
@@ -88,16 +100,6 @@ scrape_configs:
   # - job_name: "promtail"
   #   static_configs:
   #     - targets: ["{{ dc_grafana_net_promtail_ip }}:{{ dc_grafana_promtail_port }}"]
-
-  - job_name: "vector-{{ dc_traefik_type }}"  # represents job label
-    static_configs:
-      - targets: ["{{ dc_grafana_net_vector_ip }}:9598"]
-        labels:
-          job: "vector-collector"
-          job_type: "system_metrics"
-          parser: vector
-          host: "{{ ansible_hostname }}"  # eg: demo-vm20-metrics
-          instance: "{{ ansible_hostname }}:9598"
 
 
 # ! ---- Scrape config for application-1 vm ---- ! #

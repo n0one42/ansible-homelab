@@ -1,0 +1,68 @@
+# http:
+#   services:
+#     ingress-services:
+#       loadBalancer:
+#         servers:
+#           - url: "https://traefik-ingress.{{ domain_1 }}"
+
+
+# ! ------------------------ Routers ------------------------ ! #
+  # routers:
+    # to-nginx-ingress:
+    #   rule: "Host(`traefik-metrics.{{ domain_1 }}`) && PathPrefix(`/ingress/nginx`)"
+    #   service: ingress-services
+    #   entryPoints:
+    #     - websecure
+    #   middlewares:
+    #     - to-nginx-ingress-strip-prefix
+    #     - to-nginx-ingress-set-host-header
+
+    # to-vector-ingress:
+    #   rule: "Host(`traefik-metrics.{{ domain_1 }}`) && PathPrefix(`/ingress/vector`)"
+    #   service: ingress-services
+    #   entryPoints:
+    #     - websecure
+    #   middlewares:
+    #     - to-vector-ingress-strip-prefix
+    #     - to-vector-ingress-set-host-header
+
+    # to-cadvisor-ingress:
+    #   rule: "Host(`traefik-metrics.{{ domain_1 }}`) && PathPrefix(`/ingress/cadvisor`)"
+    #   service: ingress-services
+    #   entryPoints:
+    #     - websecure
+    #   middlewares:
+    #     - to-cadvisor-ingress-strip-prefix
+    #     - to-cadvisor-ingress-set-host-header
+
+
+# ! ------------------------ Middlewares ------------------------ ! #
+  # middlewares:
+    # to-nginx-ingress-strip-prefix:
+    #   stripPrefix:
+    #     prefixes:
+    #       - "/ingress/nginx"
+    # to-nginx-ingress-set-host-header:
+    #   headers:
+    #     customRequestHeaders:
+    #       Host: "nginx-ingress.{{ domain_1 }}"
+
+    # to-vector-ingress-strip-prefix:
+    #   stripPrefix:
+    #     prefixes:
+    #       - "/ingress/vector"
+    # to-vector-ingress-set-host-header:
+    #   headers:
+    #     customRequestHeaders:
+    #       Host: "vector-ingress.{{ domain_1 }}"
+
+    # to-cadvisor-ingress-strip-prefix:
+    #   stripPrefix:
+    #     prefixes:
+    #       - "/ingress/cadvisor"
+    # to-cadvisor-ingress-set-host-header:
+    #   headers:
+    #     customRequestHeaders:
+    #       Host: "cadvisor-ingress.{{ domain_1 }}"
+
+# ? Does work this way but I decided to use only one traefik. Still a cool way to do it.

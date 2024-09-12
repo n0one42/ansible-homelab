@@ -7,6 +7,74 @@ sinks:
   #   encoding:
   #     codec: json
 
+
+  system_metrics:
+    type: prometheus_exporter
+    inputs:
+      - vector_internal_metrics
+      - host_metrics
+    address: "0.0.0.0:{{ dc_vector_prometheus_exporter_port }}"
+    # ? Labels are set in the prometheus config
+
+  system_logs:
+    type: loki
+    inputs:
+      - vector_internal_logs
+      # - host_logs
+    endpoint: "http://{{ dc_traefik_net_loki_ip }}:{{ dc_loki_port }}"
+    encoding:
+      codec: json # json
+    labels:
+      job: "vector-metrics"
+      job_type: "system_logs"
+      parser: "vector_loki"
+      service: "vector"
+      host: "{{ dc_dmz_net_vm20_metrics_hostname }}"  # eg: demo-vm20-metrics
+      instance: "vector-metrics.{{ domain_1 }}"
+
+
+  docker_logs:
+    type: loki
+    inputs:
+      - remove_label
+    endpoint: "http://{{ dc_traefik_net_loki_ip }}:{{ dc_loki_port }}"
+    encoding:
+      codec: json # json
+    labels:
+      job: "vector-metrics"
+      job_type: "docker_logs"
+      parser: "vector_loki"
+      service: "vector"
+      host: "{{ dc_dmz_net_vm20_metrics_hostname }}"  # eg: demo-vm20-metrics
+      instance: "vector-metrics.{{ domain_1 }}"
+      {% raw %}
+      container: "{{ .container_name }}"
+      logstream: "{{ .stream }}"
+      level: "{{ .level }}"
+      {% endraw %}
+
+  docker_file_logs:
+    type: loki
+    inputs:
+      - traefik_access_log_parser
+      - traefik_log_parser
+    endpoint: "http://{{ dc_traefik_net_loki_ip }}:{{ dc_loki_port }}"
+    encoding:
+      codec: json # json
+    labels:
+      job: "vector-metrics"
+      job_type: "docker_logs"
+      parser: "vector_loki"
+      service: "vector"
+      host: "{{ dc_dmz_net_vm20_metrics_hostname }}"  # eg: demo-vm20-metrics
+      instance: "vector-metrics.{{ domain_1 }}"
+      {% raw %}
+      container: "{{ .container_name }}"
+      logstream: "file"
+      level: "{{ .level }}"
+      {% endraw %}
+
+
   # elasticsearch:
   #   type: elasticsearch
   #   inputs:
@@ -26,71 +94,6 @@ sinks:
   #     #   max_bytes: 10485760  # 10MB
   #     #   timeout_secs: 1
 
-  loki_docker_logs:
-    type: loki
-    inputs:
-      - remove_label
-    endpoint: "http://{{ dc_traefik_net_loki_ip }}:3100"
-    encoding:
-      codec: json # json
-    labels:
-      job: "vector-collector"
-      job_type: "docker_logs"
-      parser: vector
-      host: "{{ ansible_hostname }}"  # eg: demo-vm20-metrics
-      instance: "{{ ansible_hostname }}:3100"
-      {% raw %}
-      container: "{{ .container_name }}"
-      logstream: "{{ .stream }}"
-      level: "{{ .level }}"
-      {% endraw %}
-
-
-  loki_docker_file_logs:
-    type: loki
-    inputs:
-      - traefik_access_log_parser
-      - traefik_log_parser
-    endpoint: "http://{{ dc_traefik_net_loki_ip }}:3100"
-    encoding:
-      codec: json # json
-    labels:
-      job: "vector-collector"
-      job_type: "docker_logs"
-      parser: vector
-      host: "{{ ansible_hostname }}"  # eg: demo-vm20-metrics
-      instance: "{{ ansible_hostname }}:3100"
-      logstream: "file"
-      {% raw %}
-      container: "{{ .container_name }}"
-      level: "{{ .level }}"
-      file: "{{ .file }}"
-      {% endraw %}
-
-
-  loki_system_logs:
-    type: loki
-    inputs:
-      - vector_internal_logs
-      # - host_logs
-    endpoint: "http://{{ dc_traefik_net_loki_ip }}:3100"
-    encoding:
-      codec: json # json
-    labels:
-      job: "vector-collector"
-      job_type: "system_logs"
-      parser: vector
-      host: "{{ ansible_hostname }}"  # eg: demo-vm20-metrics
-      instance: "{{ ansible_hostname }}:3100"
-
-
-  system_metrics:
-    type: prometheus_exporter
-    inputs:
-      - vector_internal_metrics
-      - host_metrics
-    address: "0.0.0.0:9598"
-
   # influxdb_v2:
   #   type: influxdb_metrics
   #   inputs:
@@ -100,4 +103,4 @@ sinks:
   #   bucket: "grafana"
   #   token: "Pur#-rM#0idy@2V4@.nCZ2Ys3QcWhZJWGf@yLactoM30f6x^hpl5wb9%bD#0xEFT"
   #   tags:
-  #     host: "{{ ansible_hostname }}"
+  #     host: "{{ dc_dmz_net_vm20_metrics_hostname }}"

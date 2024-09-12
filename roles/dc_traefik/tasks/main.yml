@@ -38,9 +38,10 @@
           vars:
             filesystem_manager_appdata_directories_to_create:
               - path: "rules"
+              - path: "letsencrypt"
               - path: "plugins-storage"
             filesystem_manager_appdata_files_to_touch:
-              - filename: "acme.json"
+              - filename: "letsencrypt/acme.json"
                 mode: "0600"
             filesystem_manager_log_files_to_touch:
               - filename: "traefik.log"
@@ -138,6 +139,11 @@
                     - --accessLog.filePath=/logs/access.log # (Default: stdout)
                     # - --accessLog.bufferingSize=100 # Configuring a buffer of 100 lines
                     - --accessLog.filters.statusCodes=204-299,400-499,500-599
+                    - --accessLog.filters.retryAttempts=true  # Log retry attempts
+                    - --accessLog.filters.minDuration=100ms # logging slow requests
+                    # - --accessLog.fields.headers.defaultMode=drop
+                    # - --accessLog.fields.headers.names.X-Forwarded-For=keep
+                    # - --accessLog.fields.headers.names.Authorization=keep
                     - --providers.docker=true
                     # - --providers.docker.endpoint=unix:///var/run/docker.sock # Use Docker Socket Proxy instead for improved security
                     - --providers.docker.endpoint=tcp://{{ app_name }}-socketproxy:2375 # Enable for Socket Proxy. Disable otherwise.  # eg: traefik-socketproxy:2375
@@ -152,12 +158,12 @@
                     - --entrypoints.websecure.http.tls.certresolver=dns-cloudflare
                     - --entrypoints.websecure.http.tls.domains[0].main={{ domain_1 }}
                     - --entrypoints.websecure.http.tls.domains[0].sans=*.{{ domain_1 }}
-                    # - --entrypoints.websecure.http.tls.domains[1].main=$DOMAINNAME_KHUB # Pulls main cert for second domain
-                    # - --entrypoints.websecure.http.tls.domains[1].sans=*.$DOMAINNAME_KHUB # Pulls wildcard cert for second domain
+                    # - --entrypoints.websecure.http.tls.domains[1].main=internal.{{ domain_1 }} # Pulls main cert for internal domain
+                    # - --entrypoints.websecure.http.tls.domains[1].sans=*.internal.{{ domain_1 }} # Pulls wildcard cert for internal domain
                     - --providers.file.directory=/rules # Load dynamic configuration from one or more .toml or .yml files in a directory
                     - --providers.file.watch=true # Only works on top level files in the rules folder
                     - "{{ '--certificatesResolvers.dns-cloudflare.acme.caServer=https://acme-staging-v02.api.letsencrypt.org/directory' if dc_traefik_acme_staging_mode | bool else '' }}" # ? LetsEncrypt Staging Server - uncomment when testing
-                    - --certificatesResolvers.dns-cloudflare.acme.storage=/acme.json
+                    - --certificatesResolvers.dns-cloudflare.acme.storage=/letsencrypt/acme.json
                     - --certificatesResolvers.dns-cloudflare.acme.dnsChallenge.provider=cloudflare
                     - --certificatesResolvers.dns-cloudflare.acme.dnsChallenge.resolvers=1.1.1.1:53,1.0.0.1:53
                     - --certificatesResolvers.dns-cloudflare.acme.dnsChallenge.delayBeforeCheck=60 # 90 # To delay DNS check and reduce LE hitrate
@@ -179,6 +185,9 @@
                     # * ------------------- Plugins ------------------- * #
                     - "{{ '--experimental.plugins.crowdsec-bouncer-traefik-plugin.modulename=github.com/maxlerebourg/crowdsec-bouncer-traefik-plugin' if dc_traefik_crowdsec_enabled | bool else '' }}"
                     - "{{ '--experimental.plugins.crowdsec-bouncer-traefik-plugin.version=v1.3.3' if dc_traefik_crowdsec_enabled | bool else '' }}"
+                  # extra_hosts:  # Just rly needed if using both traefiks together
+                  #   - "traefik-ingress.{{ domain_1 }}:{{ dc_dmz_net_vm10_ingress_ip }}"  # Yes, this is correct!
+                  #   - "traefik-metrics.{{ domain_1 }}:{{ dc_dmz_net_vm20_metrics_ip }}"  # Yes, this is correct!
                   networks:
                     traefik_net: "{{ {'ipv4_address': dc_traefik_net_ip} if dc_traefik_net_ip is defined and dc_traefik_net_ip | length > 0 else {} }}"
                     socketproxy_net: "{{ {'ipv4_address': dc_traefik_socketproxy_net_app_ip} if dc_traefik_socketproxy_net_app_ip is defined and dc_traefik_socketproxy_net_app_ip | length > 0 else {} }}"
@@ -200,7 +209,8 @@
                     # - /var/run/docker.sock:/var/run/docker.sock:ro # Enable if not using Socket Proxy
                     - "{{ appdata_type_path }}/rules:/rules" # Dynamic File Provider directory
                     - "{{ appdata_type_path }}/plugins-storage:/plugins-storage"
-                    - "{{ appdata_type_path }}/acme.json:/acme.json" # Certs File
+                    # - "{{ appdata_type_path }}/acme.json:/acme.json" # Certs File
+                    - "{{ appdata_type_path }}/letsencrypt:/letsencrypt" # Certs Files
                     - "{{ logs_type_path }}:/logs" # Traefik logs
                     - "{{ secrets_type_path }}:/run/secrets"
                   environment:
@@ -219,8 +229,32 @@
                     # * Services - API
                     traefik.http.routers.traefik-rtr.service: "api@internal"
                     # * Middlewares
-                    # traefik.http.routers.traefik-rtr.middlewares: "chain-no-auth@file" # For No Authentication
+                    traefik.http.routers.traefik-rtr.middlewares: "chain-no-auth@file" # For No Authentication
                     # traefik.http.routers.traefik-rtr.middlewares: "chain-basic-auth@file" # For Basic HTTP Authentication
                     # traefik.http.routers.traefik-rtr.middlewares: "chain-oauth@file" # For Google OAuth
                     # traefik.http.routers.traefik-rtr.middlewares: "chain-authelia@file" # For Authelia Authentication
-                    traefik.http.routers.traefik-rtr.middlewares: "{{ 'chain-authelia@file' if dc_traefik_type == 'ingress' else 'chain-basic-auth@file' }}"
+                    # traefik.http.routers.traefik-rtr.middlewares: "{{ 'chain-authelia@file' if dc_traefik_type == 'ingress' else 'chain-basic-auth@file' }}"
+
+
+                # traefik-certs-dumper:
+                #   container_name: "{{ app_name }}-certs-dumper"
+                #   image: ldez/traefik-certs-dumper:v2.8.3
+                #   restart: unless-stopped
+                #   # read_only: true # needs to rewrite the acme and such
+                #   security_opt:
+                #     - no-new-privileges:true
+                #   privileged: false
+                #   entrypoint: sh -c '
+                #     apk add jq
+                #     ; while ! [ -e /data/acme.json ]
+                #     || ! [ `jq ".[] | .Certificates | length" /data/acme.json` != 0 ]; do
+                #     sleep 1
+                #     ; done
+                #     && traefik-certs-dumper file --domain-subdir=true
+                #     --version v2 --watch
+                #     --source /data/acme.json --dest /certs_dumper'
+                #   networks:
+                #     traefik_net: "{{ {'ipv4_address': dc_traefik_net_cert_dumper_ip} if dc_traefik_net_cert_dumper_ip is defined and dc_traefik_net_cert_dumper_ip | length > 0 else {} }}"
+                #   volumes:
+                #     - "{{ appdata_type_path }}/letsencrypt:/data"
+                #     - "{{ docker_secrets }}/certs_dumper:/certs_dumper"

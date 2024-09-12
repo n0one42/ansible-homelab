@@ -74,8 +74,12 @@
                 - '--storage.tsdb.path=/prometheus'
                 - '--log.level={{ dc_grafana_prometheus_log_level }}'
               extra_hosts:
+                # - "traefik-ingress.{{ domain_1 }}:{{ dc_traefik_net_ip }}"  # Yes, this is correct!
+                # - "traefik-metrics.{{ domain_1 }}:{{ dc_traefik_net_ip }}"  # Yes, this is correct!
+
                 - "nodeexporter-ingress.{{ domain_1 }}:{{ dc_dmz_net_vm10_ingress_ip }}"  # Has to be the internal ip of the traefik where the node-exporter are running
                 - "cadvisor-ingress.{{ domain_1 }}:{{ dc_dmz_net_vm10_ingress_ip }}"  # Has to be the internal ip of the traefik where the cadvisor are running
+                - "vector-ingress.{{ domain_1 }}:{{ dc_dmz_net_vm10_ingress_ip }}"  # Has to be the internal ip of the traefik where the cadvisor are running
                 - "wud-ingress.{{ domain_1 }}:{{ dc_dmz_net_vm10_ingress_ip }}"  # Has to be the internal ip of the traefik where the cadvisor are running
                 - "nodeexporter-application-1.{{ domain_1 }}:{{ dc_dmz_net_vm31_application_1_ip }}"  # Has to be the internal ip of the traefik where the node-exporter are running
                 - "cadvisor-application-1.{{ domain_1 }}:{{ dc_dmz_net_vm31_application_1_ip }}"  # Has to be the internal ip of the traefik where the cadvisor are running

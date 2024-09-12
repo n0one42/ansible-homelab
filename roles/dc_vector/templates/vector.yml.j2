@@ -1,6 +1,6 @@
-# api:
-#   enabled: true
-#   address: 0.0.0.0:8686 # To access http://10.0.90.20:8686/playground
+api:
+  enabled: true
+  address: 0.0.0.0:8686 # To access http://10.0.90.20:8686/playground
 
 # schema:
   # log_namespace: true # does not work with docker_logs as json and elasticsearch
@@ -10,102 +10,10 @@ sources:
   vector_logs:
     type: internal_logs
 
-  # my_docker_file_logs:
-  #   type: file
-  #   include:
-  #     # - /var/log/**/*.log
-  #     - /opt/docker/logs/**/*.log
-
-  my_docker_logs:
-    type: docker_logs
-    # include_containers:
-    #   - "grafana"
-    # include_labels: [] # It will only include containers containing these labels
-
-transforms:
-  remove_label:
-    type: remap
-    inputs:
-      - my_docker_logs
-    source: |
-      message_parsed = 
-        parse_json(.message) ??
-        parse_logfmt(.message) ??
-        parse_syslog(.message) ??
-        parse_common_log(.message) ??
-        null
-
-      if message_parsed != null {
-        .mp = message_parsed
-      }
-
-      .level, err = parse_regex(.message, r'(?i)\b(?P<level>error|warn|warning|info|debug|trace|critical|fatal)\b').level
-      if err == null {
-        .level = downcase(.level)
-      }
-
-      del(.highlight)
-      del(.container_created_at)
-      del(.image)
-      del(.sort)
-      del(.label."com.docker.compose.project") # ! This is needed for the docker_logs source except you remove all the labels
-      del(.label."com.docker.compose.service")
-      del(.label."com.docker.compose.project.config-files")
-      del(.label."com.docker.compose.project.working_dir")
-    # del(.label)
-
-
 sinks:
-  # console:
-  #   inputs:
-  #     - my_docker_file_logs
-  #   type: console
-  #   encoding:
-  #     codec: json
-
-  # influxdb_v2:
-  #   type: influxdb_metrics
-  #   inputs:
-  #     - host_metrics
-  #   endpoint: "http://{{ app_name }}-influxdb:8086"
-  #   org: "{{ dc_influxdb_bitnami_user_org | default(dc_influxdb_bitnami_org_name | default('homelab')) }}"
-  #   bucket: "grafana"
-  #   token: "Pur#-rM#0idy@2V4@.nCZ2Ys3QcWhZJWGf@yLactoM30f6x^hpl5wb9%bD#0xEFT"
-  #   tags:
-  #     host: "{{ ansible_hostname }}"
-
-
-
-  # elasticsearch:
-  #   type: elasticsearch
-  #   inputs:
-  #     # - my_docker_logs
-  #     - remove_label
-  #     # - remove_label
-  #     # - file_source # works
-  #   endpoints: 
-  #     - "http://{{ app_name }}-elasticsearch:9200"
-  #   auth:
-  #     strategy: basic
-  #     user: elastic
-  #     password: Temp#1234
-  #   bulk:
-  #     index: "docker-logs-%Y-%m-%d"
-  #     # batch:
-  #     #   max_bytes: 10485760  # 10MB
-  #     #   timeout_secs: 1
-
-  loki:
-    type: loki
+  console:
     inputs:
-      - remove_label
-    endpoint: "http://{{ dc_traefik_net_loki_ip }}:3100"
+      - vector_logs
+    type: console
     encoding:
-      codec: json # json
-    labels:
-      parser: vector
-      job: "docker_logs"
-      instance: {{ ansible_hostname }}{% raw %}
-      container: "{{ .container_name }}"
-      logstream: "{{ .stream }}"
-{% endraw %}
+      codec: json

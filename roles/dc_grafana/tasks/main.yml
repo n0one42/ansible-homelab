@@ -41,7 +41,6 @@
         dc_loki_create_with_userns: "{{ dc_grafana_loki_create_with_userns }}"
         dc_loki_image_version: "{{ dc_grafana_loki_image_version }}"
         dc_loki_net_ip: "{{ dc_grafana_net_loki_ip }}"
-        dc_loki_port: "{{ dc_grafana_loki_port }}"
 
 
   # # * ------------------------ Grafana Promtail ------------------------ * #
@@ -52,7 +51,6 @@
   #       dc_promtail_create_with_userns: "{{ dc_grafana_promtail_create_with_userns }}"
   #       dc_promtail_image_version: "{{ dc_grafana_promtail_image_version }}"
   #       dc_promtail_net_ip: "{{ dc_grafana_net_promtail_ip }}"
-  #       dc_promtail_port: "{{ dc_grafana_promtail_port }}"
 
 
   # # * ------------------------ Grafana Node Exporter ------------------------ * #
@@ -63,7 +61,6 @@
   #       dc_nodeexporter_create_with_userns: "{{ dc_grafana_nodeexporter_create_with_userns }}"
   #       dc_nodeexporter_image_version: "{{ dc_grafana_nodeexporter_image_version }}"
   #       dc_nodeexporter_net_ip: "{{ dc_grafana_net_nodeexporter_ip }}"
-  #       dc_nodeexporter_port: "{{ dc_grafana_nodeexporter_port }}"
 
 
   # * ------------------------ Grafana Cadvisor ------------------------ * #
@@ -74,7 +71,6 @@
         dc_cadvisor_create_with_userns: "{{ dc_grafana_cadvisor_create_with_userns }}"
         dc_cadvisor_image_version: "{{ dc_grafana_cadvisor_image_version }}"
         dc_cadvisor_net_ip: "{{ dc_grafana_net_cadvisor_ip }}"
-        dc_cadvisor_port: "{{ dc_grafana_cadvisor_port }}"
 
 
   # * ------------------------ Grafana Prometheus ------------------------ * #
@@ -85,7 +81,6 @@
         dc_prometheus_create_with_userns: "{{ dc_grafana_prometheus_create_with_userns }}"
         dc_prometheus_image_version: "{{ dc_grafana_prometheus_image_version }}"
         dc_prometheus_net_ip: "{{ dc_grafana_net_prometheus_ip }}"
-        dc_prometheus_port: "{{ dc_grafana_prometheus_port }}"
 
 
   # * ------------------------ Grafana Vector ------------------------ * #
@@ -96,8 +91,6 @@
         dc_vector_create_with_userns: "{{ dc_grafana_vector_create_with_userns }}"
         dc_vector_image_version: "{{ dc_grafana_vector_image_version }}"
         dc_vector_net_ip: "{{ dc_grafana_net_vector_ip }}"
-        dc_vector_port: "{{ dc_grafana_vector_port }}"
-
 
   # # * ------------------------ Grafana Alloy ------------------------ * #
   #   - name: Include alloy role
@@ -107,7 +100,6 @@
   #       dc_alloy_create_with_userns: "{{ dc_grafana_alloy_create_with_userns }}"
   #       dc_alloy_image_version: "{{ dc_grafana_alloy_image_version }}"
   #       dc_alloy_net_ip: "{{ dc_grafana_net_alloy_ip }}"
-  #       dc_alloy_port: "{{ dc_grafana_alloy_port }}"
 
 
   # # * ------------------------ Grafana InfluxDB ------------------------ * #
@@ -150,10 +142,14 @@
             filesystem_manager_appdata_directories_to_create:
               - path: "data"
               - path: "data/dashboards"
+              - path: "config"
               - path: "config/provisioning/datasources"
               - path: "config/provisioning/dashboards"
             filesystem_manager_appdata_templates_to_copy:
-              - src: "ds.yml.j2"
+              - src: "grafana.ini.j2"
+                dest: "config/grafana.ini"
+                mode: '0660'
+              - src: "datasources/ds.yml.j2"
                 dest: "config/provisioning/datasources/ds.yml"
                 mode: '0660'
               - src: "dashboards/dashboards.yml.j2"
@@ -209,6 +205,7 @@
                   #   - "{{ dc_grafana_port }}:3000"
                   volumes:
                     - "{{ appdata_type_path }}/data:/var/lib/grafana"
+                    - "{{ appdata_type_path }}/config/grafana.ini:/etc/grafana/grafana.ini"
                     - "{{ appdata_type_path }}/config/provisioning/datasources/ds.yml:/etc/grafana/provisioning/datasources/ds.yml"
                     - "{{ appdata_type_path }}/config/provisioning/dashboards:/etc/grafana/provisioning/dashboards"
                     - "{{ secrets_type_path }}:/run/secrets"

@@ -1,0 +1,17 @@
+; [server]
+; # IP address to bind Grafana to (optional). Use 0.0.0.0 to listen on all available interfaces.
+; http_addr = 0.0.0.0
+; # Port to bind to. Since you want to use port 3000, keep this as is.
+; http_port = 3000
+; # The root domain where Grafana will be hosted. In your case, it's "internal.mydom.com".
+; domain = internal.{{ domain_1 }}
+; # The full URL where Grafana will be accessible, including the subdomain, protocol, and port.
+; root_url = https://grafana.internal.{{ domain_1 }}:3001
+; # Path to your SSL private key file for the domain. This should be the file corresponding to your certificate.
+; cert_key = /etc/grafana/certs/privatekey.key
+; # Path to your SSL certificate file. This is the public certificate (CRT) issued for your domain.
+; cert_file = /etc/grafana/certs/certificate.crt
+; # This ensures Grafana only responds to requests for the specified domain (can be set to "true" for security reasons).
+; enforce_domain = false ; true
+; # Protocol to use. Since you're setting up TLS, change this to "https".
+; protocol = https

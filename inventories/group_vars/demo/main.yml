@@ -227,7 +227,7 @@ dc_it_tools_log_level: ""
 dc_traefik_container_name: "traefik"
 dc_traefik_create_with_userns: true
 dc_traefik_image_version: "3.1"
-dc_traefik_log_level: "INFO" # (Default: error) DEBUG, INFO, WARN, ERROR, FATAL, PANIC # Needs at least info for crowdsec
+dc_traefik_log_level: "INFO" # (Default: error) TRACE, DEBUG, INFO, WARN, ERROR, FATAL, PANIC # Needs at least info for crowdsec
 
 dc_traefik_acme_staging_mode: true  # true = LetsEncrypt Staging Server - false = LetsEncrypt Production Server
 dc_traefik_crowdsec_enabled: true
@@ -240,7 +240,7 @@ dc_traefik_cloudflare_ip_ranges: >
   173.245.48.0/20, 103.21.244.0/22, 103.22.200.0/22, 103.31.4.0/22, 141.101.64.0/18,
   108.162.192.0/18, 190.93.240.0/20, 188.114.96.0/20, 197.234.240.0/22, 198.41.128.0/17,
   162.158.0.0/15, 104.16.0.0/13, 104.24.0.0/14, 172.64.0.0/13, 131.0.72.0/22
-dc_traefik_local_ip_ranges: ""
+dc_traefik_local_ip_ranges: "{{ dc_dmz_net_vm09_aio_ip }}, {{ dc_dmz_net_vm10_ingress_ip }}, {{ dc_dmz_net_vm20_metrics_ip }}, {{ dc_dmz_net_vm31_application_1_ip }}"
 
 # * ------------>>> SocketProxy Configuration <<<------------ * #
 # * >>> Container variables
@@ -284,7 +284,8 @@ dc_grafana_db_port: 5432
 dc_grafana_loki_create_with_userns: true
 dc_grafana_loki_image_version: "2.9.2"
 dc_grafana_loki_log_level: ""
-dc_grafana_loki_port: 3100
+
+dc_loki_port: 3100
 
 ## ? Environment variables if used in standalone mode (external promtail)
 dc_loki_standalone: false
@@ -315,7 +316,8 @@ dc_promtail_socketproxy_env_tasks: "1"
 dc_grafana_prometheus_create_with_userns: true
 dc_grafana_prometheus_image_version: "latest"
 dc_grafana_prometheus_log_level: "debug" # default: info [debug, info, warn, error] # ? Best to let debug cuz hard to find when something not working
-dc_grafana_prometheus_port: 9090
+
+dc_prometheus_port: 9090
 
 ## ? Environment variables if used in standalone mode (external prometheus)
 dc_prometheus_standalone: false
@@ -335,7 +337,7 @@ dc_nodeexporter_standalone: false
 dc_grafana_cadvisor_create_with_userns: false # ! Need this cuz of root sadly
 dc_grafana_cadvisor_image_version: "latest"
 dc_grafana_cadvisor_log_level: "" # seams not to be any available
-dc_grafana_cadvisor_port: 8080
+dc_cadvisor_port: 8080
 
 ## ? Environment variables if used in standalone mode (external cadvisor)
 dc_cadvisor_standalone: false
@@ -404,7 +406,9 @@ dc_telegraf_socketproxy_env_tasks: "1"
 dc_grafana_vector_create_with_userns: true
 dc_grafana_vector_image_version: "0.40.1-debian"
 dc_grafana_vector_log_level: "info" # default: info [debug, info, warn, error]
-dc_grafana_vector_port: 8686
+
+dc_vector_port: 8686
+dc_vector_prometheus_exporter_port: 9598
 
 ## ? Environment variables if used in standalone mode (external promtail)
 dc_vector_standalone: false

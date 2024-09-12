@@ -34,10 +34,18 @@
               - src: "{{ playbook_dir | dirname }}/roles/dc_vector/templates/{{ dc_traefik_type }}"
                 dest: "config"
             # filesystem_manager_appdata_templates_to_copy:
-            #   - src: "vector.yml.j2"
-            #     dest: "vector.yml"
-              # - src: "docker_metrics.yml.j2"
-              #   dest: "docker_metrics.yml"
+            #   - src: "shared/common.yml.j2"
+            #     dest: "config/common.yml"
+            #   - src: "shared/system_metrics.yml.j2"
+            #     dest: "config/system_metrics.yml"
+            #   - src: "shared/system_logs.yml.j2"
+            #     dest: "config/system_logs.yml"
+            #   - src: "shared/docker_logs.yml.j2"
+            #     dest: "config/docker_logs.yml"
+            #   - src: "ingress/sinks.yml.j2"
+            #     dest: "config/sinks.yml"
+              # - src: "vector.yml.j2"
+              #   dest: "config/vector.yml"
           notify:
             - Restart vector
 
@@ -87,20 +95,23 @@
                         cpus: '0.50'
                   command: ["-c", "/etc/vector/*.yml"]
                   extra_hosts:
+                    # - "traefik-ingress.{{ domain_1 }}:{{ dc_traefik_net_ip }}"  # Yes, this is correct!
+                    # - "traefik-metrics.{{ domain_1 }}:{{ dc_traefik_net_ip }}"  # Yes, this is correct!
                     - "loki-metrics.{{ domain_1 }}:{{ dc_dmz_net_vm20_metrics_ip if (dc_vector_standalone | default(false) | bool) else dc_grafana_net_loki_ip }}"
                   networks:
                     app_net: "{{ {'ipv4_address': dc_vector_net_ip} if dc_vector_net_ip is defined and dc_vector_net_ip | length > 0 and not dc_vector_standalone | default(false) | bool else omit }}"
                     traefik_net: "{{ {'ipv4_address': dc_traefik_net_vector_ip} if dc_traefik_net_vector_ip is defined and dc_traefik_net_vector_ip | length > 0 else {} }}"
-                  # ports:
-                    # - "{{ dc_vector_port }}:8686"
-                    # - 9598:9598 # Prometheus Exporter default port
+                  ports:
+                    - "{{ dc_vector_port }}:8686"
+                    - 9598:9598 # Prometheus Exporter default port
                   volumes:
-                    # - "{{ appdata_type_path }}/config:/etc/vector"
-                    - "{{ appdata_type_path }}/config/common.yml:/etc/vector/common.yml:ro"
-                    - "{{ appdata_type_path }}/config/system_metrics.yml:/etc/vector/system_metrics.yml:ro"
-                    - "{{ appdata_type_path }}/config/system_logs.yml:/etc/vector/system_logs.yml:ro"
-                    - "{{ appdata_type_path }}/config/docker_logs.yml:/etc/vector/docker_logs.yml:ro"
-                    - "{{ appdata_type_path }}/config/sinks.yml:/etc/vector/sinks.yml:ro"
+                    - "{{ appdata_type_path }}/config:/etc/vector"
+                    # - "{{ appdata_type_path }}/config/common.yml:/etc/vector/common.yml:ro"
+                    # - "{{ appdata_type_path }}/config/system_metrics.yml:/etc/vector/system_metrics.yml:ro"
+                    # - "{{ appdata_type_path }}/config/system_logs.yml:/etc/vector/system_logs.yml:ro"
+                    # - "{{ appdata_type_path }}/config/docker_logs.yml:/etc/vector/docker_logs.yml:ro"
+                    # - "{{ appdata_type_path }}/config/sinks.yml:/etc/vector/sinks.yml:ro"
+                    # # # - "{{ appdata_type_path }}/config/vector.yml:/etc/vector/vector.yml:ro"
                     # - /sys/fs/cgroup:/sys/fs/cgroup:ro
                     # - /proc:/rootfs/proc:ro
                     # - /sys:/rootfs/sys:ro
@@ -109,10 +120,30 @@
                     - /var/run/docker.sock:/var/run/docker.sock:ro
                   environment:
                     # DOCKER_HOST: "{{ dc_vector_socketproxy_net_ip }}:2375"
-                    VECTOR_LOG: info  # trace, debug, info, warn, error, off default: info
+                    VECTOR_LOG: "{{ dc_grafana_vector_log_level }}"  # trace, debug, info, warn, error, off default: info
                     # HOST_PROC: /rootfs/proc
                     # HOST_SYS: /rootfs/sys
                     # HOST_ETC: /rootfs/etc
+                  labels:
+                    traefik.enable: "true"
+                    # ? This will need api to be enabled on the common.yml file
+                    # * HTTP Router for Vector (default port 8686)
+                    traefik.http.routers.vector-rtr.entrypoints: "websecure"
+                    traefik.http.routers.vector-rtr.rule: "Host(`vector-{{ dc_traefik_type }}.{{ domain_1 }}`)"
+                    traefik.http.routers.vector-rtr.middlewares: "chain-basic-auth@file" # For Basic HTTP Authentication
+                    traefik.http.routers.vector-rtr.service: "vector-svc"
+                    # * HTTP Service for Vector (default port 8686)
+                    traefik.http.services.vector-svc.loadbalancer.server.port: "{{ dc_vector_port }}" # default: "8686"
+
+                    # * HTTP Router for Vector Prometheus Metrics (port 9598)
+                    traefik.http.routers.vector-metrics-rtr.entrypoints: "websecure"
+                    traefik.http.routers.vector-metrics-rtr.rule: "Host(`vector-{{ dc_traefik_type }}.{{ domain_1 }}`) && Path(`/metrics`)"
+                    traefik.http.routers.vector-metrics-rtr.middlewares: "chain-basic-auth@file"
+                    # traefik.http.routers.vector-metrics-rtr.middlewares: "chain-no-auth@file"
+                    traefik.http.routers.vector-metrics-rtr.service: "vector-metrics-svc"
+                    # * HTTP Service for Vector Prometheus Metrics (port 9598)
+                    traefik.http.services.vector-metrics-svc.loadbalancer.server.port: "{{ dc_vector_prometheus_exporter_port }}" # default: "9598"
+
 
         - name: Flush handlers
           ansible.builtin.meta: flush_handlers

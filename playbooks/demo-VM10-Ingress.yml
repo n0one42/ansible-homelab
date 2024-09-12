@@ -20,7 +20,7 @@
   gather_facts: false
   vars:
     dc_traefik_type: "ingress"
-    dc_traefik_crowdsec_enabled: true
+    # dc_traefik_crowdsec_enabled: false
   pre_tasks:
     - name: Gather only the hostname fact
       ansible.builtin.setup:
@@ -43,17 +43,14 @@
         dc_vector_standalone: true
         dc_vector_create_with_userns: "{{ dc_grafana_vector_create_with_userns }}"
         dc_vector_image_version: "{{ dc_grafana_vector_image_version }}"
-        dc_vector_loki_traefik_ip: "{{ dc_dmz_net_vm20_metrics_ip }}" # Has to be the internal ip of the traefik where loki is running
-        dc_vector_net_ip: "{{ dc_grafana_net_vector_ip }}" # Will not be used since it is a standalone. Just for reference
-        dc_vector_port: "{{ dc_grafana_vector_port }}"
     - role: dc_cadvisor
       vars:
         dc_cadvisor_standalone: true
         dc_cadvisor_create_with_userns: "{{ dc_grafana_cadvisor_create_with_userns }}"
         dc_cadvisor_image_version: "{{ dc_grafana_cadvisor_image_version }}"
-        dc_cadvisor_net_ip: "{{ dc_grafana_net_cadvisor_ip }}" # Will not be used since it is a standalone. Just for reference
-        dc_cadvisor_port: "{{ dc_grafana_cadvisor_port }}"
 
+
+    # - role: dc_nginx
 
 # grafana, elasticsearch, influxdb, telegraf should be enough
 
