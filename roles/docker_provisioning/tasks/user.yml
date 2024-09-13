@@ -75,6 +75,9 @@
   notify:
     - Restart docker
 
+- name: Flush handlers
+  ansible.builtin.meta: flush_handlers
+
 - name: Add Infos to console
   ansible.builtin.debug:
     msg: "NOTE: if using --user param for a container eg 1200 it means on host uid 101200!"

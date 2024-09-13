@@ -25,12 +25,12 @@ sinks:
     encoding:
       codec: json # json
     labels:
-      job: "vector-metrics"
+      job: "vector-{{ dc_traefik_type }}"
       job_type: "system_logs"
       parser: "vector_loki"
       service: "vector"
       host: "{{ dc_dmz_net_vm20_metrics_hostname }}"  # eg: demo-vm20-metrics
-      instance: "vector-metrics.{{ domain_1 }}"
+      instance: "vector-{{ dc_traefik_type }}.{{ domain_1 }}"
 
 
   docker_logs:
@@ -41,12 +41,12 @@ sinks:
     encoding:
       codec: json # json
     labels:
-      job: "vector-metrics"
+      job: "vector-{{ dc_traefik_type }}"
       job_type: "docker_logs"
       parser: "vector_loki"
       service: "vector"
       host: "{{ dc_dmz_net_vm20_metrics_hostname }}"  # eg: demo-vm20-metrics
-      instance: "vector-metrics.{{ domain_1 }}"
+      instance: "vector-{{ dc_traefik_type }}.{{ domain_1 }}"
       {% raw %}
       container: "{{ .container_name }}"
       logstream: "{{ .stream }}"
@@ -62,12 +62,12 @@ sinks:
     encoding:
       codec: json # json
     labels:
-      job: "vector-metrics"
+      job: "vector-{{ dc_traefik_type }}"
       job_type: "docker_logs"
       parser: "vector_loki"
       service: "vector"
       host: "{{ dc_dmz_net_vm20_metrics_hostname }}"  # eg: demo-vm20-metrics
-      instance: "vector-metrics.{{ domain_1 }}"
+      instance: "vector-{{ dc_traefik_type }}.{{ domain_1 }}"
       {% raw %}
       container: "{{ .container_name }}"
       logstream: "file"

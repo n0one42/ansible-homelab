@@ -32,7 +32,7 @@
         state: restarted
       changed_when: false
   roles:
-    # - role: app_webmin
-    # - role: docker_provisioning
-    # - role: dc_traefik
+    - role: app_webmin
+    - role: docker_provisioning
+    - role: dc_traefik
     - role: dc_grafana

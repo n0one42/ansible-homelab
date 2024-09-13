@@ -1,39 +1,48 @@
 ---
-- name: Create VM => demo-vm31-application-1
-  hosts: demo-pve
-  become: true
-  gather_facts: false
-  roles:
-    - role: pve_vm
-      vars:
-        # pve_vm_prune: true  # testing purposes
-        # pve_vm_start_after_create: false
-        pve_vm_id: 131
-        pve_vm_name: "demo-vm31-application-1"
-        pve_vm_hostname: "demo-vm31-application-1"
-        pve_vm_ipv4_address_0: "{{ dc_dmz_net_vm31_application_1_ip }}"
+# - name: Create VM => demo-vm31-application-1
+#   hosts: demo-pve
+#   become: true
+#   gather_facts: false
+#   roles:
+#     - role: pve_vm
+#       vars:
+#         # pve_vm_prune: true  # testing purposes
+#         # pve_vm_start_after_create: false
+#         pve_vm_id: 131
+#         pve_vm_name: "demo-vm31-application-1"
+#         pve_vm_hostname: "demo-vm31-application-1"
+#         pve_vm_ipv4_address_0: "{{ dc_dmz_net_vm31_application_1_ip }}"
 
 
 - name: Docker Provisioning
   hosts: demo-vm31-application-1
   become: true
   gather_facts: false
+  vars:
+    dc_traefik_type: "application-1"
+    dc_traefik_crowdsec_enabled: false
   pre_tasks:
     - name: Gather only the hostname fact
       ansible.builtin.setup:
         filter: ansible_hostname
+    # ? ensure clock is set / synced otherwise time sensitive things will not work like authelia
+    - name: Synchronize system time with NTP
+      ansible.builtin.systemd:
+        name: systemd-timesyncd.service
+        state: restarted
+      changed_when: false
   roles:
+    - role: app_webmin
     - role: docker_provisioning
     - role: dc_traefik
+    - role: dc_vector
       vars:
-        dc_traefik_container_name: traefik-application-1
-        dc_traefik_type: "application-1"
-        dc_traefik_crowdsec_enabled: false
-    - role: dc_promtail
+        dc_vector_standalone: true
+        dc_vector_create_with_userns: "{{ dc_grafana_vector_create_with_userns }}"
+        dc_vector_image_version: "{{ dc_grafana_vector_image_version }}"
+    - role: dc_cadvisor
       vars:
-        dc_promtail_standalone: true
-        dc_promtail_loki_traefik_ip: "{{ dc_dmz_net_vm20_metrics_ip }}" # Has to be the internal ip of the traefik where loki is running
-        dc_promtail_net_ip: "{{ dc_grafana_net_promtail_ip }}" # Will not be used since it is a standalone. Just for reference
-        dc_promtail_create_with_userns: "{{ dc_grafana_promtail_create_with_userns }}"
-        dc_promtail_image_version: "{{ dc_grafana_promtail_image_version }}"
+        dc_cadvisor_standalone: true
+        dc_cadvisor_create_with_userns: "{{ dc_grafana_cadvisor_create_with_userns }}"
+        dc_cadvisor_image_version: "{{ dc_grafana_cadvisor_image_version }}"
     - role: dc_it-tools

@@ -32,12 +32,12 @@
         state: restarted
       changed_when: false
   roles:
-    # - role: app_webmin
-    # - role: docker_provisioning
-    # - role: dc_adguard  # ! must be first if used for correct dns
+    - role: app_webmin
+    - role: docker_provisioning
+    - role: dc_adguard  # ! must be first if used for correct dns
     - role: dc_traefik
     - role: dc_authelia
-    # - role: dc_authentik
+    - role: dc_authentik
     - role: dc_vector
       vars:
         dc_vector_standalone: true

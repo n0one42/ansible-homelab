@@ -35,7 +35,7 @@ sinks:
       job_type: "system_logs"
       parser: "vector_loki"
       service: "vector"
-      host: "{{ dc_dmz_net_vm10_ingress_hostname }}"  # eg: demo-vm10-ingress
+      host: "{{ dc_dmz_net_vm31_application_1_hostname }}"  # eg: demo-vm31-application-1
       instance: "vector-{{ dc_traefik_type }}.{{ domain_1 }}"
 
 
@@ -57,7 +57,7 @@ sinks:
       job_type: "docker_logs"
       parser: vector_loki
       service: "vector"
-      host: "{{ dc_dmz_net_vm10_ingress_hostname }}"  # eg: demo-vm10-ingress
+      host: "{{ dc_dmz_net_vm31_application_1_hostname }}"  # eg: demo-vm31-application-1
       instance: "vector-{{ dc_traefik_type }}.{{ domain_1 }}"
       {% raw %}
       container: "{{ .container_name }}"
@@ -84,7 +84,7 @@ sinks:
       job_type: "docker_logs"
       parser: vector_loki
       service: "vector"
-      host: "{{ dc_dmz_net_vm10_ingress_hostname }}"  # eg: demo-vm20-metrics
+      host: "{{ dc_dmz_net_vm31_application_1_hostname }}"  # eg: demo-vm31-application-1
       instance: "vector-{{ dc_traefik_type }}.{{ domain_1 }}"
       {% raw %}
       container: "{{ .container_name }}"
