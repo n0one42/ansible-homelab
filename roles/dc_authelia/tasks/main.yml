@@ -78,6 +78,8 @@
               - var_name: authelia_session_secret
                 content: "{{ dc_authelia_session_secret }}"
                 type: session_secret
+          notify:
+            - Restart authelia
 
         - name: '[Required] filesystem_manager role'
           ansible.builtin.import_role:
@@ -135,7 +137,7 @@
                   networks:
                     # default: # testing only
                     app_net: "{{ {'ipv4_address': dc_authelia_net_app_ip} if dc_authelia_net_app_ip is defined and dc_authelia_net_app_ip | length > 0 else {} }}"
-                    traefik_net: "{{ {'ipv4_address': dc_authelia_traefik_net_ip} if dc_authelia_traefik_net_ip is defined and dc_authelia_traefik_net_ip | length > 0 else {} }}"
+                    traefik_net: "{{ {'ipv4_address': dc_traefik_net_authelia_ip} if dc_traefik_net_authelia_ip is defined and dc_traefik_net_authelia_ip | length > 0 else {} }}"
                   # ports:
                   #   - "{{ dc_authelia_port }}:9091"
                   volumes:
@@ -153,6 +155,10 @@
                     ## HTTP Services
                     traefik.http.routers.authelia-rtr.service: "authelia-svc"
                     traefik.http.services.authelia-svc.loadbalancer.server.port: "{{ dc_authelia_port }}"
+
+
+        - name: Flush handlers
+          ansible.builtin.meta: flush_handlers
 
 
 # https://www.smarthomebeginner.com/authelia-docker-compose-guide-2024-v2/

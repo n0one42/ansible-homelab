@@ -25,9 +25,10 @@ scrape_configs:
     scheme: https
     tls_config:
       insecure_skip_verify: {{ dc_traefik_acme_staging_mode }}
-    basic_auth:
-      username: "{{ demo_auth_user }}"
-      password: "{{ demo_auth_user_pw }}"
+    # basic_auth:
+    #   username: "{{ demo_auth_user }}"
+    #   password: "{{ demo_auth_user_pw }}"
+    metrics_path: "/metrics"  # Needed to match exactly the route and rule of traefik with no authentication required for this service
     # metrics_path: "/ingress/vector/metrics" # ? Just if usng traefik to traefik with forwarding
     static_configs:
       # - targets: ["traefik-metrics.{{ domain_1 }}"] # ? Just if usng traefik to traefik with forwarding
@@ -44,9 +45,10 @@ scrape_configs:
     scheme: https
     tls_config:
       insecure_skip_verify: {{ dc_traefik_acme_staging_mode }}
-    basic_auth:
-      username: "{{ demo_auth_user }}"
-      password: "{{ demo_auth_user_pw }}"
+    # basic_auth:
+    #   username: "{{ demo_auth_user }}"
+    #   password: "{{ demo_auth_user_pw }}"
+    metrics_path: "/metrics"  # Needed to match exactly the route and rule of traefik with no authentication required for this service
     # metrics_path: "/ingress/cadvisor/metrics"
     static_configs:
       # - targets: ['traefik-metrics.{{ domain_1 }}']

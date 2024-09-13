@@ -47,3 +47,8 @@
     cmd: sudo /usr/share/webmin/changepass.pl /etc/webmin root {{ app_webmin_root_password }}
   no_log: true
   changed_when: false
+
+# ! --------------------------- Notes --------------------------- ! #
+# The defaults are https://<server-ip>:10000/
+# The default username and password are root/password
+# Change the password after the first login

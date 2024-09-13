@@ -1,6 +1,6 @@
 ---
 # handlers file for roles/dc_authelia
-- name: Restart container
+- name: Restart authelia
   community.docker.docker_container:
     name: "{{ dc_authelia_container_name }}"
     state: started

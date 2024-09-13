@@ -24,10 +24,10 @@ sinks:
     tls:
       verify_certificate: {{ not dc_traefik_acme_staging_mode }}
     endpoint: "https://loki-metrics.{{ domain_1 }}"
-    auth:
-      strategy: basic
-      user: "{{ demo_auth_user }}"
-      password: "{{ demo_auth_user_pw }}"
+    # auth:
+    #   strategy: basic
+    #   user: "{{ demo_auth_user }}"
+    #   password: "{{ demo_auth_user_pw }}"
     encoding:
       codec: json # json
     labels:
@@ -46,10 +46,10 @@ sinks:
     tls:
       verify_certificate: {{ not dc_traefik_acme_staging_mode }}
     endpoint: "https://loki-metrics.{{ domain_1 }}"
-    auth:
-      strategy: basic
-      user: "{{ demo_auth_user }}"
-      password: "{{ demo_auth_user_pw }}"
+    # auth:
+    #   strategy: basic
+    #   user: "{{ demo_auth_user }}"
+    #   password: "{{ demo_auth_user_pw }}"
     encoding:
       codec: json # json
     labels:
@@ -73,10 +73,10 @@ sinks:
     tls:
       verify_certificate: {{ not dc_traefik_acme_staging_mode }}
     endpoint: "https://loki-metrics.{{ domain_1 }}"
-    auth:
-      strategy: basic
-      user: "{{ demo_auth_user }}"
-      password: "{{ demo_auth_user_pw }}"
+    # auth:
+    #   strategy: basic
+    #   user: "{{ demo_auth_user }}"
+    #   password: "{{ demo_auth_user_pw }}"
     encoding:
       codec: json # json
     labels:

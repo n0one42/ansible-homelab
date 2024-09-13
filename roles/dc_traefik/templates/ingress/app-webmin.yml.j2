@@ -1,0 +1,34 @@
+http:
+# ! ------------------------ Services ------------------------ ! #
+  services:
+    webmin-ingress-svc:
+      loadBalancer:
+        servers:
+          - url: "https://{{ dc_dmz_net_vm10_ingress_ip }}:10000"
+
+    webmin-metrics-svc:
+      loadBalancer:
+        servers:
+          - url: "https://{{ dc_dmz_net_vm20_metrics_ip }}:10000"
+
+
+# ! ------------------------ Routers ------------------------ ! #
+  routers:
+    webmin-ingress-rtr:
+      entryPoints:
+        - websecure
+      rule: "Host(`webmin-ingress.{{ domain_1 }}`)"
+      middlewares:
+        - chain-authelia
+      service: webmin-ingress-svc
+
+    webmin-metrics-rtr:
+      entryPoints:
+        - websecure
+      rule: "Host(`webmin-metrics.{{ domain_1 }}`)"
+      middlewares:
+        - chain-authelia
+      service: webmin-metrics-svc
+
+
+# ! ------------------------ Middlewares ------------------------ ! #

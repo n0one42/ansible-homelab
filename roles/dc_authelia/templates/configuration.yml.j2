@@ -10,12 +10,15 @@ server:
     read: 4096
     write: 4096
   endpoints:
+    authz:
+      forward-auth:
+        implementation: 'ForwardAuth'
     enable_pprof: false
     enable_expvars: false
   disable_healthcheck: false
-  tls:
-    key: ""
-    certificate: ""
+  # tls:
+  #   key: ""
+  #   certificate: ""
 
 # https://www.authelia.com/configuration/miscellaneous/logging/
 log:
@@ -50,19 +53,17 @@ authentication_backend:
 access_control:
   default_policy: deny
   rules:
-    # - domain:
-    #     - "*.{{ domain_1 }}"
-    #     - "{{ domain_1 }}"
-    #   policy: bypass
-    #   networks: # bypass authentication for local networks
-    #     - 10.0.0.0/8
-    #     - 192.168.0.0/16
-    #     - 172.16.0.0/12
+{% if trusted_devices_and_networks is defined and trusted_devices_and_networks | length > 0 %}
+    - domain:
+        - "*.{{ domain_1 }}"
+        - "{{ domain_1 }}"
+      policy: bypass
+      networks: {{ trusted_devices_and_networks }} # bypass authentication for local devices and networks
+{% endif %}
     - domain:
         - "*.{{ domain_1 }}"
         - "{{ domain_1 }}"
       policy: one_factor # two_factor
-
 # https://www.authelia.com/configuration/session/introduction/
 session:
   name: authelia_session
