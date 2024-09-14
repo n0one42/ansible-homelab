@@ -1,0 +1,43 @@
+http:
+# ! ---------------------- ServersTransports ---------------------- ! #
+  serversTransports:
+    grafana-transport:
+      serverName: "grafana.{{ domain_1 }}"
+      insecureSkipVerify: {{ dc_traefik_acme_staging_mode }}
+
+
+# ! -------------------------- Services -------------------------- ! #
+  services:
+    webmin-metrics-svc:
+      loadBalancer:
+        servers:
+          - url: "https://{{ dc_dmz_net_vm20_metrics_ip }}:10000"
+
+    grafana-metrics-svc:
+      loadBalancer:
+        servers:
+          - url: "https://{{ dc_dmz_net_vm20_metrics_ip }}"
+        passHostHeader: true
+        serversTransport: "grafana-transport"
+
+
+# ! -------------------------- Routers -------------------------- ! #
+  routers:
+    webmin-metrics-rtr:
+      entryPoints:
+        - websecure
+      rule: "Host(`webmin-metrics.{{ domain_1 }}`)"
+      middlewares:
+        - chain-authelia
+      service: webmin-metrics-svc
+
+    grafana-metrics-rtr:
+      entryPoints:
+        - websecure
+      rule: "Host(`grafana.{{ domain_1 }}`)"
+      middlewares:
+        - chain-authelia
+      service: grafana-metrics-svc
+
+
+# ! ------------------------ Middlewares ------------------------ ! #

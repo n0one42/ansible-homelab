@@ -32,9 +32,7 @@
             traefik.http.routers.it-tools-rtr.entrypoints: "websecure"
             traefik.http.routers.it-tools-rtr.rule: "Host(`{{ dc_it_tools_container_name }}.{{ domain_1 }}`)"
             ## Middlewares
-            # traefik.http.routers.it-tools-rtr.middlewares: "chain-authentik@file"
-            # traefik.http.routers.it-tools-rtr.middlewares: "chain-authelia@file"
-            traefik.http.routers.it-tools-rtr.middlewares: "chain-basic-auth@file"
+            traefik.http.routers.it-tools-rtr.middlewares: "{{ 'chain-authelia@file' if dc_traefik_type == 'ingress' else 'chain-basic-auth@file' }}"
             ## HTTP Services
             traefik.http.routers.it-tools-rtr.service: "it-tools-svc"
             traefik.http.services.it-tools-svc.loadbalancer.server.port: "80"

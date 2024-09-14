@@ -1,0 +1,24 @@
+# http:
+#   middlewares:
+#     middlewares-authelia:
+#       forwardAuth:
+#         address: "https://authelia.{{ domain_1 }}/api/authz/forward-auth"
+#         tls:
+#           insecureSkipVerify: {{ dc_traefik_acme_staging_mode }}
+#         trustForwardHeader: true
+#         authRequestHeaders:
+#           - "X-Forwarded-Method"
+#           - "X-Forwarded-Proto"
+#           - "X-Forwarded-Host"
+#           - "X-Forwarded-Uri"
+#           - "X-Forwarded-For"
+#         authResponseHeaders:
+#           - "Remote-User"
+#           - "Remote-Groups"
+#           - "Remote-Email"
+#           - "Remote-Name"
+#           - "X-Forwarded-Method"
+#           - X-Forwarded-Method
+
+# cant bring it to work this way:
+# msg="Error getting Target URL and Request Method" error="header 'X-Forwarded-Method' is empty" method=GET path=/api/authz/forward-auth remote_ip=10.0.90.20

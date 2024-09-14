@@ -1,2 +1,37 @@
 ---
 # tasks file for roles/dc_whoami
+- name: Install docker compose whoami with inline definition
+  vars:
+    app_name: "whoami"
+  community.docker.docker_compose_v2:
+    project_name: "whoami"
+    definition:
+      # ! --------------------------- Networks --------------------------- ! #
+      networks:
+        traefik_net:
+          name: "{{ dc_traefik_net_name }}"  # eg: traefik_net
+          external: true  # indicating that it's a pre-existing network not managed by this Docker Compose file.
+
+
+      # * ---------------------------- App ------------------------------ * #
+      services:
+        whoami:
+          image: traefik/whoami
+          container_name: "{{ app_name }}"
+          restart: unless-stopped
+          command:
+            - --port=2001
+          networks:
+            traefik_net:
+          ports:
+            - "2001:2001"
+          labels:
+            traefik.enable: "true"
+            ## HTTP Routers
+            traefik.http.routers.whoami-rtr.entrypoints: "websecure"
+            traefik.http.routers.whoami-rtr.rule: "Host(`{{ app_name }}-{{ dc_traefik_type }}.{{ domain_1 }}`)"
+            ## Middlewares
+            traefik.http.routers.whoami-rtr.middlewares: "{{ 'chain-authelia@file' if dc_traefik_type == 'ingress' else 'chain-basic-auth@file' }}"
+            ## HTTP Services
+            traefik.http.routers.whoami-rtr.service: "whoami-svc"
+            traefik.http.services.whoami-svc.loadbalancer.server.port: "2001"

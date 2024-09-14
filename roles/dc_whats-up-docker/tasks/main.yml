@@ -91,7 +91,7 @@
                     traefik.http.routers.wud-rtr.entrypoints: "websecure"
                     traefik.http.routers.wud-rtr.rule: "Host(`wud-{{ dc_traefik_type }}.{{ domain_1 }}`)"
                     # * Middlewares
-                    traefik.http.routers.wud-rtr.middlewares: "chain-basic-auth@file" # For Basic HTTP Authentication
+                    traefik.http.routers.wud-rtr.middlewares: "{{ 'chain-authelia@file' if dc_traefik_type == 'ingress' else 'chain-basic-auth@file' }}"
                     # * HTTP Services
                     traefik.http.routers.wud-rtr.service: "wud-svc"
                     traefik.http.services.wud-svc.loadbalancer.server.port: "{{ dc_wud_port }}"

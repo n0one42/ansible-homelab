@@ -227,7 +227,7 @@ dc_it_tools_log_level: ""
 dc_traefik_container_name: "traefik"
 dc_traefik_create_with_userns: true
 dc_traefik_image_version: "3.1"
-dc_traefik_log_level: "INFO" # (Default: error) TRACE, DEBUG, INFO, WARN, ERROR, FATAL, PANIC # Needs at least info for crowdsec
+dc_traefik_log_level: "TRACE" # (Default: error) TRACE, DEBUG, INFO, WARN, ERROR, FATAL, PANIC # Needs at least info for crowdsec
 
 dc_traefik_acme_staging_mode: true  # true = LetsEncrypt Staging Server - false = LetsEncrypt Production Server
 dc_traefik_crowdsec_enabled: true

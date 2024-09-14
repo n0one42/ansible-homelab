@@ -123,7 +123,7 @@
                     traefik.http.routers.alloy-rtr.entrypoints: "websecure"
                     traefik.http.routers.alloy-rtr.rule: "Host(`alloy-{{ dc_traefik_type }}.{{ domain_1 }}`)"
                     # * Middlewares
-                    traefik.http.routers.alloy-rtr.middlewares: "chain-basic-auth@file" # For Basic HTTP Authentication
+                    traefik.http.routers.alloy-rtr.middlewares: "{{ 'chain-authelia@file' if dc_traefik_type == 'ingress' else 'chain-basic-auth@file' }}"
                     # * HTTP Services
                     traefik.http.routers.alloy-rtr.service: "alloy-svc"
                     traefik.http.services.alloy-svc.loadbalancer.server.port: "12345"

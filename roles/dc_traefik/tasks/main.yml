@@ -185,9 +185,12 @@
                     # * ------------------- Plugins ------------------- * #
                     - "{{ '--experimental.plugins.crowdsec-bouncer-traefik-plugin.modulename=github.com/maxlerebourg/crowdsec-bouncer-traefik-plugin' if dc_traefik_crowdsec_enabled | bool else '' }}"
                     - "{{ '--experimental.plugins.crowdsec-bouncer-traefik-plugin.version=v1.3.3' if dc_traefik_crowdsec_enabled | bool else '' }}"
-                  # extra_hosts:  # Just rly needed if using both traefiks together
-                  #   - "traefik-ingress.{{ domain_1 }}:{{ dc_dmz_net_vm10_ingress_ip }}"  # Yes, this is correct!
-                  #   - "traefik-metrics.{{ domain_1 }}:{{ dc_dmz_net_vm20_metrics_ip }}"  # Yes, this is correct!
+                  extra_hosts:
+                    - "authelia.{{ domain_1 }}:{{ dc_dmz_net_vm10_ingress_ip }}"
+                    - "authentik.{{ domain_1 }}:{{ dc_dmz_net_vm10_ingress_ip }}"
+                    # # Just rly needed if using both traefiks together
+                    # - "traefik-ingress.{{ domain_1 }}:{{ dc_dmz_net_vm10_ingress_ip }}"  # Yes, this is correct!
+                    # - "traefik-metrics.{{ domain_1 }}:{{ dc_dmz_net_vm20_metrics_ip }}"  # Yes, this is correct!
                   networks:
                     traefik_net: "{{ {'ipv4_address': dc_traefik_net_ip} if dc_traefik_net_ip is defined and dc_traefik_net_ip | length > 0 else {} }}"
                     socketproxy_net: "{{ {'ipv4_address': dc_traefik_socketproxy_net_app_ip} if dc_traefik_socketproxy_net_app_ip is defined and dc_traefik_socketproxy_net_app_ip | length > 0 else {} }}"
@@ -233,6 +236,7 @@
                     # traefik.http.routers.traefik-rtr.middlewares: "chain-basic-auth@file" # For Basic HTTP Authentication
                     # traefik.http.routers.traefik-rtr.middlewares: "chain-oauth@file" # For Google OAuth
                     # traefik.http.routers.traefik-rtr.middlewares: "chain-authelia@file" # For Authelia Authentication
+                    # traefik.http.routers.traefik-rtr.middlewares: "chain-authentik@file" # For Authentik Authentication
                     traefik.http.routers.traefik-rtr.middlewares: "{{ 'chain-authelia@file' if dc_traefik_type == 'ingress' else 'chain-basic-auth@file' }}"
 
 

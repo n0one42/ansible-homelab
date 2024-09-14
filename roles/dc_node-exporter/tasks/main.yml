@@ -78,8 +78,7 @@
                 traefik.http.routers.nodeexporter-rtr.entrypoints: "websecure"
                 traefik.http.routers.nodeexporter-rtr.rule: "Host(`nodeexporter-{{ dc_traefik_type }}.{{ domain_1 }}`)"
                 # * Middlewares
-                # traefik.http.routers.nodeexporter-rtr.middlewares: "chain-no-auth@file"  # Has to be chain-no-auth
-                traefik.http.routers.nodeexporter-rtr.middlewares: "chain-basic-auth@file" # For Basic HTTP Authentication
+                traefik.http.routers.nodeexporter-rtr.middlewares: "{{ 'chain-authelia@file' if dc_traefik_type == 'ingress' else 'chain-basic-auth@file' }}"
                 # * HTTP Services
                 traefik.http.routers.nodeexporter-rtr.service: "nodeexporter-svc"
                 traefik.http.services.nodeexporter-svc.loadbalancer.server.port: "{{ dc_nodeexporter_port }}"
