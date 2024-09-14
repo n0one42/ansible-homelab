@@ -1,0 +1,112 @@
+---
+# tasks file for roles/dc_whats_up_docker
+# TODO: Variables which has to be passed through the playbook or on import of this task file
+# ! Mandatory variables
+  # vars:
+  #   app_name: => traefik, portainer, grafana, netbox
+# ? Optional variables
+
+- name: Create Whats-Up-Docker & Socket Proxy
+  vars:
+    app_name: "{{ dc_wud_container_name }}" # "whats-up-docker"
+  block:
+  # * ------------------------ Socket Proxy ------------------------ * #
+    - name: Include Socket Proxy role
+      ansible.builtin.import_role:
+        name: dc_socketproxy
+      vars:
+        dc_socketproxy_net_cidr: "{{ dc_wud_socketproxy_net_cidr }}"
+        dc_socketproxy_net_ip: "{{ dc_wud_socketproxy_net_ip }}"
+
+        dc_socketproxy_env_log_level: "{{ dc_wud_socketproxy_env_log_level }}"
+
+        dc_socketproxy_env_containers: "{{ dc_wud_socketproxy_env_containers }}"
+        dc_socketproxy_env_networks: "{{ dc_wud_socketproxy_env_networks }}"
+        dc_socketproxy_env_nodes: "{{ dc_wud_socketproxy_env_nodes }}"
+        dc_socketproxy_env_services: "{{ dc_wud_socketproxy_env_services }}"
+        dc_socketproxy_env_tasks: "{{ dc_wud_socketproxy_env_tasks }}"
+        dc_socketproxy_env_info: "{{ dc_wud_socketproxy_env_info }}"
+        dc_socketproxy_env_volumes: "{{ dc_wud_socketproxy_env_volumes }}"
+        dc_socketproxy_env_images: "{{ dc_wud_socketproxy_env_images }}"
+
+
+  # * --------------------------- App --------------------------- *
+    - name: Create app
+      vars:
+        container_type: "app" # => app, db, redis, loki, promtail
+        user: "{{ (dc_wud_create_with_userns | bool) | ternary(dc_wud_u_g_id + 100000, dc_wud_u_g_id) }}"
+        group: "{{ (dc_wud_create_with_userns | bool) | ternary(dc_wud_u_g_id + 100000, dc_wud_u_g_id) }}"
+      block:
+        # - name: '[Required] filesystem_manager role'
+        #   ansible.builtin.import_role:
+        #     name: filesystem_manager
+        #   vars:
+        #     filesystem_manager_appdata_templates_to_copy:
+        #       - src: "{{ ansible_hostname }}/promtail-docker-config.yml.j2"
+        #         dest: "promtail-docker-config.yml"
+        #     filesystem_manager_give_full_read_access_to_path:
+        #       - path: "{{ docker_logs }}"
+        #       - path: /var/log
+
+
+        - name: Install docker compose whats-up-docker with inline definition
+          community.docker.docker_compose_v2:
+            project_name: "{{ app_name }}"  # eg: crowdsec
+            definition:
+              # ! --------------------------- Networks --------------------------- ! #
+              networks:
+                socketproxy_net:
+                  "name": "{{ app_name }}_socketproxy_net"
+                  driver: bridge
+                  external: true
+                traefik_net:
+                  name: "{{ dc_traefik_net_name }}"  # eg: traefik_net
+                  external: true  # indicating that it's a pre-existing network not managed by this Docker Compose file.
+
+
+              # * ---------------------------- App ------------------------------ * #
+              services:
+                whats-up-docker:
+                  image: fmartinou/whats-up-docker:{{ dc_wud_image_version }}
+                  container_name: "{{ app_name }}"  # eg: whats-up-docker
+                  restart: unless-stopped
+                  security_opt:
+                    - no-new-privileges:true
+                  privileged: false
+                  userns_mode: "{{ 'host' if dc_wud_create_with_userns | bool == false else 'remap' }}"
+                  user: "{{ dc_wud_u_g_id }}:{{ dc_wud_u_g_id }}"
+                  # command:
+                  networks:
+                    socketproxy_net: "{{ {'ipv4_address': dc_wud_socketproxy_net_app_ip} if dc_wud_socketproxy_net_app_ip is defined and dc_wud_socketproxy_net_app_ip | length > 0 else {} }}"
+                    traefik_net: "{{ {'ipv4_address': dc_traefik_net_wud_ip} if dc_traefik_net_wud_ip is defined and dc_traefik_net_wud_ip | length > 0 else {} }}"
+                  # ports:
+                  #   - "{{ dc_wud_port }}:3000"
+                  # volumes:
+                  environment:
+                    WUD_LOG_LEVEL: info
+                    DOCKER_HOST: "{{ dc_wud_socketproxy_net_ip }}:2375"
+                  labels:
+                    traefik.enable: "true"
+                    # * HTTP Routers
+                    traefik.http.routers.wud-rtr.entrypoints: "websecure"
+                    traefik.http.routers.wud-rtr.rule: "Host(`wud-{{ dc_traefik_type }}.{{ domain_1 }}`)"
+                    # * Middlewares
+                    traefik.http.routers.wud-rtr.middlewares: "{{ 'chain-authelia@file' if dc_traefik_type == 'ingress' else 'chain-basic-auth@file' }}"
+                    # * HTTP Services
+                    traefik.http.routers.wud-rtr.service: "wud-svc"
+                    traefik.http.services.wud-svc.loadbalancer.server.port: "{{ dc_wud_port }}"
+
+
+# ! --------------------------- Notes --------------------------- ! #
+# Depending on the logs wanted, it is best to use this container as root. Since this will not be exposed, this should be acceptable.
+# Actually it is using a non root user. With read permissions to the logs using filesystem_manager_give_full_read_access_to_path
+# ? Grafana and Loki has to already run. Otherwise it will not be able to push logs to it and you have to restart promtail.
+
+# Promtail is a log shipper. It reads logs from various sources (such as log files, Docker containers, or syslog) and then forwards or “pushes” them to a Loki instance.
+# Loki acts as a log storage and indexing system. It does not actively pull logs from Promtail; instead, it listens for incoming log data that Promtail sends.
+# Grafana queries logs from Loki and displays them in Dashboards.
+
+# cleaning:
+# sudo docker container rm -f grafana-promtail grafana-promtail-socketproxy
+# sudo docker network rm grafana-promtail_socketproxy_net
+# sudo rm -r $APPDATA_DIR/grafana/promtail

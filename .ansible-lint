@@ -1,5 +1,17 @@
+use_default_rules: true
+
 skip_list:
   - placeholderifempty
   - meta-incorrect
   # - name[template]
   # - var-naming[no-role-prefix]
+
+exclude_paths:
+  - '**/*.j2'
+  - '**/meta/*'
+  - '**/tests/*'
+
+# Offline mode disables installation of requirements.yml and schema refreshing
+# offline: true
+
+# https://ansible.readthedocs.io/projects/lint/configuring/#ansible-lint-configuration

@@ -1,0 +1,109 @@
+---
+# tasks file for roles/dc_node_exporter
+# TODO: Variables which has to be passed through the playbook or on import of this task file
+# ! Mandatory variables
+  # vars:
+  #   app_name: => traefik, portainer, grafana, netbox
+# ? Optional variables
+
+- name: Set facts app_name for standalone
+  ansible.builtin.set_fact:
+    app_name: "standalone"
+  when: dc_nodeexporter_standalone | default(false)
+
+  # * --------------------------- App --------------------------- *
+- name: Create nodeexporter for --> {{ app_name }}
+  vars:
+    container_type: "nodeexporter" # => app, db, redis, loki, promtail
+    user: "{{ (dc_nodeexporter_create_with_userns | bool) | ternary(dc_nodeexporter_u_g_id + 100000, dc_nodeexporter_u_g_id) }}"
+    group: "{{ (dc_nodeexporter_create_with_userns | bool) | ternary(dc_nodeexporter_u_g_id + 100000, dc_nodeexporter_u_g_id) }}"
+  block:
+    - name: Install docker compose nodeexporter with inline definition
+      vars:
+        docker_networks: >-
+          {{
+            {
+              "traefik_net": {
+                "name": dc_traefik_net_name,
+                "external": true
+              }
+            }
+            | combine(
+              {
+                "app_net": {
+                  "name": app_name ~ "_net",
+                  "external": true
+                }
+              } if not dc_nodeexporter_standalone else {}
+            )
+          }}
+
+      community.docker.docker_compose_v2:
+        project_name: "{{ app_name }}-nodeexporter" # eg: grafana-nodeexporter
+        definition:
+          # ! --------------------------- Networks --------------------------- ! #
+          networks: "{{ docker_networks }}"
+
+
+          # * ---------------------------- App ------------------------------ * #
+          services:
+            nodeexporter:
+              image: prom/node-exporter:{{ dc_nodeexporter_image_version }}
+              container_name: "{{ app_name }}-nodeexporter"  # eg: grafana-nodeexporter
+              restart: unless-stopped
+              security_opt:
+                - no-new-privileges:true
+              privileged: false
+              userns_mode: "{{ 'host' if dc_nodeexporter_create_with_userns | bool == false else 'remap' }}"
+              user: "{{ dc_nodeexporter_u_g_id }}:{{ dc_nodeexporter_u_g_id }}"
+              command:
+                - --log.level={{ dc_grafana_nodeexporter_log_level }}
+                - --path.procfs=/host/proc
+                - --path.sysfs=/host/sys
+                - --collector.filesystem.ignored-mount-points
+                - "^/(sys|proc|dev|host|etc|rootfs/var/lib/docker/containers|rootfs/var/lib/docker/overlay2|rootfs/run/docker/netns|rootfs/var/lib/docker/aufs)($$|/)"
+              networks:
+                app_net: "{{ {'ipv4_address': dc_nodeexporter_net_ip} if dc_nodeexporter_net_ip is defined and dc_nodeexporter_net_ip | length > 0 and not dc_nodeexporter_standalone | default(false) | bool else omit }}"
+                traefik_net: "{{ {'ipv4_address': dc_traefik_net_nodeexporter_ip} if dc_traefik_net_nodeexporter_ip is defined and dc_traefik_net_nodeexporter_ip | length > 0 else {} }}"
+              # ports:
+              #   - "{{ dc_nodeexporter_port }}:9100"
+              volumes:
+                - /:/rootfs:ro  # ! While I do not like it this way, it is the easiest one to get all the metrics
+                - /proc:/host/proc:ro
+                - /sys:/host/sys:ro
+              # environment:
+              labels:
+                traefik.enable: "true"
+                # * HTTP Routers
+                traefik.http.routers.nodeexporter-rtr.entrypoints: "websecure"
+                traefik.http.routers.nodeexporter-rtr.rule: "Host(`nodeexporter-{{ dc_traefik_type }}.{{ domain_1 }}`)"
+                # * Middlewares
+                traefik.http.routers.nodeexporter-rtr.middlewares: "{{ 'chain-authelia@file' if dc_traefik_type == 'ingress' else 'chain-basic-auth@file' }}"
+                # * HTTP Services
+                traefik.http.routers.nodeexporter-rtr.service: "nodeexporter-svc"
+                traefik.http.services.nodeexporter-svc.loadbalancer.server.port: "{{ dc_nodeexporter_port }}"
+
+# ! --------------------------- Notes --------------------------- ! #
+# https://github.com/prometheus/node_exporter
+
+# http://10.0.90.20:9100/ready    # https://nodeexporter-ingress.your.dom/ready
+# http://10.0.90.20:9100/metrics  # https://nodeexporter-ingress.your.dom/metrics
+
+# Prometheus and Node Exporter
+
+#     Pull-based model:
+#         Prometheus uses a pull-based model.
+#         It actively scrapes metrics from configured targets at regular intervals.
+#     Node Exporter's role:
+#         Node Exporter is an exporter that collects and exposes system metrics.
+#         It runs on the host system and makes metrics available on an HTTP endpoint (usually :9100).
+#     Data flow:
+#         Node Exporter collects system metrics
+#         Prometheus scrapes these metrics from Node Exporter's endpoint
+#         Prometheus stores the scraped data in its time-series database
+#     Configuration:
+#         You configure Prometheus to know about Node Exporter and other targets
+#         Node Exporter doesn't need to know about Prometheus
+
+# Prometheus /metrics: This endpoint provides metrics related to the Prometheus server itself.
+# Node Exporter: This provides detailed system-level metrics of the VM.

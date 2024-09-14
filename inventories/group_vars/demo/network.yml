@@ -77,6 +77,7 @@ dc_traefik_net_address: "{{ dc_traefik_net_base }}.0"
 dc_traefik_net_prefix_length: 24  # usable => 10.100.90.2 - 10.100.90.254
 dc_traefik_net_cidr: "{{ dc_traefik_net_address }}/{{ dc_traefik_net_prefix_length }}"  # 10.100.90.0/24
 
+dc_traefik_net_homepage_ip: "{{ dc_traefik_net_base }}.100"  # 10.100.90.100
 dc_traefik_net_authelia_ip: "{{ dc_traefik_net_base }}.242"  # 10.100.90.242
 dc_traefik_net_elasticsearch_ip: "{{ dc_traefik_net_base }}.243"  # 10.100.90.243
 dc_traefik_net_wud_ip: "{{ dc_traefik_net_base }}.244"  # 10.100.90.244
@@ -159,6 +160,18 @@ dc_vector_socketproxy_net_cidr: "{{ dc_vector_socketproxy_net_address }}/{{ dc_v
 
 dc_vector_socketproxy_net_app_ip: "{{ dc_vector_socketproxy_net_base }}.36"  # 10.100.20.36
 dc_vector_socketproxy_net_ip: "{{ dc_vector_socketproxy_net_base }}.37"  # 10.100.20.37
+
+# ? -----------------------------------------------------------------------------
+# *                                  Homepage                                   *
+# ? -----------------------------------------------------------------------------
+dc_homepage_socketproxy_net_base: 10.100.20
+dc_homepage_socketproxy_net_address: "{{ dc_homepage_socketproxy_net_base }}.40"
+dc_homepage_socketproxy_net_prefix_length: 29 # 6 usable octets eg 10.100.20.42 - 10.100.20.46
+dc_homepage_socketproxy_net_cidr: "{{ dc_homepage_socketproxy_net_address }}/{{ dc_homepage_socketproxy_net_prefix_length }}"  # 10.100.20.40/29
+
+dc_homepage_socketproxy_net_app_ip: "{{ dc_homepage_socketproxy_net_base }}.44"  # 10.100.20.44
+dc_homepage_socketproxy_net_ip: "{{ dc_homepage_socketproxy_net_base }}.45"  # 10.100.20.45
+
 
 # ? ######################################################################################## #
 # *                                            Apps                                          #

@@ -89,6 +89,7 @@ dc_influxdb_u_g_id: 22030 # with userns --> 122030
 dc_telegraf_u_g_id: 22031 # with userns --> 122031
 dc_vector_u_g_id: 22032 # with userns --> 122032
 dc_alloy_u_g_id: 22033 # with userns --> 122033
+dc_homepage_u_g_id: 22034 # with userns --> 122034
 
 # ? -----------------------------------------------------------------------------
 # *                                  dc_adguard                                 *
@@ -205,6 +206,25 @@ dc_it_tools_container_name: "it-tools"
 dc_it_tools_create_with_userns: true
 dc_it_tools_image_version: "latest"
 dc_it_tools_log_level: ""
+
+# ? -----------------------------------------------------------------------------
+# *                                 dc_homepage                                 *
+# ? -----------------------------------------------------------------------------
+# * ------------->>> Container Configuration <<<------------ * #
+# * >>> Container variables
+dc_homepage_container_name: "homepage"
+dc_homepage_create_with_userns: true
+dc_homepage_image_version: "latest"
+# dc_homepage_log_level: ""
+dc_homepage_port: 3000
+
+## ? Environment variables for socketproxy
+dc_homepage_socketproxy_env_log_level: "info"  # debug, info, notice, warning, err, crit, alert and emerg
+
+# * Not always needed - Can expose some information that your service does not need
+dc_homepage_socketproxy_env_containers: "1"
+dc_homepage_socketproxy_env_services: "1"
+dc_homepage_socketproxy_env_tasks: "1"
 
 # ? -----------------------------------------------------------------------------
 # *                                  dc_nginx                                   *
@@ -424,7 +444,7 @@ dc_vector_basic_auth_password: "{{ demo_auth_user_pw }}"  # traefik basic auth c
 
 
 # ? -----------------------------------------------------------------------------
-# *                             dc_whats-up-docker                              *
+# *                             dc_whats_up_docker                              *
 # ? -----------------------------------------------------------------------------
 # * ------------->>> Container Configuration <<<------------ * #
 # * >>> Container variables

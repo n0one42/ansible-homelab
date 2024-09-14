@@ -1,0 +1,97 @@
+---
+# tasks file for roles/dc_homepage
+# TODO: Variables which has to be passed through the playbook or on import of this task file
+# ! Mandatory variables
+  # vars:
+  #   app_name: => traefik, portainer, grafana, netbox
+# ? Optional variables
+
+- name: Create Homepage & Socket Proxy
+  vars:
+    app_name: "{{ dc_homepage_container_name }}" # "homepage"
+  block:
+  # # * ------------------------ Socket Proxy ------------------------ * #
+  #   - name: Include Socket Proxy role
+  #     ansible.builtin.import_role:
+  #       name: dc_socketproxy
+  #     vars:
+  #       dc_socketproxy_net_cidr: "{{ dc_homepage_socketproxy_net_cidr }}"
+  #       dc_socketproxy_net_ip: "{{ dc_homepage_socketproxy_net_ip }}"
+
+  #       dc_socketproxy_env_log_level: "{{ dc_homepage_socketproxy_env_log_level }}"
+  #       dc_socketproxy_env_containers: "{{ dc_homepage_socketproxy_env_containers }}"
+  #       dc_socketproxy_env_services: "{{ dc_homepage_socketproxy_env_services }}"
+  #       dc_socketproxy_env_tasks: "{{ dc_homepage_socketproxy_env_tasks }}"
+
+
+      # * --------------------------- App --------------------------- *
+    - name: Install docker compose homepage with inline definition
+      vars:
+        container_type: "app" # => app, db, redis
+        user: "{{ (dc_homepage_create_with_userns | bool) | ternary(dc_homepage_u_g_id + 100000, dc_homepage_u_g_id) }}"
+        group: "{{ (dc_homepage_create_with_userns | bool) | ternary(dc_homepage_u_g_id + 100000, dc_homepage_u_g_id) }}"
+      block:
+        - name: '[Required] filesystem_manager role'
+          ansible.builtin.import_role:
+            name: filesystem_manager
+          vars:
+            filesystem_manager_appdata_directories_to_create:
+              - path: "config"
+            filesystem_manager_appdata_templates_to_copy:
+              - src: "docker.yml.j2"
+                dest: "config/docker.yaml"
+          notify:
+            - Restart homepage
+
+        - name: Install docker compose homepage with inline definition
+          community.docker.docker_compose_v2:
+            project_name: "{{ dc_homepage_container_name }}"
+            definition:
+              # ! --------------------------- Networks --------------------------- ! #
+              networks:
+                # socketproxy_net:
+                #   name: "{{ app_name }}_socketproxy_net"
+                #   external: true
+
+                traefik_net:
+                  name: "{{ dc_traefik_net_name }}"  # eg: traefik_net
+                  external: true  # indicating that it's a pre-existing network not managed by this Docker Compose file.
+
+
+              # * ---------------------------- App ------------------------------ * #
+              services:
+                homepage:
+                  image: ghcr.io/gethomepage/homepage:{{ dc_homepage_image_version }}
+                  container_name: "{{ dc_homepage_container_name }}"
+                  restart: unless-stopped
+                  security_opt:
+                    - no-new-privileges:true
+                  privileged: false
+                  userns_mode: "{{ 'host' if dc_homepage_create_with_userns | bool == false else 'remap' }}"
+                  user: "{{ dc_homepage_u_g_id }}:{{ dc_homepage_u_g_id }}"
+                  networks:
+                    # socketproxy_net: "{{ {'ipv4_address': dc_homepage_socketproxy_net_app_ip} if dc_homepage_socketproxy_net_app_ip is defined and dc_homepage_socketproxy_net_app_ip | length > 0 else {} }}"
+                    traefik_net: "{{ {'ipv4_address': dc_traefik_net_homepage_ip} if dc_traefik_net_homepage_ip is defined and dc_traefik_net_homepage_ip | length > 0 else {} }}"
+                  ports:
+                    - "{{ dc_homepage_port }}:3000"
+                  volumes:
+                    - "{{ appdata_type_path }}/config:/app/config"
+                    # - /var/run/docker.sock:/var/run/docker.sock:ro
+                  environment:
+                    TZ: "{{ timezone }}"
+                    PUID: "{{ dc_homepage_u_g_id }}"
+                    PGID: "{{ dc_homepage_u_g_id }}"
+                  labels:
+                    traefik.enable: "true"
+                    ## HTTP Routers
+                    traefik.http.routers.homepage-rtr.entrypoints: "websecure"
+                    traefik.http.routers.homepage-rtr.rule: "Host(`{{ dc_homepage_container_name }}.{{ domain_1 }}`)"
+                    ## Middlewares
+                    traefik.http.routers.homepage-rtr.middlewares: "{{ 'chain-authelia@file' if dc_traefik_type == 'ingress' else 'chain-basic-auth@file' }}"
+                    ## HTTP Services
+                    traefik.http.routers.homepage-rtr.service: "homepage-svc"
+                    traefik.http.services.homepage-svc.loadbalancer.server.port: "{{ dc_homepage_port }}"
+
+
+# ! --------------------------- Notes --------------------------- ! #
+# I just decided not to use any docker ingegration but manually manage them by config files. Its just up to you. It works otherwise.

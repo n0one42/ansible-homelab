@@ -56,7 +56,7 @@
   # # * ------------------------ Grafana Node Exporter ------------------------ * #
   #   - name: Include node-exporter role
   #     ansible.builtin.import_role:
-  #       name: dc_node-exporter
+  #       name: dc_node_exporter
   #     vars:
   #       dc_nodeexporter_create_with_userns: "{{ dc_grafana_nodeexporter_create_with_userns }}"
   #       dc_nodeexporter_image_version: "{{ dc_grafana_nodeexporter_image_version }}"
