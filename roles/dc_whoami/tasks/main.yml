@@ -31,7 +31,8 @@
             traefik.http.routers.whoami-rtr.entrypoints: "websecure"
             traefik.http.routers.whoami-rtr.rule: "Host(`{{ app_name }}-{{ dc_traefik_type }}.{{ domain_1 }}`)"
             ## Middlewares
-            traefik.http.routers.whoami-rtr.middlewares: "{{ 'chain-authelia@file' if dc_traefik_type == 'ingress' else 'chain-basic-auth@file' }}"
+            # traefik.http.routers.whoami-rtr.middlewares: "{{ 'chain-authelia@file' if dc_traefik_type == 'ingress' else 'chain-basic-auth@file' }}"
+            traefik.http.routers.whoami-rtr.middlewares: "chain-authelia@file"
             ## HTTP Services
             traefik.http.routers.whoami-rtr.service: "whoami-svc"
             traefik.http.services.whoami-svc.loadbalancer.server.port: "2001"

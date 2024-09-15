@@ -37,9 +37,12 @@
           vars:
             filesystem_manager_appdata_directories_to_create:
               - path: "config"
-            filesystem_manager_appdata_templates_to_copy:
-              - src: "docker.yml.j2"
-                dest: "config/docker.yaml"
+            # filesystem_manager_appdata_templates_to_copy:
+            #   - src: "docker.yml.j2"
+            #     dest: "config/docker.yaml"
+            filesystem_manager_appdata_templates_in_directory_to_copy:
+              - src: "{{ playbook_dir | dirname }}/roles/dc_homepage/templates"
+                dest: "config"
           notify:
             - Restart homepage
 
@@ -87,7 +90,8 @@
                     traefik.http.routers.homepage-rtr.entrypoints: "websecure"
                     traefik.http.routers.homepage-rtr.rule: "Host(`{{ dc_homepage_container_name }}.{{ domain_1 }}`)"
                     ## Middlewares
-                    traefik.http.routers.homepage-rtr.middlewares: "{{ 'chain-authelia@file' if dc_traefik_type == 'ingress' else 'chain-basic-auth@file' }}"
+                    # traefik.http.routers.homepage-rtr.middlewares: "{{ 'chain-authelia@file' if dc_traefik_type == 'ingress' else 'chain-basic-auth@file' }}"
+                    traefik.http.routers.homepage-rtr.middlewares: "chain-authelia@file"
                     ## HTTP Services
                     traefik.http.routers.homepage-rtr.service: "homepage-svc"
                     traefik.http.services.homepage-svc.loadbalancer.server.port: "{{ dc_homepage_port }}"
