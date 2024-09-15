@@ -1,0 +1,8 @@
+---
+# handlers file for roles/dc_vaultwarden
+- name: Restart vaultwarden
+  community.docker.docker_container:
+    name: "{{ dc_vaultwarden_container_name }}"
+    state: started
+    restart: true
+  when: dc_vaultwarden_restart_container_on_template_change | default(true)

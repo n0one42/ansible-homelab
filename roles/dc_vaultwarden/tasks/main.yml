@@ -1,0 +1,168 @@
+---
+# tasks file for roles/dc_vaultwarden
+- name: Create Vaultwarden
+  vars:
+    app_name: "{{ dc_vaultwarden_container_name }}" # "vaultwarden"
+    db_name: "{{ dc_vaultwarden_db_name }}" # "vaultwarden"
+    db_user_name: "{{ dc_vaultwarden_db_user_name }}" # "vaultwarden"
+    db_user_pw: "{{ dc_vaultwarden_db_user_pw }}"  # ! MUST BE HERE BECAUSE SHARED !
+    db_port: "{{ dc_vaultwarden_db_port }}" # "5432"
+  block:
+  # ! --------------------------- Networks --------------------------- ! #
+    - name: Create network for --> {{ app_name }}
+      community.docker.docker_network:
+        name: "{{ app_name }}_net"
+        driver: bridge
+        internal: true
+        ipam_config:
+          - subnet: "{{ dc_vaultwarden_net_cidr }}"
+      when: not dc_vaultwarden_use_sqlite
+
+
+  # * ------------------------ Vaultwarden DB ------------------------ * #
+    - name: Include postgresql role
+      ansible.builtin.import_role:
+        name: dc_postgresql_bitnami
+      vars:
+        dc_postgresql_bitnami_create_with_userns: "{{ dc_vaultwarden_db_create_with_userns }}"
+        dc_postgresql_bitnami_image_version: "{{ dc_vaultwarden_db_image_version }}"
+        dc_postgresql_bitnami_db_superuser_pw: "{{ dc_vaultwarden_db_superuser_pw }}"
+        dc_postgresql_bitnami_db_name: "{{ dc_vaultwarden_db_name }}"
+        dc_postgresql_bitnami_db_user_name: "{{ dc_vaultwarden_db_user_name }}"
+        dc_postgresql_bitnami_db_port: "{{ dc_vaultwarden_db_port }}"
+        dc_postgresql_bitnami_net_ip: "{{ dc_vaultwarden_net_db_ip }}"
+      when: not dc_vaultwarden_use_sqlite
+
+  # * ----------------------- Vaultwarden App ------------------------- *
+    - name: Create app --> {{ app_name }}
+      vars:
+        container_type: "app" # => app, db, redis
+        user: "{{ (dc_vaultwarden_create_with_userns | bool) | ternary(dc_vaultwarden_u_g_id + 100000, dc_vaultwarden_u_g_id) }}"
+        group: "{{ (dc_vaultwarden_create_with_userns | bool) | ternary(dc_vaultwarden_u_g_id + 100000, dc_vaultwarden_u_g_id) }}"
+      block:
+        - name: '[Required] filesystem_manager role'
+          ansible.builtin.import_role:
+            name: filesystem_manager
+          vars:
+            filesystem_manager_appdata_directories_to_create:
+              - path: "data"
+            filesystem_manager_secret_files_to_create:
+              - var_name: admin_token
+                content: "{{ dc_vaultwarden_admin_token }}"
+            # filesystem_manager_appdata_templates_to_copy:
+            #   - src: "vaultwarden_environments.sh.j2"
+            #     dest: "vaultwarden_environments.sh"
+            #     mode: "0400"
+          notify:
+            - Restart vaultwarden
+
+        - name: '[Required] filesystem_manager role'
+          ansible.builtin.import_role:
+            name: filesystem_manager
+          vars:
+            filesystem_manager_secret_files_to_create:
+              - var_name: database_url
+                content: "postgresql://{{ db_user_name }}:{{ db_user_pw }}@{{ dc_vaultwarden_net_db_ip }}:{{ db_port }}/{{ db_name }}"
+          when: not dc_vaultwarden_use_sqlite
+
+        - name: Install docker compose vaultwarden with inline definition
+          vars:
+            compose_networks: >-
+              {{
+                {
+                  "traefik_net": {
+                    "name": dc_traefik_net_name,
+                    "external": true
+                  },
+                }
+                | combine(
+                  {
+                    "app_net": {
+                      "name": app_name ~ "_net",
+                      "external": true
+                    }
+                  } if not dc_vaultwarden_use_sqlite else {}
+                )
+              }}
+
+            container_networks: >-
+              {{
+                {
+                  "traefik_net": {
+                    "ipv4_address": dc_traefik_net_vaultwarden_ip if dc_traefik_net_vaultwarden_ip is defined and dc_traefik_net_vaultwarden_ip | length > 0 else {}
+                  }
+                }
+                | combine(
+                  {
+                    "app_net": {
+                      "ipv4_address": dc_vaultwarden_net_app_ip if dc_vaultwarden_net_app_ip is defined and dc_vaultwarden_net_app_ip | length > 0 else {}
+                    }
+                  } if not dc_vaultwarden_use_sqlite else {}
+                )
+              }}
+
+            docker_environment: >-
+              {{
+                {
+                  "LOG_LEVEL": dc_vaultwarden_log_level,
+                  "TZ": timezone,
+                  "ADMIN_TOKEN_FILE": "/run/secrets/admin_token",
+                  "DISABLE_ADMIN_TOKEN": false,
+                  "SIGNUPS_ALLOWED": true,
+                  "INVITATIONS_ALLOWED": true
+                }
+                | combine(
+                  {
+                    "DATABASE_URL_FILE": "/run/secrets/database_url"
+                  }
+                  if not dc_vaultwarden_use_sqlite else {}
+                )
+              }}
+
+          community.docker.docker_compose_v2:
+            project_name: "{{ app_name }}"
+            definition:
+              # ! --------------------------- Networks --------------------------- ! #
+              networks: "{{ compose_networks }}"
+
+              # * ---------------------------- App ------------------------------ * #
+              services:
+                vaultwarden:
+                  image: vaultwarden/server:{{ dc_vaultwarden_image_version }}
+                  container_name: "{{ app_name }}"
+                  restart: unless-stopped
+                  security_opt:
+                    - no-new-privileges:true
+                  privileged: false
+                  userns_mode: "{{ 'host' if dc_vaultwarden_create_with_userns | bool == false else 'remap' }}"
+                  user: "{{ dc_vaultwarden_u_g_id }}:{{ dc_vaultwarden_u_g_id }}"
+                  networks: "{{ container_networks }}"
+                  # ports:
+                  #   - "{{ dc_vaultwarden_port }}:80"
+                  volumes:
+                    - "{{ appdata_type_path }}/data:/data"
+                    # - "{{ logs_type_path }}:/data/logs"
+                    - "{{ secrets_type_path }}:/run/secrets"
+                    # - "{{ appdata_type_path }}/vaultwarden_environments.sh:/etc/vaultwarden.d/vaultwarden_environments.sh"
+                  environment: "{{ docker_environment }}"
+                  labels:
+                    traefik.enable: "true"
+                    ## HTTP Routers
+                    traefik.http.routers.vaultwarden-rtr.entrypoints: "websecure"
+                    traefik.http.routers.vaultwarden-rtr.rule: "Host(`{{ app_name }}.{{ domain_1 }}`)"
+                    ## Middlewares
+                    # traefik.http.routers.vaultwarden-rtr.middlewares: "chain-vaultwarden@file"
+                    traefik.http.routers.vaultwarden-rtr.middlewares: "chain-no-auth@file"
+                    ## HTTP Services
+                    traefik.http.routers.vaultwarden-rtr.service: "vaultwarden-svc"
+                    traefik.http.services.vaultwarden-svc.loadbalancer.server.port: "{{ dc_vaultwarden_port }}"
+
+
+        - name: Flush handlers
+          ansible.builtin.meta: flush_handlers
+
+# ! --------------------------- Notes --------------------------- ! #
+
+# Cleaning
+# sudo docker container rm -f vaultwarden vaultwarden-postgresql && sudo docker network rm vaultwarden_net
+# sudo rm -r $APPDATA_DIR/vaultwarden && sudo rm -r $SECRETS_DIR/vaultwarden && sudo rm -r $LOGS_DIR/vaultwarden

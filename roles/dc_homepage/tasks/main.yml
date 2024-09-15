@@ -97,5 +97,8 @@
                     traefik.http.services.homepage-svc.loadbalancer.server.port: "{{ dc_homepage_port }}"
 
 
+        - name: Flush handlers
+          ansible.builtin.meta: flush_handlers
+
 # ! --------------------------- Notes --------------------------- ! #
 # I just decided not to use any docker ingegration but manually manage them by config files. Its just up to you. It works otherwise.

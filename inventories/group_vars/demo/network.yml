@@ -77,6 +77,7 @@ dc_traefik_net_address: "{{ dc_traefik_net_base }}.0"
 dc_traefik_net_prefix_length: 24  # usable => 10.100.90.2 - 10.100.90.254
 dc_traefik_net_cidr: "{{ dc_traefik_net_address }}/{{ dc_traefik_net_prefix_length }}"  # 10.100.90.0/24
 
+dc_traefik_net_vaultwarden_ip: "{{ dc_traefik_net_base }}.99"  # 10.100.90.99
 dc_traefik_net_homepage_ip: "{{ dc_traefik_net_base }}.100"  # 10.100.90.100
 dc_traefik_net_authelia_ip: "{{ dc_traefik_net_base }}.242"  # 10.100.90.242
 dc_traefik_net_elasticsearch_ip: "{{ dc_traefik_net_base }}.243"  # 10.100.90.243
@@ -202,6 +203,16 @@ dc_authelia_net_cidr: "{{ dc_authelia_net_address }}/{{ dc_authelia_net_prefix_l
 dc_authelia_net_app_ip: "{{ dc_authelia_net_base }}.2"  # 10.100.50.2/29
 dc_authelia_net_db_ip: "{{ dc_authelia_net_base }}.3"  # 10.100.50.3/29
 dc_authelia_net_redis_ip: "{{ dc_authelia_net_base }}.4"  # 10.100.50.4/29
+
+# ? -----------------------------------------------------------------------------
+# *                                  Vaultwarden                                   *
+# ? -----------------------------------------------------------------------------
+dc_vaultwarden_net_base: 10.100.50
+dc_vaultwarden_net_address: "{{ dc_vaultwarden_net_base }}.8"
+dc_vaultwarden_net_prefix_length: 29  # 6 usable octets eg 10.100.50.10 - 10.100.50.14
+dc_vaultwarden_net_cidr: "{{ dc_vaultwarden_net_address }}/{{ dc_vaultwarden_net_prefix_length }}"  # 10.100.50.8/29
+dc_vaultwarden_net_app_ip: "{{ dc_vaultwarden_net_base }}.10"  # 10.100.50.10/29
+dc_vaultwarden_net_db_ip: "{{ dc_vaultwarden_net_base }}.11"  # 10.100.50.11/29
 
 # ? -----------------------------------------------------------------------------
 # *                                  Crowdsec                                   *

@@ -1,0 +1,12 @@
+#!/bin/sh
+export "DATABASE_URL=postgresql://{{ db_user_name }}:{{ db_user_pw }}@{{ dc_vaultwarden_net_db_ip }}:{{ db_port }}/{{ db_name }}"
+{# export "ADMIN_TOKEN={{ vaultwarden_admin_token }}" # Must be set through environment. Its encrypted anyway #}
+export "DISABLE_ADMIN_TOKEN=false" # ! Warning! This removes the password from the Admin interface!
+export "SMTP_HOST={{ dc_vaultwarden_smtp_host }}"
+export "SMTP_FROM={{ dc_vaultwarden_smtp_from }}"
+export "SMTP_PORT={{ dc_vaultwarden_smtp_port }}"
+export "SMTP_SECURITY={{ dc_vaultwarden_smtp_security }}"
+export "SMTP_USERNAME={{ dc_vaultwarden_smtp_username }}"
+export "SMTP_PASSWORD={{ dc_vaultwarden_smtp_password }}"
+export "YUBICO_CLIENT_ID={{ dc_vaultwarden_yubico_client_id }}"
+export "YUBICO_SECRET_KEY={{ dc_vaultwarden_yubico_secret_key }}"
