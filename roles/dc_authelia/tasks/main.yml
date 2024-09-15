@@ -18,7 +18,7 @@
         internal: true
         ipam_config:
           - subnet: "{{ dc_authelia_net_cidr }}"
-
+      when: not dc_authelia_use_sqlite
 
   # * ------------------------ Authelia DB ------------------------ * #
     - name: Include postgresql role
@@ -94,6 +94,40 @@
 
         - name: Install docker compose authelia with inline definition
           vars:
+            compose_networks: >-
+              {{
+                {
+                  "traefik_net": {
+                    "name": dc_traefik_net_name,
+                    "external": true
+                  },
+                }
+                | combine(
+                  {
+                    "app_net": {
+                      "name": app_name ~ "_net",
+                      "external": true
+                    }
+                  } if not dc_authelia_use_sqlite else {}
+                )
+              }}
+
+            container_networks: >-
+              {{
+                {
+                  "traefik_net": {
+                    "ipv4_address": dc_traefik_net_authelia_ip if dc_traefik_net_authelia_ip is defined and dc_traefik_net_authelia_ip | length > 0 else {}
+                  }
+                }
+                | combine(
+                  {
+                    "app_net": {
+                      "ipv4_address": dc_authelia_net_app_ip if dc_authelia_net_app_ip is defined and dc_authelia_net_app_ip | length > 0 else {}
+                    }
+                  } if not dc_authelia_use_sqlite else {}
+                )
+              }}
+
             docker_environment: >-
               {{
                 {
@@ -115,13 +149,7 @@
             project_name: "{{ app_name }}"  # eg: authelia
             definition:
               # ! --------------------------- Networks --------------------------- ! #
-              networks:
-                app_net:
-                  name: "{{ app_name }}_net"  # eg: authelia_net
-                  external: true  # indicating that it's a pre-existing network not managed by this Docker Compose file.
-                traefik_net:
-                  name: "{{ dc_traefik_net_name }}"  # eg: traefik_net
-                  external: true  # indicating that it's a pre-existing network not managed by this Docker Compose file.
+              networks: "{{ compose_networks }}"
 
               # * ---------------------------- App ------------------------------ * #
               services:
@@ -134,10 +162,7 @@
                   privileged: false
                   userns_mode: "{{ 'host' if dc_authelia_create_with_userns | bool == false else 'remap' }}"
                   user: "{{ dc_authelia_u_g_id }}:{{ dc_authelia_u_g_id }}"
-                  networks:
-                    # default: # testing only
-                    app_net: "{{ {'ipv4_address': dc_authelia_net_app_ip} if dc_authelia_net_app_ip is defined and dc_authelia_net_app_ip | length > 0 else {} }}"
-                    traefik_net: "{{ {'ipv4_address': dc_traefik_net_authelia_ip} if dc_traefik_net_authelia_ip is defined and dc_traefik_net_authelia_ip | length > 0 else {} }}"
+                  networks: "{{ container_networks }}"
                   # ports:
                   #   - "{{ dc_authelia_port }}:9091"
                   volumes:
