@@ -227,8 +227,8 @@
           storage_encryption_key: "chars=ascii_uppercase,ascii_lowercase,digits,-_!@#%+=.^ length=64"
           session_secret: "chars=ascii_uppercase,ascii_lowercase,digits,-_!@#%+=.^ length=64"
           crowdsec_bouncer_key: "chars=ascii_uppercase,ascii_lowercase,digits,-_#%&* length=64"
-          postgres_password: "chars=ascii_uppercase,ascii_lowercase,digits,-_!#%+=.^ length=32" # @ can lead to issues
-          redis_password: "chars=ascii_uppercase,ascii_lowercase,digits,-_!#%+=.^ length=32"  # @ can lead to issues
+          postgres_password: "chars=ascii_uppercase,ascii_lowercase,digits,-_!+= length=32"
+          redis_password: "chars=ascii_uppercase,ascii_lowercase,digits,-_!+= length=32"
       no_log: true
 
     - name: Create or update password files

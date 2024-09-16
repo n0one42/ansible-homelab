@@ -248,7 +248,7 @@ dc_vaultwarden_smtp_password: ""
 dc_vaultwarden_yubico_client_id: ""
 dc_vaultwarden_yubico_secret_key: ""
 
-dc_vaultwarden_use_sqlite: false # because not many users and data therefore postgresql = overhead
+dc_vaultwarden_use_sqlite: true # because not many users and data therefore postgresql = overhead
 # * ---------------->>> DB Configuration <<<---------------- * #
 # * >>> Container variables
 dc_vaultwarden_db_create_with_userns: true

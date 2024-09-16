@@ -101,6 +101,7 @@
                 )
               }}
 
+            # Seams like all variables can also be set as a _FILE variable
             docker_environment: >-
               {{
                 {
@@ -109,7 +110,9 @@
                   "ADMIN_TOKEN_FILE": "/run/secrets/admin_token",
                   "DISABLE_ADMIN_TOKEN": false,
                   "SIGNUPS_ALLOWED": true,
-                  "INVITATIONS_ALLOWED": true
+                  "INVITATIONS_ALLOWED": true,
+                  "ROCKET_WORKERS": 10,
+                  "DOMAIN": "https://" + app_name + "." + domain_1
                 }
                 | combine(
                   {
