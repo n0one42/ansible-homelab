@@ -101,27 +101,6 @@
                 )
               }}
 
-            # Seams like all variables can also be set as a _FILE variable
-            docker_environment: >-
-              {{
-                {
-                  "LOG_LEVEL": dc_vaultwarden_log_level,
-                  "TZ": timezone,
-                  "ADMIN_TOKEN_FILE": "/run/secrets/admin_token",
-                  "DISABLE_ADMIN_TOKEN": false,
-                  "SIGNUPS_ALLOWED": true,
-                  "INVITATIONS_ALLOWED": true,
-                  "ROCKET_WORKERS": 10,
-                  "DOMAIN": "https://" + app_name + "." + domain_1
-                }
-                | combine(
-                  {
-                    "DATABASE_URL_FILE": "/run/secrets/database_url"
-                  }
-                  if not dc_vaultwarden_use_sqlite else {}
-                )
-              }}
-
           community.docker.docker_compose_v2:
             project_name: "{{ app_name }}"
             definition:
@@ -147,7 +126,26 @@
                     # - "{{ logs_type_path }}:/data/logs"
                     - "{{ secrets_type_path }}:/run/secrets"
                     # - "{{ appdata_type_path }}/vaultwarden_environments.sh:/etc/vaultwarden.d/vaultwarden_environments.sh"
-                  environment: "{{ docker_environment }}"
+                  # ? Seams like all variables can also be set as a _FILE variable
+                  environment: >-
+                    {{
+                      {
+                        "LOG_LEVEL": dc_vaultwarden_log_level,
+                        "TZ": timezone,
+                        "ADMIN_TOKEN_FILE": "/run/secrets/admin_token",
+                        "DISABLE_ADMIN_TOKEN": false,
+                        "SIGNUPS_ALLOWED": true,
+                        "INVITATIONS_ALLOWED": true,
+                        "ROCKET_WORKERS": 10,
+                        "DOMAIN": "https://" + app_name + "." + domain_1
+                      }
+                      | combine(
+                        {
+                          "DATABASE_URL_FILE": "/run/secrets/database_url"
+                        }
+                        if not dc_vaultwarden_use_sqlite else {}
+                      )
+                    }}
                   labels:
                     traefik.enable: "true"
                     ## HTTP Routers
@@ -165,6 +163,7 @@
           ansible.builtin.meta: flush_handlers
 
 # ! --------------------------- Notes --------------------------- ! #
+# https://github.com/dani-garcia/vaultwarden/wiki
 
 # Cleaning
 # sudo docker container rm -f vaultwarden vaultwarden-postgresql && sudo docker network rm vaultwarden_net
