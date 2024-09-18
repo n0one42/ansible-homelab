@@ -46,11 +46,14 @@
             filesystem_manager_log_files_to_touch:
               - filename: "traefik.log"
               - filename: "access.log"
+            filesystem_manager_appdata_templates_to_copy:
+              - src: "traefik.yml.j2"
+                dest: "traefik.yml"
             filesystem_manager_appdata_templates_in_directory_to_copy:
               - src: "{{ playbook_dir | dirname }}/roles/dc_traefik/templates/shared"
                 dest: "rules"
-              - src: "{{ playbook_dir | dirname }}/roles/dc_traefik/templates/{{ dc_traefik_type }}"
-                dest: "rules"
+              # - src: "{{ playbook_dir | dirname }}/roles/dc_traefik/templates/{{ dc_traefik_type }}"
+              #   dest: "rules"
             filesystem_manager_secret_files_to_create:
               - var_name: "basic_auth_credentials"
                 content: "{{ dc_traefik_basic_auth_user }}:{{ dc_traefik_basic_auth_password_hashed }}"
@@ -115,76 +118,8 @@
                   privileged: false
                   userns_mode: "{{ 'host' if dc_traefik_create_with_userns | bool == false else 'remap' }}"
                   user: "{{ dc_traefik_u_g_id }}:{{ dc_traefik_u_g_id }}"
-                  command: # CLI arguments
-                    - --global.checkNewVersion=true
-                    - --global.sendAnonymousUsage=false
-                    - --entrypoints.web.address=:80
-                    - --entrypoints.websecure.address=:443
-                    - --entrypoints.traefik.address=:8080
-                    # - --entrypoints.ping.address=:8081
-                    - --entrypoints.web.http.redirections.entrypoint.to=websecure
-                    - --entrypoints.web.http.redirections.entrypoint.scheme=https
-                    - --entrypoints.web.http.redirections.entrypoint.permanent=true
-                    - --api=true
-                    - --api.dashboard=true
-                    - --api.insecure=true # http://ip:8080/dashboard/#/
-                    # - --ping=true
-                    - --serversTransport.insecureSkipVerify=true  # uncomment with https containers internally
-                    # Allow these IPs to set the X-Forwarded-* headers - Cloudflare IPs: https://www.cloudflare.com/ips/
-                    - --entrypoints.websecure.forwardedHeaders.trustedIPs={{ dc_traefik_cloudflare_ip_ranges }}{{ ',' + dc_traefik_local_ip_ranges if dc_traefik_local_ip_ranges is defined and dc_traefik_local_ip_ranges | length > 0 }}
-                    - --log=true
-                    - --log.filePath=/logs/traefik.log  # (Default: stdout)
-                    - --log.level={{ dc_traefik_log_level }} # (Default: error)(info for grafana & crowdsec logs) DEBUG, INFO, WARN, ERROR, FATAL, PANIC
-                    - --accessLog=true
-                    - --accessLog.filePath=/logs/access.log # (Default: stdout)
-                    # - --accessLog.bufferingSize=100 # Configuring a buffer of 100 lines
-                    - --accessLog.filters.statusCodes=204-299,400-499,500-599
-                    - --accessLog.filters.retryAttempts=true  # Log retry attempts
-                    - --accessLog.filters.minDuration=100ms # logging slow requests
-                    # - --accessLog.fields.headers.defaultMode=drop
-                    # - --accessLog.fields.headers.names.X-Forwarded-For=keep
-                    # - --accessLog.fields.headers.names.Authorization=keep
-                    - --providers.docker=true
-                    # - --providers.docker.endpoint=unix:///var/run/docker.sock # Use Docker Socket Proxy instead for improved security
-                    - --providers.docker.endpoint=tcp://{{ app_name }}-socketproxy:2375 # Enable for Socket Proxy. Disable otherwise.  # eg: traefik-socketproxy:2375
-                    - --providers.docker.exposedByDefault=false
-                    - --providers.docker.network={{ dc_traefik_net_name }}
-                    # - --providers.docker.swarmMode=false # Traefik v2 Swarm
-                    # - --providers.swarm.endpoint=tcp://127.0.0.1:2377 # Traefik v3 Swarm
-                    - --entrypoints.websecure.http.tls=true
-                    - --entrypoints.websecure.http.tls.options=tls-opts@file
-                    # * ------------------- Cloudflare with ACME ------------------- * #
-                    # Add dns-cloudflare as default certresolver for all services. Also enables TLS and no need to specify on individual services
-                    - --entrypoints.websecure.http.tls.certresolver=dns-cloudflare
-                    - --entrypoints.websecure.http.tls.domains[0].main={{ domain_1 }}
-                    - --entrypoints.websecure.http.tls.domains[0].sans=*.{{ domain_1 }}
-                    # - --entrypoints.websecure.http.tls.domains[1].main=internal.{{ domain_1 }} # Pulls main cert for internal domain
-                    # - --entrypoints.websecure.http.tls.domains[1].sans=*.internal.{{ domain_1 }} # Pulls wildcard cert for internal domain
-                    - --providers.file.directory=/rules # Load dynamic configuration from one or more .toml or .yml files in a directory
-                    - --providers.file.watch=true # Only works on top level files in the rules folder
-                    - "{{ '--certificatesResolvers.dns-cloudflare.acme.caServer=https://acme-staging-v02.api.letsencrypt.org/directory' if dc_traefik_acme_staging_mode | bool else '' }}" # ? LetsEncrypt Staging Server - uncomment when testing
-                    - --certificatesResolvers.dns-cloudflare.acme.storage=/letsencrypt/acme.json
-                    - --certificatesResolvers.dns-cloudflare.acme.dnsChallenge.provider=cloudflare
-                    - --certificatesResolvers.dns-cloudflare.acme.dnsChallenge.resolvers=1.1.1.1:53,1.0.0.1:53
-                    - --certificatesResolvers.dns-cloudflare.acme.dnsChallenge.delayBeforeCheck=60 # 90 # To delay DNS check and reduce LE hitrate
-                    # - --metrics.prometheus=true
-                    # - --metrics.prometheus.buckets=0.1,0.3,1.2,5.0
-                    # - --metrics.prometheus.addEntryPointsLabels=true
-                    # - --metrics.prometheus.addrouterslabels=true
-                    # - --metrics.prometheus.addServicesLabels=true
-                    # - --metrics.influxdb2=true
-                    # - --metrics.influxdb2.address=http://192.168.10.111:8086
-                    # - --metrics.influxdb2.token=$INFLUXDB_TOKEN
-                    # - --metrics.influxdb2.org=zHome
-                    # - --metrics.influxdb2.bucket=traefik-ws
-                    # - --metrics.influxdb2.addEntryPointsLabels=true
-                    # - --metrics.influxdb2.addrouterslabels=true
-                    # - --metrics.influxdb2.addServicesLabels=true
-                    # - --metrics.influxdb2.pushInterval=30s
-                    # - --metrics.influxdb2.additionallabels.host=$DOMAINNAME_1
-                    # * ------------------- Plugins ------------------- * #
-                    - "{{ '--experimental.plugins.crowdsec-bouncer-traefik-plugin.modulename=github.com/maxlerebourg/crowdsec-bouncer-traefik-plugin' if dc_traefik_crowdsec_enabled | bool else '' }}"
-                    - "{{ '--experimental.plugins.crowdsec-bouncer-traefik-plugin.version=v1.3.3' if dc_traefik_crowdsec_enabled | bool else '' }}"
+                  command: # CLI arguments # ? decided to use traefik.yml instead
+                    - --configFile=/etc/traefik/traefik.yml
                   extra_hosts:
                     - "authelia.{{ domain_1 }}:{{ dc_dmz_net_vm10_ingress_ip }}"
                     - "authentik.{{ domain_1 }}:{{ dc_dmz_net_vm10_ingress_ip }}"
@@ -210,6 +145,7 @@
                       mode: host
                   volumes:
                     # - /var/run/docker.sock:/var/run/docker.sock:ro # Enable if not using Socket Proxy
+                    - "{{ appdata_type_path }}/traefik.yml:/etc/traefik/traefik.yml"
                     - "{{ appdata_type_path }}/rules:/rules" # Dynamic File Provider directory
                     - "{{ appdata_type_path }}/plugins-storage:/plugins-storage"
                     # - "{{ appdata_type_path }}/acme.json:/acme.json" # Certs File
@@ -233,9 +169,9 @@
                     traefik.http.routers.traefik-rtr.service: "api@internal"
                     # * Middlewares
                     # traefik.http.routers.traefik-rtr.middlewares: "chain-no-auth@file" # For No Authentication
-                    # traefik.http.routers.traefik-rtr.middlewares: "chain-basic-auth@file" # For Basic HTTP Authentication
+                    traefik.http.routers.traefik-rtr.middlewares: "chain-basic-auth@file" # For Basic HTTP Authentication
                     # traefik.http.routers.traefik-rtr.middlewares: "chain-oauth@file" # For Google OAuth
-                    traefik.http.routers.traefik-rtr.middlewares: "chain-authelia@file" # For Authelia Authentication
+                    # traefik.http.routers.traefik-rtr.middlewares: "chain-authelia@file" # For Authelia Authentication
                     # traefik.http.routers.traefik-rtr.middlewares: "chain-authentik@file" # For Authentik Authentication
                     # traefik.http.routers.traefik-rtr.middlewares: "{{ 'chain-authelia@file' if dc_traefik_type == 'ingress' else 'chain-basic-auth@file' }}"
 
@@ -262,3 +198,7 @@
                 #   volumes:
                 #     - "{{ appdata_type_path }}/letsencrypt:/data"
                 #     - "{{ docker_secrets }}/certs_dumper:/certs_dumper"
+
+# ! Notes
+# something like the following line causes problems in traefik. Therefore I think, it would be better not to use this anymore this way despite the container.
+# - "{{ '--certificatesResolvers.dns-cloudflare.acme.caServer=https://acme-staging-v02.api.letsencrypt.org/directory' if dc_traefik_acme_staging_mode | bool else '' }}"

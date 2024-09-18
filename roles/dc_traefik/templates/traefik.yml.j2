@@ -1,0 +1,125 @@
+global:
+  checkNewVersion: true
+  sendAnonymousUsage: false
+
+entryPoints:
+  web:
+    address: ":80"
+    http:
+      redirections:
+        entryPoint:
+          to: websecure
+          scheme: https
+          permanent: true
+  websecure:
+    address: ":443"
+    forwardedHeaders:
+      # Allow these IPs to set the X-Forwarded-* headers - Cloudflare IPs: https://www.cloudflare.com/ips/
+      trustedIPs: "{{ dc_traefik_cloudflare_ip_ranges }}{{ ',' + dc_traefik_local_ip_ranges if dc_traefik_local_ip_ranges is defined and dc_traefik_local_ip_ranges | length > 0 }}"
+    http:
+      tls:
+        certResolver: dns-cloudflare  # Add dns-cloudflare as default certresolver for all services. Also enables TLS and no need to specify on individual services
+        options: "tls-opts@file"
+        domains:
+          - main: "{{ domain_1 }}"
+            sans:
+              - "*.{{ domain_1 }}"
+          # - main: "internal.{{ domain_1 }}"  # Pulls main cert for internal domain
+          #   sans:
+          #     - "*.internal.{{ domain_1 }}"  # Pulls wildcard cert for internal domain
+  traefik:
+    address: ":8080"
+  # ping:
+    # address: ":8081"
+
+api:
+  dashboard: true
+  insecure: true  # http://ip:8080/dashboard/#/
+
+# Uncomment the following lines to enable the ping endpoint
+# ping:
+#   entryPoint: ping
+
+serversTransport:
+  insecureSkipVerify: true  # Uncomment with HTTPS containers internally
+
+log:
+  filePath: "/logs/traefik.log"  # (Default: stdout)
+  level: "{{ dc_traefik_log_level }}"  # (Default: error)(info for Grafana & CrowdSec logs) DEBUG, INFO, WARN, ERROR, FATAL, PANIC
+
+accessLog:
+  filePath: "/logs/access.log"  # (Default: stdout)
+  # bufferingSize: 100  # Configuring a buffer of 100 lines
+  filters:
+    statusCodes: "204-299,400-499,500-599"
+    retryAttempts: true  # Log retry attempts
+    minDuration: "100ms"  # Logging slow requests
+  # fields:
+    # headers:
+      # defaultMode: drop
+      # names:
+        # X-Forwarded-For: keep
+        # Authorization: keep
+
+providers:
+  docker:
+    endpoint: "tcp://{{ app_name }}-socketproxy:2375"  # Enable for Socket Proxy. Disable otherwise.
+    exposedByDefault: false
+    network: "{{ dc_traefik_net_name }}"
+    # Uncomment the following line for Traefik v2 Swarm mode
+    # swarmMode: false
+  # swarm:
+    # endpoint: "tcp://127.0.0.1:2377"  # Traefik v3 Swarm
+
+  file:
+    directory: "/rules"  # Load dynamic configuration from one or more .toml or .yml files in a directory
+    watch: true  # Only works on top-level files in the rules folder
+
+certificatesResolvers:
+  dns-cloudflare:
+    acme:
+{% if dc_traefik_acme_staging_mode %}
+      caServer: "https://acme-staging-v02.api.letsencrypt.org/directory"  # Let's Encrypt Staging Server - Uncomment when testing
+{% endif %}
+      storage: "/letsencrypt/acme.json"
+      dnsChallenge:
+        provider: cloudflare
+        resolvers:
+          - "1.1.1.1:53"
+          - "1.0.0.1:53"
+        delayBeforeCheck: 90  # To delay DNS check and reduce Let's Encrypt hit rate
+
+# * ------------------- Metrics ------------------- * #
+metrics:
+  # Uncomment and configure the following sections to enable metrics
+  # prometheus:
+    # entryPoint: metrics
+    # addEntryPointsLabels: true
+    # addRoutersLabels: true
+    # addServicesLabels: true
+    # buckets:
+    #   - 0.1
+    #   - 0.3
+    #   - 1.2
+    #   - 5.0
+
+  # influxdb2:
+    # address: "http://192.168.10.111:8086"
+    # token: "$INFLUXDB_TOKEN"
+    # org: "zHome"
+    # bucket: "traefik-ws"
+    # addEntryPointsLabels: true
+    # addRoutersLabels: true
+    # addServicesLabels: true
+    # pushInterval: "30s"
+    # additionalLabels:
+    #   host: "$DOMAINNAME_1"
+
+# * ------------------- Plugins ------------------- * #
+{% if dc_traefik_crowdsec_enabled %}
+experimental:
+  plugins:
+    crowdsec-bouncer-traefik-plugin:
+      modulename: "github.com/maxlerebourg/crowdsec-bouncer-traefik-plugin"
+      version: "v1.3.3"
+{% endif %}
