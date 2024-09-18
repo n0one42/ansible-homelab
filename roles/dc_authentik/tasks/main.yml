@@ -19,24 +19,24 @@
         ipam_config:
           - subnet: "{{ dc_authentik_net_cidr }}"
 
-  # * ------------------------ Socket Proxy ------------------------ * #
-    - name: Include Socket Proxy role
-      ansible.builtin.import_role:
-        name: dc_socketproxy
-      vars:
-        dc_socketproxy_net_cidr: "{{ dc_authentik_socketproxy_net_cidr }}"
-        dc_socketproxy_net_ip: "{{ dc_authentik_socketproxy_net_ip }}"
+  # # * ------------------------ Socket Proxy ------------------------ * #
+  #   - name: Include Socket Proxy role
+  #     ansible.builtin.import_role:
+  #       name: dc_socketproxy
+  #     vars:
+  #       dc_socketproxy_net_cidr: "{{ dc_authentik_socketproxy_net_cidr }}"
+  #       dc_socketproxy_net_ip: "{{ dc_authentik_socketproxy_net_ip }}"
 
-        dc_socketproxy_env_log_level: "{{ dc_authentik_socketproxy_env_log_level }}"
-        dc_socketproxy_env_ping: "{{ dc_authentik_socketproxy_env_ping }}"
-        dc_socketproxy_env_version: "{{ dc_authentik_socketproxy_env_version }}"
-        dc_socketproxy_env_start: "{{ dc_authentik_socketproxy_env_start }}"
-        dc_socketproxy_env_stop: "{{ dc_authentik_socketproxy_env_stop }}"
-        dc_socketproxy_env_restarts: "{{ dc_authentik_socketproxy_env_restarts }}"
-        dc_socketproxy_env_containers: "{{ dc_authentik_socketproxy_env_containers }}"
-        dc_socketproxy_env_images: "{{ dc_authentik_socketproxy_env_images }}"
-        dc_socketproxy_env_info: "{{ dc_authentik_socketproxy_env_info }}"
-        dc_socketproxy_env_post: "{{ dc_authentik_socketproxy_env_post }}" # ! Security critical - Maximum caution when enabling these.
+  #       dc_socketproxy_env_log_level: "{{ dc_authentik_socketproxy_env_log_level }}"
+  #       dc_socketproxy_env_ping: "{{ dc_authentik_socketproxy_env_ping }}"
+  #       dc_socketproxy_env_version: "{{ dc_authentik_socketproxy_env_version }}"
+  #       dc_socketproxy_env_start: "{{ dc_authentik_socketproxy_env_start }}"
+  #       dc_socketproxy_env_stop: "{{ dc_authentik_socketproxy_env_stop }}"
+  #       dc_socketproxy_env_restarts: "{{ dc_authentik_socketproxy_env_restarts }}"
+  #       dc_socketproxy_env_containers: "{{ dc_authentik_socketproxy_env_containers }}"
+  #       dc_socketproxy_env_images: "{{ dc_authentik_socketproxy_env_images }}"
+  #       dc_socketproxy_env_info: "{{ dc_authentik_socketproxy_env_info }}"
+  #       dc_socketproxy_env_post: "{{ dc_authentik_socketproxy_env_post }}" # ! Security critical - Maximum caution when enabling these.
 
 
   # * ------------------------ Authentik DB ------------------------ * #
@@ -103,9 +103,9 @@
                 traefik_net:
                   name: "{{ dc_traefik_net_name }}"  # eg: traefik_net
                   external: true  # indicating that it's a pre-existing network not managed by this Docker Compose file.
-                socketproxy_net:
-                  name: "{{ app_name }}_socketproxy_net"
-                  external: true
+                # socketproxy_net:
+                #   name: "{{ app_name }}_socketproxy_net"
+                #   external: true
 
 
               # * ---------------------------- App ------------------------------ * #
@@ -193,7 +193,7 @@
                   command: worker
                   networks:
                     app_net: "{{ {'ipv4_address': dc_authentik_net_app_worker_ip} if dc_authentik_net_app_worker_ip is defined and dc_authentik_net_app_worker_ip | length > 0 else {} }}"
-                    socketproxy_net: "{{ {'ipv4_address': dc_authentik_socketproxy_net_app_worker_ip} if dc_authentik_socketproxy_net_app_worker_ip is defined and dc_authentik_socketproxy_net_app_worker_ip | length > 0 else {} }}"
+                    # socketproxy_net: "{{ {'ipv4_address': dc_authentik_socketproxy_net_app_worker_ip} if dc_authentik_socketproxy_net_app_worker_ip is defined and dc_authentik_socketproxy_net_app_worker_ip | length > 0 else {} }}"
                   volumes:
                     # ? https://docs.goauthentik.io/docs/outposts/integrations/docker#permissions for socketproxy
                     # - /var/run/docker.sock:/var/run/docker.sock # Maybe later through socketproxy
@@ -244,6 +244,11 @@
 # https://docs.goauthentik.io/docs/installation/configuration
 # https://docs.goauthentik.io/docs/installation/docker-compose
 # ? https://docs.goauthentik.io/docs/outposts/manual-deploy-docker-compose <-- Manual outpost deployment (LDAP, RADIUS, Proxy, ...)
+# https://www.youtube.com/watch?v=N5unsATNpJk
+# https://www.youtube.com/watch?v=wVOO2DOk49Y
+# https://www.youtube.com/watch?v=RtPKMMKRT_E
+# https://www.youtube.com/watch?v=i9FfCk_fxmk
+
 # To start the initial setup, navigate to http://<your server's IP or hostname>:9000/if/flow/initial-setup/.
 # https://10.0.90.10:9443/if/flow/initial-setup/  # Will not work if bootstrapped
 # http://10.0.90.10:9000/if/flow/initial-setup/
@@ -253,8 +258,13 @@
 
 # https://www.youtube.com/watch?v=RtPKMMKRT_E # LDAP
 
-# ? I did not rly used the socket proxy but I did manually create the outpost containers. Therefore the socket proxy is more experimental and not trully tested.
-# ? ̈Under settings: it must be like http://10.100.20.53:2375 or http://authentik-socketproxy:2375 with ! local:false !
+# ? I did not rly used the socket proxy but I did manually create the outpost containers but should work. Still, therefore the socket proxy is more experimental and not fully tested.
+# ? Under settings: it must be like http://10.100.20.53:2375 or http://authentik-socketproxy:2375 with ! local:false !
+
+# ? Each app which uses oauth2/openid and so on has to be either able to resolve the authentik.yourdom.com or by adding those lines:
+      # ? extra_hosts:
+      # ?  - "authentik.{{ domain_1 }}:{{ dc_dmz_net_vm10_ingress_ip }}"
+
 
 # nc -v 10.0.90.10 3389
 
