@@ -74,6 +74,8 @@ logs_type_path: "{{ docker_logs }}/{{ app_name }}/{{ container_type }}" # eg: lo
 
 dc_crowdsec_u_g_id: 0 # !  such an odd container... # ! to many problems... odd container... therefore host mode and root
 dc_cadvisor_u_g_id: 0 # with userns --> 122030 # ! needs root sadly
+
+dc_portainer_u_g_id: 22000 # with userns --> 122000
 dc_wud_u_g_id: 22001 # with userns --> 122001
 dc_authelia_u_g_id: 22002 # with userns --> 122002
 dc_traefik_u_g_id: 22003 # with userns --> 122003
@@ -160,13 +162,31 @@ dc_authelia_redis_port: 6379
 dc_authentik_container_name: "authentik"
 dc_authentik_create_with_userns: true
 dc_authentik_image_version: "2024.6.3" # "latest"
-dc_authentik_log_level: "INFO" # default: info  # debug, info, warning, error, trace # ! trace also includes sensitive data in logs
+dc_authentik_log_level: "info" # default: info  # debug, info, warning, error, trace # ! trace also includes sensitive data in logs
 dc_authentik_secret_key: ""  # Empty for generated password
 dc_authentik_http_port: 9000 # Default: 9000
 dc_authentik_https_port: 9443 # Default: 9443
 # dc_authentik_healthcheck_port: 9300 # Default: 9300
 # * Worker only for sure
 dc_authentik_bootstrap_pw: "{{ demo_auth_user_pw }}" # Empty for generated password # Configure the default password for the akadmin user. Only read on the first startup.
+# * LDAP only
+dc_authentik_ldap_authentik_token: "" # token-generated-by-authentik
+
+
+## ? Environment variables for socketproxy
+dc_authentik_socketproxy_env_log_level: "info"  # debug, info, notice, warning, err, crit, alert and emerg
+
+# * Not always needed - Can expose some information that your service does not need
+dc_authentik_socketproxy_env_ping: "1"
+dc_authentik_socketproxy_env_version: "1"
+dc_authentik_socketproxy_env_start: "1"
+dc_authentik_socketproxy_env_stop: "1"
+dc_authentik_socketproxy_env_restarts: "1"
+dc_authentik_socketproxy_env_containers: "1"
+dc_authentik_socketproxy_env_images: "1"
+dc_authentik_socketproxy_env_info: "1"
+dc_authentik_socketproxy_env_post: "1" # ! Security critical - Maximum caution when enabling these.
+
 
 # * ---------------->>> DB Configuration <<<---------------- * #
 # * >>> Container variables
@@ -226,6 +246,33 @@ dc_homepage_socketproxy_env_log_level: "info"  # debug, info, notice, warning, e
 dc_homepage_socketproxy_env_containers: "1"
 dc_homepage_socketproxy_env_services: "1"
 dc_homepage_socketproxy_env_tasks: "1"
+
+# ? -----------------------------------------------------------------------------
+# *                                 dc_portainer                                 *
+# ? -----------------------------------------------------------------------------
+# * ------------->>> Container Configuration <<<------------ * #
+# * >>> Container variables
+dc_portainer_container_name: "portainer"
+dc_portainer_create_with_userns: true
+dc_portainer_image_version: "latest"
+# dc_portainer_log_level: ""
+dc_portainer_port: 9000
+
+## ? Environment variables for socketproxy
+dc_portainer_socketproxy_env_log_level: "info"  # debug, info, notice, warning, err, crit, alert and emerg
+
+# * Not always needed - Can expose some information that your service does not need
+dc_portainer_socketproxy_env_post: "1"
+dc_portainer_socketproxy_env_start: "1"
+dc_portainer_socketproxy_env_stop: "1"
+dc_portainer_socketproxy_env_restarts: "1"
+dc_portainer_socketproxy_env_containers: "1"
+dc_portainer_socketproxy_env_images: "1"
+dc_portainer_socketproxy_env_info: "1"
+dc_portainer_socketproxy_env_networks: "1"
+dc_portainer_socketproxy_env_services: "1"
+dc_portainer_socketproxy_env_tasks: "1"
+dc_portainer_socketproxy_env_volumes: "1"
 
 # ? -----------------------------------------------------------------------------
 # *                                  dc_vaultwarden                                 *
@@ -323,6 +370,10 @@ dc_grafana_admin_pw: "{{ demo_auth_user_pw }}"  # Empty for generated password
 dc_grafana_port: 3000
 
 dc_grafana_use_sqlite: true  # because not many users and data therefore postgresql = overhead
+
+# * ---------------->>> Grafana Authentik <<<---------------- * #
+dc_grafana_authentik_client_id: ""
+dc_grafana_authentik_client_secret: ""
 
 # * ---------------->>> DB Configuration <<<---------------- * #
 # * >>> Container variables

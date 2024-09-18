@@ -32,6 +32,7 @@
           tmpfs:
             - /run
           environment:
+            TZ: "{{ timezone }}"
             LOG_LEVEL: "{{ dc_socketproxy_env_log_level | default('info') }}"  # debug, info, notice, warning, err, crit, alert and emerg
             # * Variables match the URL prefix (i.e. AUTH blocks access to /auth/* parts of the API, etc.).
             # 0 to revoke access.
@@ -46,10 +47,14 @@
             SECRETS: "{{ dc_socketproxy_env_secrets | default(0) }}"
             POST: "{{ dc_socketproxy_env_post | default(0) }}" # Portainer, Watchtower  # When set to 0, only GET and HEAD operations are allowed, making API access read-only.
             # * Not always needed - Can expose some information that your service does not need.
+            ALLOW_START: "{{ dc_socketproxy_env_start | default(0) }}"
+            ALLOW_STOP: "{{ dc_socketproxy_env_stop | default(0) }}"
+            ALLOW_RESTARTS: "{{ dc_socketproxy_env_restarts | default(0) }}"
+            DISABLE_IPV6: "{{ dc_socketproxy_env_disable_ipv6 | default(0) }}"
             BUILD: "{{ dc_socketproxy_env_build | default(0) }}"
             COMMIT: "{{ dc_socketproxy_env_commit | default(0) }}"
             CONFIGS: "{{ dc_socketproxy_env_configs | default(0) }}"
-            CONTAINERS: "{{ dc_socketproxy_env_containers | default(0) }}" # Traefik, portainer, etc.
+            CONTAINERS: "{{ dc_socketproxy_env_containers | default(0) }}" # Traefik, Portainer, etc.
             DISTRIBUTION: "{{ dc_socketproxy_env_distribution | default(0) }}"
             EXEC: "{{ dc_socketproxy_env_exec | default(0) }}"
             IMAGES: "{{ dc_socketproxy_env_images | default(0) }}" # Portainer
@@ -65,8 +70,8 @@
             VOLUMES: "{{ dc_socketproxy_env_volumes | default(0) }}" # Portainer
 
 
-# https://github.com/Tecnativa/docker-socket-proxy
 # https://hub.docker.com/r/linuxserver/socket-proxy
+# https://github.com/Tecnativa/docker-socket-proxy
 # The container should be run on the same docker network as the service(s) using it.
 # Most containers that would normally connect to a mounted docker.sock can have their endpoint overridden using the
 # DOCKER_HOST environment variable if they do not offer the option in their configuration;

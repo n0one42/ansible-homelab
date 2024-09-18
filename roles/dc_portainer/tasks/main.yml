@@ -1,0 +1,96 @@
+---
+# tasks file for roles/dc_portainer
+- name: Create Portainer with Socket Proxy
+  vars:
+    app_name: "{{ dc_portainer_container_name }}"
+
+  block:
+  # * ------------------------ Socket Proxy ------------------------ * #
+    - name: Include Socket Proxy role
+      ansible.builtin.import_role:
+        name: dc_socketproxy
+      vars:
+        dc_socketproxy_net_cidr: "{{ dc_portainer_socketproxy_net_cidr }}"
+        dc_socketproxy_net_ip: "{{ dc_portainer_socketproxy_net_ip }}"
+
+        dc_socketproxy_env_log_level: "{{ dc_portainer_socketproxy_env_log_level }}"
+        dc_socketproxy_env_post: "{{ dc_portainer_socketproxy_env_post }}"
+        dc_socketproxy_env_start: "{{ dc_portainer_socketproxy_env_start }}"
+        dc_socketproxy_env_stop: "{{ dc_portainer_socketproxy_env_stop }}"
+        dc_socketproxy_env_restarts: "{{ dc_portainer_socketproxy_env_restarts }}"
+        dc_socketproxy_env_containers: "{{ dc_portainer_socketproxy_env_containers }}"
+        dc_socketproxy_env_images: "{{ dc_portainer_socketproxy_env_images }}"
+        dc_socketproxy_env_info: "{{ dc_portainer_socketproxy_env_info }}"
+        dc_socketproxy_env_networks: "{{ dc_portainer_socketproxy_env_networks }}"
+        dc_socketproxy_env_services: "{{ dc_portainer_socketproxy_env_services }}"
+        dc_socketproxy_env_tasks: "{{ dc_portainer_socketproxy_env_tasks }}"
+        dc_socketproxy_env_volumes: "{{ dc_portainer_socketproxy_env_volumes }}"
+
+
+  # * ----------------------- Portainer App ------------------------- *
+    - name: Create app --> {{ app_name }}
+      vars:
+        container_type: "app" # => app, db, redis
+        user: "{{ (dc_portainer_create_with_userns | bool) | ternary(dc_portainer_u_g_id + 100000, dc_portainer_u_g_id) }}"
+        group: "{{ (dc_portainer_create_with_userns | bool) | ternary(dc_portainer_u_g_id + 100000, dc_portainer_u_g_id) }}"
+      block:
+        - name: '[Required] filesystem_manager role'
+          ansible.builtin.import_role:
+            name: filesystem_manager
+          vars:
+            filesystem_manager_appdata_directories_to_create:
+              - path: "data"
+
+
+        - name: Install docker compose portainer with inline definition
+          community.docker.docker_compose_v2:
+            project_name: "{{ app_name }}"  # eg: portainer
+            definition:
+              # ! --------------------------- Networks --------------------------- ! #
+              networks:
+                traefik_net:
+                  name: "{{ dc_traefik_net_name }}"
+                  external: true
+                socketproxy_net:
+                  name: "{{ app_name }}_socketproxy_net"
+                  external: true
+
+
+              # * ---------------------------- App ------------------------------ * #
+              services:
+                portainer:
+                  image: portainer/portainer-ce:{{ dc_portainer_image_version }}
+                  container_name: "{{ app_name }}"
+                  restart: unless-stopped
+                  security_opt:
+                    - no-new-privileges:true
+                  privileged: false
+                  userns_mode: "{{ 'host' if dc_portainer_create_with_userns | bool == false else 'remap' }}"
+                  user: "{{ dc_portainer_u_g_id }}:{{ dc_portainer_u_g_id }}"
+                  command: -H tcp://{{ app_name }}-socketproxy:2375
+                  extra_hosts:
+                    - "authentik.{{ domain_1 }}:{{ dc_dmz_net_vm10_ingress_ip }}" # ! EACH APP NEEDS THIS IF USING AUTHENTIK and without chain-authentik if using oauth2 or openid
+                  networks:
+                    socketproxy_net: "{{ {'ipv4_address': dc_portainer_socketproxy_net_app_ip} if dc_portainer_socketproxy_net_app_ip is defined and dc_portainer_socketproxy_net_app_ip | length > 0 else {} }}"
+                    traefik_net: "{{ {'ipv4_address': dc_traefik_net_portainer_ip} if dc_traefik_net_portainer_ip is defined and dc_traefik_net_portainer_ip | length > 0 else {} }}"
+                  ports:
+                    - "{{ dc_portainer_port }}:9000"
+                  volumes:
+                    - "{{ appdata_type_path }}/data:/data"
+                  environment:
+                    - TZ="{{ timezone }}"
+                  labels:
+                    traefik.enable: "true"
+                    ## HTTP Routers
+                    traefik.http.routers.portainer-rtr.rule: "Host(`{{ app_name }}-{{ dc_traefik_type }}.{{ domain_1 }}`)"
+                    ## Middlewares
+                    # traefik.http.routers.portainer-rtr.middlewares: "{{ 'chain-authelia@file' if dc_traefik_type == 'ingress' else 'chain-basic-auth@file' }}"
+                    # traefik.http.routers.portainer-rtr.middlewares: "chain-authentik@file"
+                    traefik.http.routers.portainer-rtr.middlewares: "chain-no-auth@file"
+                    ## HTTP Services
+                    traefik.http.routers.portainer-rtr.service: "portainer-svc"
+                    traefik.http.services.portainer-svc.loadbalancer.server.port: "{{ dc_portainer_port }}"
+
+
+# ! --------------------------- Notes --------------------------- ! #
+# https://docs.goauthentik.io/docs/installation/automated-install
