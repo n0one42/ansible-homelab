@@ -1,11 +1,11 @@
-# http:
-#   middlewares:
-#     chain-authentik:
-#       chain:
-#         middlewares:
-# # {% if dc_traefik_crowdsec_enabled %}
-# #           - middlewares-traefik-bouncer
-# # {% endif %}
-#           - middlewares-rate-limit
-#           - middlewares-secure-headers
-#           - middlewares-authentik
+http:
+  middlewares:
+    chain-authentik:
+      chain:
+        middlewares:
+# {% if dc_traefik_crowdsec_enabled %}
+#           - middlewares-traefik-bouncer
+# {% endif %}
+          - middlewares-rate-limit
+          - middlewares-secure-headers
+          - middlewares-authentik

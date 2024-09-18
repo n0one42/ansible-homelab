@@ -1,0 +1,21 @@
+http:
+# ! -------------------------- Services -------------------------- ! #
+  services:
+    pve-demo-svc:
+      loadBalancer:
+        servers:
+          - url: "https://10.0.5.10:8006"
+
+
+# ! -------------------------- Routers -------------------------- ! #
+  routers:
+    webmin-ingress-rtr:
+      entryPoints:
+        - websecure
+      rule: "Host(`pve-demo.{{ domain_1 }}`)"
+      middlewares:
+        - chain-no-auth
+      service: pve-demo-svc
+
+
+# ! ------------------------ Middlewares ------------------------ ! #

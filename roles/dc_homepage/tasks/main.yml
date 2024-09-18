@@ -88,7 +88,7 @@
                     traefik.enable: "true"
                     ## HTTP Routers
                     traefik.http.routers.homepage-rtr.entrypoints: "websecure"
-                    traefik.http.routers.homepage-rtr.rule: "Host(`{{ dc_homepage_container_name }}.{{ domain_1 }}`)"
+                    traefik.http.routers.homepage-rtr.rule: "Host(`{{ app_name }}.{{ domain_1 }}`)"
                     ## Middlewares
                     # traefik.http.routers.homepage-rtr.middlewares: "{{ 'chain-authelia@file' if dc_traefik_type == 'ingress' else 'chain-basic-auth@file' }}"
                     traefik.http.routers.homepage-rtr.middlewares: "chain-authelia@file"

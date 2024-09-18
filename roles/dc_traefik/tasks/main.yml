@@ -169,10 +169,10 @@
                     traefik.http.routers.traefik-rtr.service: "api@internal"
                     # * Middlewares
                     # traefik.http.routers.traefik-rtr.middlewares: "chain-no-auth@file" # For No Authentication
-                    traefik.http.routers.traefik-rtr.middlewares: "chain-basic-auth@file" # For Basic HTTP Authentication
+                    # traefik.http.routers.traefik-rtr.middlewares: "chain-basic-auth@file" # For Basic HTTP Authentication
                     # traefik.http.routers.traefik-rtr.middlewares: "chain-oauth@file" # For Google OAuth
                     # traefik.http.routers.traefik-rtr.middlewares: "chain-authelia@file" # For Authelia Authentication
-                    # traefik.http.routers.traefik-rtr.middlewares: "chain-authentik@file" # For Authentik Authentication
+                    traefik.http.routers.traefik-rtr.middlewares: "chain-authentik@file" # For Authentik Authentication
                     # traefik.http.routers.traefik-rtr.middlewares: "{{ 'chain-authelia@file' if dc_traefik_type == 'ingress' else 'chain-basic-auth@file' }}"
 
 

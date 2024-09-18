@@ -19,6 +19,25 @@
         ipam_config:
           - subnet: "{{ dc_authentik_net_cidr }}"
 
+  # * ------------------------ Socket Proxy ------------------------ * #
+    - name: Include Socket Proxy role
+      ansible.builtin.import_role:
+        name: dc_socketproxy
+      vars:
+        dc_socketproxy_net_cidr: "{{ dc_authentik_socketproxy_net_cidr }}"
+        dc_socketproxy_net_ip: "{{ dc_authentik_socketproxy_net_ip }}"
+
+        dc_socketproxy_env_log_level: "{{ dc_authentik_socketproxy_env_log_level }}"
+        dc_socketproxy_env_ping: "{{ dc_authentik_socketproxy_env_ping }}"
+        dc_socketproxy_env_version: "{{ dc_authentik_socketproxy_env_version }}"
+        dc_socketproxy_env_start: "{{ dc_authentik_socketproxy_env_start }}"
+        dc_socketproxy_env_stop: "{{ dc_authentik_socketproxy_env_stop }}"
+        dc_socketproxy_env_restarts: "{{ dc_authentik_socketproxy_env_restarts }}"
+        dc_socketproxy_env_containers: "{{ dc_authentik_socketproxy_env_containers }}"
+        dc_socketproxy_env_images: "{{ dc_authentik_socketproxy_env_images }}"
+        dc_socketproxy_env_info: "{{ dc_authentik_socketproxy_env_info }}"
+        dc_socketproxy_env_post: "{{ dc_authentik_socketproxy_env_post }}" # ! Security critical - Maximum caution when enabling these.
+
 
   # * ------------------------ Authentik DB ------------------------ * #
     - name: Include postgresql role
@@ -84,6 +103,10 @@
                 traefik_net:
                   name: "{{ dc_traefik_net_name }}"  # eg: traefik_net
                   external: true  # indicating that it's a pre-existing network not managed by this Docker Compose file.
+                socketproxy_net:
+                  name: "{{ app_name }}_socketproxy_net"
+                  external: true
+
 
               # * ---------------------------- App ------------------------------ * #
               services:
@@ -96,11 +119,17 @@
                   privileged: false
                   userns_mode: "{{ 'host' if dc_authentik_create_with_userns | bool == false else 'remap' }}"
                   user: "{{ dc_authentik_u_g_id }}:{{ dc_authentik_u_g_id }}"
+                  deploy:
+                    resources:
+                      limits:
+                        cpus: '0.5'
                   command: server
                   networks:
                     app_net: "{{ {'ipv4_address': dc_authentik_net_app_server_ip} if dc_authentik_net_app_server_ip is defined and dc_authentik_net_app_server_ip | length > 0 else {} }}"
-                    traefik_net: "{{ {'ipv4_address': dc_traefik_net_authentik_ip} if dc_traefik_net_authentik_ip is defined and dc_traefik_net_authentik_ip | length > 0 else {} }}"
-                  # ports:
+                    traefik_net: "{{ {'ipv4_address': dc_traefik_net_authentik_server_ip} if dc_traefik_net_authentik_server_ip is defined and dc_traefik_net_authentik_server_ip | length > 0 else {} }}"
+                  ports:
+                    - 9300:9300 # Prometheus metrics
+                    # - 9900:9900 # Go Debugging metrics
                     # - "{{ dc_authentik_http_port }}:9000"
                     # - "{{ dc_authentik_https_port }}:9443"
                   volumes:
@@ -118,20 +147,29 @@
                     AUTHENTIK_LOG_LEVEL: "{{ dc_authentik_log_level }}" # default: info  # debug, info, warning, error, trace # ! trace also includes sensitive data in logs
                     COMPOSE_PORT_HTTP: "{{ dc_authentik_http_port }}"
                     COMPOSE_PORT_HTTPS: "{{ dc_authentik_https_port }}"
-                    AUTHENTIK_HOST: https://{{ app_name }}.{{ domain_1 }} # ? duno if needed here
-                    AUTHENTIK_INSECURE: "false"
+                    AUTHENTIK_HOST: https://{{ app_name }}.{{ domain_1 }}
+                    AUTHENTIK_INSECURE: "{{ dc_traefik_acme_staging_mode }}"
+
+                    LDAPTLS_REQCERT: "never"
+
+                    AUTHENTIK_LISTEN__HTTP: "0.0.0.0:{{ dc_authentik_http_port }}" # Listening address:port (e.g. 0.0.0.0:9000) for HTTP (Applies to Server and Proxy outpost)
+                    AUTHENTIK_LISTEN__HTTPS: "0.0.0.0:{{ dc_authentik_https_port }}" # Listening address:port (e.g. 0.0.0.0:9443) for HTTPS (Applies to Server and Proxy outpost)
+                    AUTHENTIK_LISTEN__LDAP: "0.0.0.0:3389" # Listening address:port (e.g. 0.0.0.0:3389) for LDAP (Applies to LDAP outpost)
+                    AUTHENTIK_LISTEN__LDAPS: "0.0.0.0:6636" # Listening address:port (e.g. 0.0.0.0:6636) for LDAPS (Applies to LDAP outpost)
+                    AUTHENTIK_LISTEN__METRICS: "0.0.0.0:9300" # Listening address:port (e.g. 0.0.0.0:9300) for Prometheus metrics (Applies to All)
+                    AUTHENTIK_LISTEN__DEBUG: "0.0.0.0:9900" # Listening address:port (e.g. 0.0.0.0:9900) for Go Debugging metrics (Applies to All)
+                    AUTHENTIK_LISTEN__TRUSTED_PROXY_CIDRS: "{{ dc_traefik_local_ip_ranges }}" # List of comma-separated CIDRs that proxy headers should be accepted from (Applies to Server)
                   labels:
                     traefik.enable: "true"
                     ## Router for general application traffic
-                    traefik.http.routers.authentik-rtr.entrypoints: "websecure"
                     traefik.http.routers.authentik-rtr.rule: "Host(`{{ app_name }}.{{ domain_1 }}`)"
-                    traefik.http.routers.authentik-rtr.middlewares: "chain-no-auth@file"
+                    # traefik.http.routers.authentik-rtr.middlewares: "chain-no-auth@file"
                     traefik.http.routers.authentik-rtr.priority: "10"
                     traefik.http.routers.authentik-rtr.service: "authentik-svc"
 
                     ## Router specifically for Authentik's outpost
-                    traefik.http.routers.authentik-rtr-outpost.entrypoints: "websecure"
                     traefik.http.routers.authentik-rtr-outpost.rule: "Host(`{{ app_name }}.{{ domain_1 }}`) && PathPrefix(`/outpost.goauthentik.io/`)"
+                    # traefik.http.routers.authentik-rtr-outpost.rule: "HostRegexp(`{subdomain:[a-z0-9-]+}.{{ domain_1 }}`) && PathPrefix(`/outpost.goauthentik.io/`)"
                     traefik.http.routers.authentik-rtr-outpost.priority: "15"
                     traefik.http.routers.authentik-rtr-outpost.service: "authentik-svc"
 
@@ -148,9 +186,14 @@
                   privileged: false
                   userns_mode: "{{ 'host' if dc_authentik_create_with_userns | bool == false else 'remap' }}"
                   user: "{{ dc_authentik_u_g_id }}:{{ dc_authentik_u_g_id }}"
+                  deploy:
+                    resources:
+                      limits:
+                        cpus: '0.5'
                   command: worker
                   networks:
                     app_net: "{{ {'ipv4_address': dc_authentik_net_app_worker_ip} if dc_authentik_net_app_worker_ip is defined and dc_authentik_net_app_worker_ip | length > 0 else {} }}"
+                    socketproxy_net: "{{ {'ipv4_address': dc_authentik_socketproxy_net_app_worker_ip} if dc_authentik_socketproxy_net_app_worker_ip is defined and dc_authentik_socketproxy_net_app_worker_ip | length > 0 else {} }}"
                   volumes:
                     # ? https://docs.goauthentik.io/docs/outposts/integrations/docker#permissions for socketproxy
                     # - /var/run/docker.sock:/var/run/docker.sock # Maybe later through socketproxy
@@ -174,15 +217,54 @@
                     AUTHENTIK_BOOTSTRAP_PASSWORD: "{{ dc_authentik_bootstrap_pw }}" # Configure the default password for the akadmin user. Only read on the first startup.
 
 
+                # authentik_ldap:
+                #   image: ghcr.io/goauthentik/ldap:{{ dc_authentik_image_version }}
+                #   container_name: "{{ app_name }}_ldap"
+                #   restart: unless-stopped
+                #   security_opt:
+                #     - no-new-privileges:true
+                #   privileged: false
+                #   userns_mode: "{{ 'host' if dc_authentik_create_with_userns | bool == false else 'remap' }}"
+                #   user: "{{ dc_authentik_u_g_id }}:{{ dc_authentik_u_g_id }}"
+                #   extra_hosts:
+                #     - "authentik.{{ domain_1 }}:{{ dc_dmz_net_vm10_ingress_ip }}"
+                #   networks:
+                #     traefik_net: "{{ {'ipv4_address': dc_traefik_net_authentik_ldap_ip} if dc_traefik_net_authentik_ldap_ip is defined and dc_traefik_net_authentik_ldap_ip | length > 0 else {} }}"
+                #   ports:
+                #     - 389:3389  # LDAP
+                #     - 636:6636  # LDAPS
+                #   environment:
+                #     AUTHENTIK_HOST: https://{{ app_name }}.{{ domain_1 }} # Seams not to work with like local ip therefore no app_net needed
+                #     AUTHENTIK_INSECURE: "{{ dc_traefik_acme_staging_mode }}"
+                #     AUTHENTIK_TOKEN: "{{ dc_authentik_ldap_authentik_token }}" # token-generated-by-authentik
+
+
+# ! --------------------------- Notes --------------------------- ! #
 # https://docs.goauthentik.io/docs/installation/automated-install
 # https://docs.goauthentik.io/docs/installation/configuration
 # https://docs.goauthentik.io/docs/installation/docker-compose
+# ? https://docs.goauthentik.io/docs/outposts/manual-deploy-docker-compose <-- Manual outpost deployment (LDAP, RADIUS, Proxy, ...)
 # To start the initial setup, navigate to http://<your server's IP or hostname>:9000/if/flow/initial-setup/.
 # https://10.0.90.10:9443/if/flow/initial-setup/  # Will not work if bootstrapped
 # http://10.0.90.10:9000/if/flow/initial-setup/
 # There you are prompted to set a password for the akadmin user (the default user).
 # https://docs.goauthentik.io/docs/core/architecture
 # https://docs.goauthentik.io/docs/terminology
+
+# https://www.youtube.com/watch?v=RtPKMMKRT_E # LDAP
+
+# ? I did not rly used the socket proxy but I did manually create the outpost containers. Therefore the socket proxy is more experimental and not trully tested.
+# ? ̈Under settings: it must be like http://10.100.20.53:2375 or http://authentik-socketproxy:2375 with ! local:false !
+
+# nc -v 10.0.90.10 3389
+
+# ldapsearch \
+#   -x \
+#   -H ldap://10.0.90.10:389 \
+#   -D 'cn=ldapservice,ou=users,DC=ldap,DC=goauthentik,DC=io' \
+#   -w 'Test1234' \
+#   -b 'DC=ldap,DC=goauthentik,DC=io' \
+#   '(objectClass=user)'
 
 # sudo docker rm -f authentik_worker authentik_server authentik-redis authentik-postgresql
 # sudo rm -r $APPDATA_DIR/authentik

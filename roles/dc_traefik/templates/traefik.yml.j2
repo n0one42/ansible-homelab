@@ -24,9 +24,6 @@ entryPoints:
           - main: "{{ domain_1 }}"
             sans:
               - "*.{{ domain_1 }}"
-          # - main: "internal.{{ domain_1 }}"  # Pulls main cert for internal domain
-          #   sans:
-          #     - "*.internal.{{ domain_1 }}"  # Pulls wildcard cert for internal domain
   traefik:
     address: ":8080"
   # ping:
