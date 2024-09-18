@@ -52,8 +52,8 @@
             filesystem_manager_appdata_templates_in_directory_to_copy:
               - src: "{{ playbook_dir | dirname }}/roles/dc_traefik/templates/shared"
                 dest: "rules"
-              # - src: "{{ playbook_dir | dirname }}/roles/dc_traefik/templates/{{ dc_traefik_type }}"
-              #   dest: "rules"
+              - src: "{{ playbook_dir | dirname }}/roles/dc_traefik/templates/{{ dc_traefik_type }}"
+                dest: "rules"
             filesystem_manager_secret_files_to_create:
               - var_name: "basic_auth_credentials"
                 content: "{{ dc_traefik_basic_auth_user }}:{{ dc_traefik_basic_auth_password_hashed }}"
