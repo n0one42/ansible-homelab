@@ -46,9 +46,6 @@
             filesystem_manager_log_files_to_touch:
               - filename: "traefik.log"
               - filename: "access.log"
-            filesystem_manager_appdata_templates_to_copy:
-              - src: "traefik.yml.j2"
-                dest: "traefik.yml"
             filesystem_manager_appdata_templates_in_directory_to_copy:
               - src: "{{ playbook_dir | dirname }}/roles/dc_traefik/templates/shared"
                 dest: "rules"
@@ -66,12 +63,24 @@
           ansible.builtin.import_role:
             name: filesystem_manager
           vars:
+            filesystem_manager_appdata_templates_to_copy:
+              - src: "traefik.yml.j2"
+                dest: "traefik.yml"
+          notify: Restart traefik
+
+        - name: '[Required] filesystem_manager role'
+          ansible.builtin.import_role:
+            name: filesystem_manager
+          vars:
             filesystem_manager_secret_files_to_create:
               - var_name: "traefik_crowdsec_bouncer_key"
                 content: "{{ traefik_crowdsec_bouncer_key | default('') }}"
                 set_facts: true  # optional - needed for the app
                 # overide_existing: true  # optional
           when: dc_traefik_crowdsec_enabled | bool
+
+        - name: Flush handlers
+          ansible.builtin.meta: flush_handlers
 
         - name: Install docker compose traefik with inline definition
           vars:
@@ -163,7 +172,6 @@
                     # - "traefik.http.routers.ping.tls=true"
                     # - "traefik.http.routers.ping.service=ping@internal"
                     # * HTTP Routers
-                    traefik.http.routers.traefik-rtr.entrypoints: "websecure"
                     traefik.http.routers.traefik-rtr.rule: "Host(`{{ app_name }}-{{ dc_traefik_type }}.{{ domain_1 }}`)"
                     # * Services - API
                     traefik.http.routers.traefik-rtr.service: "api@internal"
@@ -171,8 +179,8 @@
                     # traefik.http.routers.traefik-rtr.middlewares: "chain-no-auth@file" # For No Authentication
                     # traefik.http.routers.traefik-rtr.middlewares: "chain-basic-auth@file" # For Basic HTTP Authentication
                     # traefik.http.routers.traefik-rtr.middlewares: "chain-oauth@file" # For Google OAuth
-                    # traefik.http.routers.traefik-rtr.middlewares: "chain-authelia@file" # For Authelia Authentication
-                    traefik.http.routers.traefik-rtr.middlewares: "chain-authentik@file" # For Authentik Authentication
+                    traefik.http.routers.traefik-rtr.middlewares: "chain-authelia@file" # For Authelia Authentication
+                    # traefik.http.routers.traefik-rtr.middlewares: "chain-authentik@file" # For Authentik Authentication
                     # traefik.http.routers.traefik-rtr.middlewares: "{{ 'chain-authelia@file' if dc_traefik_type == 'ingress' else 'chain-basic-auth@file' }}"
 
 

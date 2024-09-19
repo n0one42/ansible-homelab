@@ -21,7 +21,7 @@
         - { key: 'DNSStubListener', value: 'no' }
       notify:
         - Restart systemd-resolved
-        # - Restart docker  # not needed
+        # - Restart adguard # not needed
 
     - name: Flush handlers
       ansible.builtin.meta: flush_handlers

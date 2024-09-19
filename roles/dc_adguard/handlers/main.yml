@@ -1,6 +1,6 @@
 ---
 # handlers file for roles/dc_adguard
-- name: Restart container
+- name: Restart adguard
   community.docker.docker_container:
     name: "{{ dc_adguard_container_name }}"
     state: started
