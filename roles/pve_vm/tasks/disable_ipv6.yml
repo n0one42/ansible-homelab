@@ -1,0 +1,46 @@
+---
+# ! Sadly, some containers are bad created and will not work without ipv6 eg: socketproxy
+- name: Gather facts --> os_family
+  ansible.builtin.setup:
+    filter: os_family
+  register: os_family
+
+- name: Debug os_family
+  ansible.builtin.debug:
+    var: os_family
+
+# ? Disabling at the sysctl level. (will throw error if using also the kernel level method below)
+# - name: Disable IPv6 by setting sysctl parameters
+#   ansible.posix.sysctl:
+#     name: "{{ item.key }}"
+#     value: "{{ item.value }}"
+#     sysctl_file: /etc/sysctl.d/99-disable-ipv6.conf
+#     state: present
+#     reload: true
+#   loop:
+#     - { key: 'net.ipv6.conf.all.disable_ipv6', value: '1' }
+#     - { key: 'net.ipv6.conf.default.disable_ipv6', value: '1' }
+#     - { key: 'net.ipv6.conf.lo.disable_ipv6', value: '1' }
+#   tags: disable_ipv6
+
+- name: Ensure IPv6 modules are disabled in grub (optional)
+  when: os_family.ansible_facts['ansible_os_family'] == 'Debian'
+  block:
+    - name: Add GRUB command line parameter to disable IPv6
+      ansible.builtin.lineinfile:
+        path: /etc/default/grub
+        regexp: '^GRUB_CMDLINE_LINUX='
+        line: 'GRUB_CMDLINE_LINUX="ipv6.disable=1"'
+        backrefs: true
+        state: present
+      notify: Update GRUB
+
+- name: Remove IPv6 modules from kernel (optional)
+  when: os_family.ansible_facts['ansible_os_family'] == 'Debian'
+  ansible.builtin.lineinfile:
+    path: /etc/modprobe.d/blacklist-ipv6.conf
+    line: 'blacklist ipv6'
+    create: true
+    state: present
+    mode: '0644'
+  notify: Update Initramfs
