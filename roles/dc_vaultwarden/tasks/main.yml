@@ -102,7 +102,7 @@
               }}
 
           community.docker.docker_compose_v2:
-            project_name: "{{ app_name }}"
+            project_name: "{{ dc_vaultwarden_container_name }}"
             definition:
               # ! --------------------------- Networks --------------------------- ! #
               networks: "{{ compose_networks }}"
@@ -111,7 +111,7 @@
               services:
                 vaultwarden:
                   image: vaultwarden/server:{{ dc_vaultwarden_image_version }}
-                  container_name: "{{ app_name }}"
+                  container_name: "{{ dc_vaultwarden_container_name }}"
                   restart: unless-stopped
                   security_opt:
                     - no-new-privileges:true
@@ -137,7 +137,7 @@
                         "SIGNUPS_ALLOWED": true,
                         "INVITATIONS_ALLOWED": true,
                         "ROCKET_WORKERS": 10,
-                        "DOMAIN": "https://" + app_name + "." + domain_1
+                        "DOMAIN": "https://" + dc_vaultwarden_container_name + "." + domain_1
                       }
                       | combine(
                         {
@@ -149,8 +149,7 @@
                   labels:
                     traefik.enable: "true"
                     ## HTTP Routers
-                    traefik.http.routers.vaultwarden-rtr.entrypoints: "websecure"
-                    traefik.http.routers.vaultwarden-rtr.rule: "Host(`{{ app_name }}.{{ domain_1 }}`)"
+                    traefik.http.routers.vaultwarden-rtr.rule: "Host(`{{ dc_vaultwarden_container_name }}.{{ domain_1 }}`)"
                     ## Middlewares
                     # traefik.http.routers.vaultwarden-rtr.middlewares: "chain-vaultwarden@file"
                     traefik.http.routers.vaultwarden-rtr.middlewares: "chain-no-auth@file"

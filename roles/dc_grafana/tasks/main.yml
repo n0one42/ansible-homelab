@@ -222,13 +222,26 @@
                     GF_DATABASE_NAME: "{{ db_name if not dc_grafana_use_sqlite else omit }}"
                     GF_DATABASE_USER: "{{ db_user_name if not dc_grafana_use_sqlite else omit }}"
                     GF_DATABASE_PASSWORD__FILE: "{{ '/run/secrets/db_user_pw' if not dc_grafana_use_sqlite else omit }}"
+
+                    # # ! --------------------------- Authentik --------------------------- ! #
+                    # GF_AUTH_GENERIC_OAUTH_ENABLED: "true"
+                    # GF_AUTH_GENERIC_OAUTH_NAME: "authentik"
+                    # GF_AUTH_GENERIC_OAUTH_CLIENT_ID: "{{ dc_grafana_authentik_client_id }}"
+                    # GF_AUTH_GENERIC_OAUTH_CLIENT_SECRET: "{{ dc_grafana_authentik_client_secret }}"
+                    # GF_AUTH_GENERIC_OAUTH_SCOPES: "openid profile email"
+                    # GF_AUTH_GENERIC_OAUTH_AUTH_URL: "https://authentik.{{ domain_1 }}/application/o/authorize/"
+                    # GF_AUTH_GENERIC_OAUTH_TOKEN_URL: "https://authentik.{{ domain_1 }}/application/o/token/"
+                    # GF_AUTH_GENERIC_OAUTH_API_URL: "https://authentik.{{ domain_1 }}/application/o/userinfo/"
+                    # GF_AUTH_SIGNOUT_REDIRECT_URL: "https://authentik.{{ domain_1 }}/application/o/grafana/end-session/"
+                    # # Optionally enable auto-login (bypasses Grafana login screen)
+                    # GF_AUTH_OAUTH_AUTO_LOGIN: "true"
+                    # # Optionally map user groups to Grafana roles
+                    # GF_AUTH_GENERIC_OAUTH_ROLE_ATTRIBUTE_PATH: "contains(groups, 'Grafana Admins') && 'Admin' || contains(groups, 'Grafana Editors') && 'Editor' || 'Viewer'"
                   labels:
                     traefik.enable: "true"
                     ## HTTP Routers
-                    traefik.http.routers.grafana-rtr.entrypoints: "websecure"
                     traefik.http.routers.grafana-rtr.rule: "Host(`{{ app_name }}.{{ domain_1 }}`)"
                     ## Middlewares
-                    # traefik.http.routers.grafana-rtr.middlewares: "{{ 'chain-authelia@file' if dc_traefik_type == 'ingress' else 'chain-basic-auth@file' }}"
                     traefik.http.routers.grafana-rtr.middlewares: "chain-authelia@file"
                     ## HTTP Services
                     traefik.http.routers.grafana-rtr.service: "grafana-svc"

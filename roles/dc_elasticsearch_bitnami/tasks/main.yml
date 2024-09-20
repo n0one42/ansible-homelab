@@ -78,7 +78,6 @@
               # labels:
               #   traefik.enable: "true"
               #   ## HTTP Routers
-              #   traefik.http.routers.elasticsearch-rtr.entrypoints: "websecure"
               #   traefik.http.routers.elasticsearch-rtr.rule: "Host(`{{ app_name }}-elasticsearch.{{ domain_1 }}`)"
               #   ## Middlewares
               #   traefik.http.routers.elasticsearch-rtr.middlewares: "chain-no-auth@file"

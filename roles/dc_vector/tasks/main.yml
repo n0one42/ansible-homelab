@@ -101,9 +101,9 @@
                   networks:
                     app_net: "{{ {'ipv4_address': dc_vector_net_ip} if dc_vector_net_ip is defined and dc_vector_net_ip | length > 0 and not dc_vector_standalone | default(false) | bool else omit }}"
                     traefik_net: "{{ {'ipv4_address': dc_traefik_net_vector_ip} if dc_traefik_net_vector_ip is defined and dc_traefik_net_vector_ip | length > 0 else {} }}"
-                  ports:
-                    - "{{ dc_vector_port }}:8686"
-                    - 9598:9598 # Prometheus Exporter default port
+                  # ports:
+                  #   - "{{ dc_vector_port }}:8686"
+                  #   - 9598:9598 # Prometheus Exporter default port
                   volumes:
                     - "{{ appdata_type_path }}/config:/etc/vector"
                     # - "{{ appdata_type_path }}/config/common.yml:/etc/vector/common.yml:ro"
@@ -128,24 +128,21 @@
                     traefik.enable: "true"
                     # ? This will need api to be enabled on the common.yml file
                     # * HTTP Router for Vector (default port 8686)
-                    traefik.http.routers.vector-rtr.entrypoints: "websecure"
                     traefik.http.routers.vector-rtr.rule: "Host(`vector-{{ dc_traefik_type }}.{{ domain_1 }}`)"
-                    traefik.http.routers.vector-rtr.middlewares: "chain-basic-auth@file" # For Basic HTTP Authentication
+                    traefik.http.routers.vector-rtr.middlewares: "chain-authelia@file"
                     traefik.http.routers.vector-rtr.service: "vector-svc"
                     # * HTTP Service for Vector (default port 8686)
                     traefik.http.services.vector-svc.loadbalancer.server.port: "{{ dc_vector_port }}" # default: "8686"
 
 
                     # * HTTP Router Without Authentication for Vector Prometheus Metrics (port 9598)
-                    traefik.http.routers.vector-metrics-rtr-noauth.entrypoints: "websecure"
                     traefik.http.routers.vector-metrics-rtr-noauth.rule: "Host(`vector-{{ dc_traefik_type }}.{{ domain_1 }}`) && Path(`/metrics`) && ClientIP(`{{ dc_dmz_net_vm20_metrics_ip }}/32`)"
                     traefik.http.routers.vector-metrics-rtr-noauth.middlewares: "chain-no-auth@file"
                     traefik.http.routers.vector-metrics-rtr-noauth.service: "vector-metrics-svc"
 
                     # * HTTP Router With Authentication for Vector Prometheus Metrics (port 9598)
-                    traefik.http.routers.vector-metrics-rtr.entrypoints: "websecure"
                     traefik.http.routers.vector-metrics-rtr.rule: "Host(`vector-{{ dc_traefik_type }}.{{ domain_1 }}`)"
-                    traefik.http.routers.vector-metrics-rtr.middlewares: "{{ 'chain-authelia@file' if dc_traefik_type == 'ingress' else 'chain-basic-auth@file' }}"
+                    traefik.http.routers.vector-metrics-rtr.middlewares: "chain-authelia@file"
                     traefik.http.routers.vector-metrics-rtr.service: "vector-metrics-svc"
 
                     # * HTTP Service for Vector Prometheus Metrics (port 9598)

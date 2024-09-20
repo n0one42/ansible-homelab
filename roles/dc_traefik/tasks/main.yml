@@ -79,9 +79,6 @@
                 # overide_existing: true  # optional
           when: dc_traefik_crowdsec_enabled | bool
 
-        - name: Flush handlers
-          ansible.builtin.meta: flush_handlers
-
         - name: Install docker compose traefik with inline definition
           vars:
             docker_networks: >-
@@ -206,6 +203,9 @@
                 #   volumes:
                 #     - "{{ appdata_type_path }}/letsencrypt:/data"
                 #     - "{{ docker_secrets }}/certs_dumper:/certs_dumper"
+
+        - name: Flush handlers
+          ansible.builtin.meta: flush_handlers
 
 # ! Notes
 # something like the following line causes problems in traefik. Therefore I think, it would be better not to use this anymore this way despite the container.

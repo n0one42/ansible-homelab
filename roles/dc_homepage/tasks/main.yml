@@ -75,8 +75,8 @@
                   networks:
                     # socketproxy_net: "{{ {'ipv4_address': dc_homepage_socketproxy_net_app_ip} if dc_homepage_socketproxy_net_app_ip is defined and dc_homepage_socketproxy_net_app_ip | length > 0 else {} }}"
                     traefik_net: "{{ {'ipv4_address': dc_traefik_net_homepage_ip} if dc_traefik_net_homepage_ip is defined and dc_traefik_net_homepage_ip | length > 0 else {} }}"
-                  ports:
-                    - "{{ dc_homepage_port }}:3000"
+                  # ports:
+                  #   - "{{ dc_homepage_port }}:3000"
                   volumes:
                     - "{{ appdata_type_path }}/config:/app/config"
                     # - /var/run/docker.sock:/var/run/docker.sock:ro
@@ -87,10 +87,8 @@
                   labels:
                     traefik.enable: "true"
                     ## HTTP Routers
-                    traefik.http.routers.homepage-rtr.entrypoints: "websecure"
-                    traefik.http.routers.homepage-rtr.rule: "Host(`{{ app_name }}.{{ domain_1 }}`)"
+                    traefik.http.routers.homepage-rtr.rule: "Host(`{{ dc_homepage_container_name }}.{{ domain_1 }}`)"
                     ## Middlewares
-                    # traefik.http.routers.homepage-rtr.middlewares: "{{ 'chain-authelia@file' if dc_traefik_type == 'ingress' else 'chain-basic-auth@file' }}"
                     traefik.http.routers.homepage-rtr.middlewares: "chain-authelia@file"
                     ## HTTP Services
                     traefik.http.routers.homepage-rtr.service: "homepage-svc"
