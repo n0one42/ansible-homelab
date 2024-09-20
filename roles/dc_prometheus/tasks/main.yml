@@ -6,11 +6,6 @@
   #   app_name: => traefik, portainer, grafana, netbox
 # ? Optional variables
 
-- name: Set facts app_name for standalone
-  ansible.builtin.set_fact:
-    app_name: "standalone"
-  when: dc_prometheus_standalone | default(false)
-
   # * --------------------------- App --------------------------- *
 - name: Create prometheus for --> {{ app_name }}
   vars:

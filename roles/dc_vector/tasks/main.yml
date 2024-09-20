@@ -8,11 +8,6 @@
 
 - name: Create Vector & Socket Proxy
   block:
-    - name: Set facts app_name for Vector standalone
-      ansible.builtin.set_fact:
-        app_name: "standalone"
-      when: dc_vector_standalone | default(false)
-
   # ? Does not work correctly with the socketproxy.
 
   # * --------------------------- App --------------------------- *

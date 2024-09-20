@@ -8,11 +8,6 @@
 
 - name: Create cAdvisor & Socket Proxy
   block:
-    - name: Set facts app_name for standalone
-      ansible.builtin.set_fact:
-        app_name: "standalone"
-      when: dc_cadvisor_standalone | default(false)
-
   # * --------------------------- App --------------------------- *
     - name: Create cAdvisor for --> {{ app_name }}
       vars:

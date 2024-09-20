@@ -1,4 +1,7 @@
-use_default_rules: true
+# profile: min  # Use the minimal profile
+# offline: true
+
+# use_default_rules: true
 
 skip_list:
   - placeholderifempty

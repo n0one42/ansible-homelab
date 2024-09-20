@@ -8,11 +8,6 @@
 
 - name: Create Alloy & Socket Proxy
   block:
-    - name: Set facts app_name for standalone
-      ansible.builtin.set_fact:
-        app_name: "standalone"
-      when: dc_alloy_standalone | default(false)
-
   # # * ------------------------ Socket Proxy ------------------------ * #
   #   - name: Include Socket Proxy role
   #     ansible.builtin.import_role:
