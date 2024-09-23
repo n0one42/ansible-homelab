@@ -1,0 +1,21 @@
+http:
+# ! -------------------------- Services -------------------------- ! #
+  services:
+    webmin-application-1-svc:
+      loadBalancer:
+        servers:
+          - url: "https://{{ dc_dmz_net_vm31_application_1_ip }}:10000"
+
+
+# ! -------------------------- Routers -------------------------- ! #
+  routers:
+    webmin-application-1-rtr:
+      entryPoints:
+        - websecure
+      rule: "Host(`webmin-application-1.{{ domain_1 }}`)"
+      middlewares:
+        - chain-authelia
+      service: webmin-application-1-svc
+
+
+# ! ------------------------ Middlewares ------------------------ ! #
