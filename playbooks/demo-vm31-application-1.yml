@@ -37,12 +37,18 @@
     - role: dc_traefik
     - role: dc_vector
       vars:
+        app_name: "standalone" # noqa: var-naming
         dc_vector_standalone: true
         dc_vector_create_with_userns: "{{ dc_grafana_vector_create_with_userns }}"
         dc_vector_image_version: "{{ dc_grafana_vector_image_version }}"
     - role: dc_cadvisor
       vars:
+        app_name: "standalone" # noqa: var-naming
         dc_cadvisor_standalone: true
         dc_cadvisor_create_with_userns: "{{ dc_grafana_cadvisor_create_with_userns }}"
         dc_cadvisor_image_version: "{{ dc_grafana_cadvisor_image_version }}"
-    - role: dc_it-tools
+    - role: dc_homepage
+    - role: dc_it_tools
+    - role: dc_vaultwarden
+    - role: dc_gluetun
+    # - role: dc_whoami

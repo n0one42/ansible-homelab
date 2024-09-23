@@ -36,27 +36,20 @@
     - role: docker_provisioning
     - role: dc_adguard  # ! must be first if used for correct dns
     - role: dc_traefik
-    - role: dc_authelia
-    - role: dc_authentik
+    # # - role: dc_authentik  # Works perfectly but is overkill for what I need. (extensively tested)
+    - role: dc_authelia # Decided to use authelia. Its lighter and easier to configure than authentik while offering most what I need. (also extensively tested)
     - role: dc_vector
       vars:
+        app_name: "standalone" # noqa: var-naming
         dc_vector_standalone: true
         dc_vector_create_with_userns: "{{ dc_grafana_vector_create_with_userns }}"
         dc_vector_image_version: "{{ dc_grafana_vector_image_version }}"
     - role: dc_cadvisor
       vars:
+        app_name: "standalone" # noqa: var-naming
         dc_cadvisor_standalone: true
         dc_cadvisor_create_with_userns: "{{ dc_grafana_cadvisor_create_with_userns }}"
         dc_cadvisor_image_version: "{{ dc_grafana_cadvisor_image_version }}"
-
-
+    # - role: dc_whoami
+    # - role: dc_portainer
     # - role: dc_nginx
-
-# grafana, elasticsearch, influxdb, telegraf should be enough
-
-# Final Decision:
-# - Primary Tools: Telegraf or vector (need testing) for both metrics and logs, Elasticsearch and InfluxDB, Grafana for visualization.
-
-
-# First constelation to test:
-# grafana, alertmanager(maybe later), elasticsearch, influxdb, vector (test first) / telegraf

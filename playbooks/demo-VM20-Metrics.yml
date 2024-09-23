@@ -36,3 +36,4 @@
     - role: docker_provisioning
     - role: dc_traefik
     - role: dc_grafana
+    # - role: dc_whoami
