@@ -28,6 +28,7 @@
           labels:
             traefik.enable: "true"
             ## HTTP Routers
+            traefik.http.routers.whoami-rtr.entrypoints: "websecure"
             traefik.http.routers.whoami-rtr.rule: "Host(`{{ app_name }}-{{ dc_traefik_type }}.{{ domain_1 }}`)"
             ## Middlewares
             traefik.http.routers.whoami-rtr.middlewares: "chain-authelia@file"

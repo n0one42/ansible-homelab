@@ -105,6 +105,7 @@
               labels:
                 traefik.enable: "true"
                 ## HTTP Routers
+                traefik.http.routers.influxdb-rtr.entrypoints: "websecure"
                 traefik.http.routers.influxdb-rtr.rule: "Host(`{{ app_name }}-influxdb.{{ domain_1 }}`)"
                 ## Middlewares
                 traefik.http.routers.influxdb-rtr.middlewares: "chain-authelia@file"

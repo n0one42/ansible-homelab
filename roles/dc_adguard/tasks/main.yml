@@ -110,6 +110,7 @@
                   labels:
                     traefik.enable: "true"
                     ## HTTP Routers
+                    traefik.http.routers.adguard-rtr.entrypoints: "websecure"
                     traefik.http.routers.adguard-rtr.rule: "Host(`{{ app_name }}.{{ domain_1 }}`)"
                     ## Middlewares
                     traefik.http.routers.adguard-rtr.middlewares: "chain-authelia@file" # For Authelia Authentication

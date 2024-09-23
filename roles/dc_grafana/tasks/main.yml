@@ -240,6 +240,7 @@
                   labels:
                     traefik.enable: "true"
                     ## HTTP Routers
+                    traefik.http.routers.grafana-rtr.entrypoints: "websecure"
                     traefik.http.routers.grafana-rtr.rule: "Host(`{{ app_name }}.{{ domain_1 }}`)"
                     ## Middlewares
                     traefik.http.routers.grafana-rtr.middlewares: "chain-authelia@file"

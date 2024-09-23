@@ -69,6 +69,7 @@
               # environment:
               labels:
                 traefik.enable: "true"
+                traefik.http.routers.nodeexporter-rtr.entrypoints: "websecure"
                 traefik.http.routers.nodeexporter-rtr.rule: "Host(`nodeexporter-{{ dc_traefik_type }}.{{ domain_1 }}`)"
                 # * Middlewares
                 traefik.http.routers.nodeexporter-rtr.middlewares: "chain-authelia@file"

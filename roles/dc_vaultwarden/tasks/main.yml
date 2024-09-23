@@ -149,6 +149,7 @@
                   labels:
                     traefik.enable: "true"
                     ## HTTP Routers
+                    traefik.http.routers.vaultwarden-rtr.entrypoints: "websecure"
                     traefik.http.routers.vaultwarden-rtr.rule: "Host(`{{ dc_vaultwarden_container_name }}.{{ domain_1 }}`)"
                     ## Middlewares
                     # traefik.http.routers.vaultwarden-rtr.middlewares: "chain-vaultwarden@file"

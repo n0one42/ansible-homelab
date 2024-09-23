@@ -162,12 +162,14 @@
                   labels:
                     traefik.enable: "true"
                     ## Router for general application traffic
+                    traefik.http.routers.authentik-rtr.entrypoints: "websecure"
                     traefik.http.routers.authentik-rtr.rule: "Host(`{{ app_name }}.{{ domain_1 }}`)"
                     # traefik.http.routers.authentik-rtr.middlewares: "chain-no-auth@file"
                     traefik.http.routers.authentik-rtr.priority: "10"
                     traefik.http.routers.authentik-rtr.service: "authentik-svc"
 
                     ## Router specifically for Authentik's outpost
+                    traefik.http.routers.authentik-rtr-outpost.entrypoints: "websecure"
                     traefik.http.routers.authentik-rtr-outpost.rule: "Host(`{{ app_name }}.{{ domain_1 }}`) && PathPrefix(`/outpost.goauthentik.io/`)"
                     # traefik.http.routers.authentik-rtr-outpost.rule: "HostRegexp(`{subdomain:[a-z0-9-]+}.{{ domain_1 }}`) && PathPrefix(`/outpost.goauthentik.io/`)"
                     traefik.http.routers.authentik-rtr-outpost.priority: "15"

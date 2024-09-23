@@ -82,6 +82,7 @@
                   labels:
                     traefik.enable: "true"
                     ## HTTP Routers
+                    traefik.http.routers.portainer-rtr.entrypoints: "websecure"
                     traefik.http.routers.portainer-rtr.rule: "Host(`{{ app_name }}-{{ dc_traefik_type }}.{{ domain_1 }}`)"
                     ## Middlewares
                     traefik.http.routers.portainer-rtr.middlewares: "chain-authelia@file"

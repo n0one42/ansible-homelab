@@ -89,6 +89,7 @@
               labels:
                 traefik.enable: "true"
                 # * HTTP Routers
+                traefik.http.routers.prometheus-rtr.entrypoints: "websecure"
                 traefik.http.routers.prometheus-rtr.rule: "Host(`prometheus-{{ dc_traefik_type }}.{{ domain_1 }}`)"
                 # * Middlewares
                 traefik.http.routers.prometheus-rtr.middlewares: "chain-authelia@file"

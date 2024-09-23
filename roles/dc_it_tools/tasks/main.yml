@@ -29,6 +29,7 @@
           labels:
             traefik.enable: "true"
             ## HTTP Routers
+            traefik.http.routers.it-tools-rtr.entrypoints: "websecure"
             traefik.http.routers.it-tools-rtr.rule: "Host(`{{ dc_it_tools_container_name }}.{{ domain_1 }}`)"
             ## Middlewares
             traefik.http.routers.it-tools-rtr.middlewares: "chain-authelia@file"

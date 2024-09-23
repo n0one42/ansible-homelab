@@ -103,6 +103,7 @@
                   labels:
                     traefik.enable: "true"
                     # * HTTP Routers
+                    traefik.http.routers.promtail-rtr.entrypoints: "websecure"
                     traefik.http.routers.promtail-rtr.rule: "Host(`promtail-{{ dc_traefik_type }}.{{ domain_1 }}`)"
                     # * Middlewares
                     traefik.http.routers.promtail-rtr.middlewares: "chain-authelia@file"

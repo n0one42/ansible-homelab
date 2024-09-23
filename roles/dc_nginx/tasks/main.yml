@@ -24,6 +24,7 @@
             - "1234:80"
           labels:
             traefik.enable: "true"
+            traefik.http.routers.nginx-rtr.entrypoints: "websecure"
             traefik.http.routers.nginx.rule: "Host(`nginx-ingress.{{ domain_1 }}`)"
             traefik.http.routers.nginx.service: "nginx-svc"
             traefik.http.services.nginx-svc.loadbalancer.server.port: "80"
