@@ -1,2 +1,141 @@
 ---
 # tasks file for roles/dc_gluetun
+# TODO: Variables which have to be passed through the playbook or on import of this task file
+# ! Mandatory variables
+  # vars:
+  #   app_name: => gluetun
+
+# * --------------------------- App --------------------------- *
+- name: Create Gluetun
+  vars:
+    app_name: "{{ dc_gluetun_container_name }}"
+    container_type: "app"
+    user: "{{ (dc_gluetun_create_with_userns | bool) | ternary(dc_gluetun_u_g_id + 100000, dc_gluetun_u_g_id) }}"
+    group: "{{ (dc_gluetun_create_with_userns | bool) | ternary(dc_gluetun_u_g_id + 100000, dc_gluetun_u_g_id) }}"
+  block:
+    - name: '[Required] filesystem_manager role'
+      ansible.builtin.import_role:
+        name: filesystem_manager
+      vars:
+        filesystem_manager_appdata_directories_to_create:
+          - path: "config"
+        # ! Individual step, so uncomment what needed
+        filesystem_manager_secret_files_to_create:
+        #   - var_name: wireguard_private_key
+        #     content: "{{ dc_gluetun_wireguard_private_key }}"
+        #   - var_name: wireguard_preshared_key
+        #     content: "{{ dc_gluetun_wireguard_preshared_key }}"
+        #   - var_name: wireguard_addresses
+        #     content: "{{ dc_gluetun_wireguard_addresses }}"
+          - var_name: openvpn_user
+            content: "{{ dc_gluetun_openvpn_user }}"
+          - var_name: openvpn_password
+            content: "{{ dc_gluetun_openvpn_password }}"
+        #   - var_name: openvpn_clientkey
+        #     content: "{{ dc_gluetun_openvpn_clientkey }}"
+        #   - var_name: openvpn_encrypted_key
+        #     content: "{{ dc_gluetun_openvpn_encrypted_key }}"
+        #   - var_name: openvpn_key_passphrase
+        #     content: "{{ dc_gluetun_openvpn_key_passphrase }}"
+        #   - var_name: openvpn_clientcrt
+        #     content: "{{ dc_gluetun_openvpn_clientcrt }}"
+        #   - var_name: httpproxy_user
+        #     content: "{{ dc_gluetun_httpproxy_user }}"
+        #   - var_name: httpproxy_password
+        #     content: "{{ dc_gluetun_httpproxy_password }}"
+        #   - var_name: shadowsocks_password
+        #     content: "{{ dc_gluetun_shadowsocks_password }}"
+      notify:
+        - Restart gluetun
+
+    - name: Install docker compose Gluetun with inline definition
+      community.docker.docker_compose_v2:
+        project_name: "{{ dc_gluetun_container_name }}"
+        definition:
+          # * ---------------------------- Networks ---------------------------- ! #
+          networks:
+            traefik_net:
+              name: "{{ dc_traefik_net_name }}"
+              external: true
+
+          # * ---------------------------- Services ---------------------------- * #
+          services:
+            gluetun:
+              image: qmcgaw/gluetun:{{ dc_gluetun_image_version }}
+              container_name: "{{ dc_gluetun_container_name }}"
+              restart: unless-stopped
+              security_opt:
+                - no-new-privileges:true
+              privileged: false
+              userns_mode: "host" # ! Needs to be like that
+              user: "0" # ! Needs to be like that
+              # userns_mode: "{{ 'host' if dc_gluetun_create_with_userns | bool == false else 'remap' }}"
+              # user: "{{ dc_gluetun_u_g_id }}:{{ dc_gluetun_u_g_id }}" # Will not work here since it needs to be root at this level
+              cap_add:
+                - NET_ADMIN
+              healthcheck:
+                test: ping -c 1 www.google.com || exit 1
+                interval: 60s
+                timeout: 20s
+                retries: 5
+              # networks:
+              #   traefik_net: "{{ {'ipv4_address': dc_traefik_net_gluetun_ip} if dc_traefik_net_gluetun_ip is defined and dc_traefik_net_gluetun_ip | length > 0 else {} }}"
+              # ports:
+                # - "{{ dc_gluetun_port }}:8112"  # deluge web interface
+                # - "58846:58846"  # deluge RPC
+                # - "6789:6789"  # nzbget
+                # - "9696:9696"  # prowlarr
+              volumes:
+                - "{{ appdata_type_path }}/config:/gluetun"
+                - "{{ secrets_type_path }}:/run/secrets"
+              environment:
+                # * ---------------------------- Optionals ---------------------------- * #
+                TZ: "{{ timezone }}"
+                PUID: "{{ dc_gluetun_u_g_id }}" # default (1000) # User ID to run as non root and for ownership of files written
+                PGID: "{{ dc_gluetun_u_g_id }}" # default (1000) # Group ID to run as non root and for ownership of files written
+                # PUBLICIP_API: "{{ dc_gluetun_publicip_api }}"
+                # PUBLICIP_API_TOKEN: "{{ dc_gluetun_publicip_api_token }}"
+                # PUBLICIP_PERIOD: "{{ dc_gluetun_publicip_period }}"
+                # PUBLICIP_FILE: "{{ dc_gluetun_publicip_file }}"
+                # VERSION_INFORMATION: "{{ dc_gluetun_version_information }}"
+                # STORAGE_FILEPATH: "{{ dc_gluetun_storage_filepath }}"
+
+                VPN_SERVICE_PROVIDER: "{{ dc_gluetun_vpn_service_provider }}"
+                VPN_TYPE: "{{ dc_gluetun_vpn_type }}"
+                SERVER_COUNTRIES: "{{ dc_gluetun_server_countries }}"
+                SERVER_CITIES: "{{ dc_gluetun_server_cities }}"
+                FIREWALL_VPN_INPUT_PORTS: "{{ dc_gluetun_firewall_vpn_input_ports }}"
+
+                # * ---------------------------- Wireguard ---------------------------- * #
+                # WIREGUARD_CONF_SECRETFILE: "/gluetun/wireguard.conf"
+                # WIREGUARD_PRIVATE_KEY_SECRETFILE: "/run/secrets/wireguard_private_key"
+                # WIREGUARD_PRESHARED_KEY_SECRETFILE: "/run/secrets/wireguard_preshared_key"
+                # WIREGUARD_ADDRESSES_SECRETFILE: "/run/secrets/wireguard_addresses"
+
+                # * ---------------------------- OpenVPN ---------------------------- * #
+                OPENVPN_USER_SECRETFILE: "/run/secrets/openvpn_user"
+                OPENVPN_PASSWORD_SECRETFILE: "/run/secrets/openvpn_password"
+                # OPENVPN_CLIENTKEY_SECRETFILE: "/run/secrets/openvpn_clientkey"
+                # OPENVPN_ENCRYPTED_KEY_SECRETFILE: "/run/secrets/openvpn_encrypted_key"
+                # OPENVPN_KEY_PASSPHRASE_SECRETFILE: "/run/secrets/openvpn_key_passphrase"
+                # OPENVPN_CLIENTCRT_SECRETFILE: "/run/secrets/openvpn_clientcrt"
+
+                # * ---------------------------- Common ---------------------------- * #
+                # HTTPPROXY_USER_SECRETFILE: "/run/secrets/httpproxy_user"
+                # HTTPPROXY_PASSWORD_SECRETFILE: "/run/secrets/httpproxy_password"
+                # SHADOWSOCKS_PASSWORD_SECRETFILE: "/run/secrets/shadowsocks_password"
+
+
+    - name: Flush handlers
+      ansible.builtin.meta: flush_handlers
+
+# ! --------------------------- Notes --------------------------- ! #
+# https://github.com/qdm12/gluetun-wiki
+# https://github.com/qdm12/gluetun-wiki/tree/main/setup/providers
+# https://github.com/qdm12/gluetun-wiki/blob/main/setup/options/others.md
+# https://github.com/qdm12/gluetun-wiki/blob/main/setup/advanced/docker-secrets.md
+# https://www.youtube.com/watch?v=_tz2wUFT8VQ
+
+# docker run --rm --userns=host --network=container:gluetun alpine:3.20 sh -c "apk add wget && wget -qO- https://ipinfo.io"
+
+# ! This container needs the permission to use /run/xtables.lock file for iptables therefore the only way is to use the container as root

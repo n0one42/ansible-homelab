@@ -73,7 +73,7 @@ logs_type_path: "{{ docker_logs }}/{{ app_name }}/{{ container_type }}" # eg: lo
 # ? -----------------------------------------------------------------------------
 
 dc_crowdsec_u_g_id: 0 # !  such an odd container... # ! to many problems... odd container... therefore host mode and root
-dc_cadvisor_u_g_id: 0 # with userns --> 122030 # ! needs root sadly
+dc_cadvisor_u_g_id: 0 # ! needs root sadly
 
 dc_portainer_u_g_id: 22000 # with userns --> 122000
 dc_wud_u_g_id: 22001 # with userns --> 122001
@@ -93,6 +93,7 @@ dc_vector_u_g_id: 22032 # with userns --> 122032
 dc_alloy_u_g_id: 22033 # with userns --> 122033
 dc_homepage_u_g_id: 22034 # with userns --> 122034
 dc_vaultwarden_u_g_id: 22035 # with userns --> 122035
+dc_gluetun_u_g_id: 22099 # with userns --> 122099 # ! Note: Container will run as root and will use just the environment: PUID and PGID as non root user
 
 # ? -----------------------------------------------------------------------------
 # *                                  dc_adguard                                 *
@@ -306,6 +307,45 @@ dc_vaultwarden_db_name: "vaultwarden"
 dc_vaultwarden_db_user_name: "vaultwarden"
 dc_vaultwarden_db_user_pw: ""  # Empty for generated password
 dc_vaultwarden_db_port: 5432
+
+# ? -----------------------------------------------------------------------------
+# *                                  dc_gluetun                                 *
+# ? -----------------------------------------------------------------------------
+# * ------------->>> Container Configuration <<<------------ * #
+# * >>> Container variables
+dc_gluetun_container_name: "gluetun"
+dc_gluetun_create_with_userns: false # must be false + user: 0
+dc_gluetun_image_version: "latest"
+dc_gluetun_log_level: ""
+dc_gluetun_port: 8112
+
+dc_gluetun_publicip_api: "ipinfo" # default (ipinfo) # ipinfo or ip2location # Public IP echo service API to use
+dc_gluetun_publicip_api_token: "" # Optional API token for the public IP echo service to increase rate limiting
+dc_gluetun_publicip_period: "12h" # default (12h) # Period to check for public IP address. Set to 0 to disable.
+dc_gluetun_publicip_file: "/tmp/gluetun/ip" # default (/tmp/gluetun/ip) # Filepath to store the public IP address assigned. This will be removed in the v4 program, instead you might want to use the control server
+dc_gluetun_version_information: "on" # default (on) # on, off # Logs a message indicating if a newer version is available once the VPN is connected
+dc_gluetun_storage_filepath: "/gluetun/servers.json" # default (/gluetun/servers.json) # Path of servers.json file, or empty to disable caching servers
+
+dc_gluetun_vpn_service_provider: "" # "mullvad" / "nordvpn" / "windscribe" / "expressvpn" / "cyberghost" / "ivpn" / "pia" / "protonvpn" / "privateinternetaccess" / "scaleway" / "surfshark" / "torguard" / "vpnunlimited" / "windscribe"
+dc_gluetun_vpn_type: "" # "openvpn" / "wireguard"
+dc_gluetun_server_countries: ""
+dc_gluetun_server_cities: ""
+dc_gluetun_firewall_vpn_input_ports: "" # VPN Port forwarding --> https://github.com/qdm12/gluetun-wiki/blob/main/setup/advanced/vpn-port-forwarding.md#allow-a-forwarded-port-through-the-firewall
+# ? https://github.com/qdm12/gluetun-wiki/blob/main/setup/options/wireguard.md
+dc_gluetun_wireguard_private_key: ""
+dc_gluetun_wireguard_preshared_key: ""
+dc_gluetun_wireguard_addresses: ""
+# ? https://github.com/qdm12/gluetun-wiki/blob/main/setup/options/openvpn.md
+dc_gluetun_openvpn_user: ""
+dc_gluetun_openvpn_password: ""
+dc_gluetun_openvpn_clientkey: ""
+dc_gluetun_openvpn_encrypted_key: ""
+dc_gluetun_openvpn_key_passphrase: ""
+dc_gluetun_openvpn_clientcrt: ""
+
+dc_gluetun_httpproxy_user: ""
+dc_gluetun_httpproxy_password: ""
+dc_gluetun_shadowsocks_password: ""
 
 # ? -----------------------------------------------------------------------------
 # *                                  dc_nginx                                   *
