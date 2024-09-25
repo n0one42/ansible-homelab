@@ -86,7 +86,7 @@
                 traefik.http.routers.jdownloader2-rtr.entrypoints: "websecure"
                 traefik.http.routers.jdownloader2-rtr.rule: "Host(`{{ dc_jdownloader2_container_name }}.{{ domain_1 }}`)"
                 ## Middlewares
-                traefik.http.routers.jdownloader2-rtr.middlewares: "middlewares-authelia@file"
+                traefik.http.routers.jdownloader2-rtr.middlewares: "chain-authelia@file"
                 ## HTTP Services
                 traefik.http.routers.jdownloader2-rtr.service: "jdownloader2-svc"
                 traefik.http.services.jdownloader2-svc.loadbalancer.server.port: "{{ dc_jdownloader2_web_listening_port | default('5800') }}"
