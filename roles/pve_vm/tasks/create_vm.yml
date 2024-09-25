@@ -13,7 +13,7 @@
   ansible.builtin.shell: |
     qm stop {{ pve_vm_id }}
     qm destroy {{ pve_vm_id }} -skiplock -purge
-    rm -r /var/lib/vz/snippets/*
+    rm -r /var/lib/vz/snippets/{{ pve_vm_id }}*
   args:
     executable: /bin/bash
   changed_when: true
