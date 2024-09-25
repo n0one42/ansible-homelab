@@ -93,6 +93,7 @@ dc_vector_u_g_id: 22032 # with userns --> 122032
 dc_alloy_u_g_id: 22033 # with userns --> 122033
 dc_homepage_u_g_id: 22034 # with userns --> 122034
 dc_vaultwarden_u_g_id: 22035 # with userns --> 122035
+dc_jdownloader2_u_g_id: 22036 # with userns --> 122036
 dc_gluetun_u_g_id: 22099 # with userns --> 122099 # ! Note: Container will run as root and will use just the environment: PUID and PGID as non root user
 
 # ? -----------------------------------------------------------------------------
@@ -346,6 +347,44 @@ dc_gluetun_openvpn_clientcrt: ""
 dc_gluetun_httpproxy_user: ""
 dc_gluetun_httpproxy_password: ""
 dc_gluetun_shadowsocks_password: ""
+
+# ? -----------------------------------------------------------------------------
+# *                               dc_jdownloader2                               *
+# ? -----------------------------------------------------------------------------
+# * ------------->>> Container Configuration <<<------------ * #
+# * >>> Container variables
+dc_jdownloader2_container_name: "jdownloader2"
+dc_jdownloader2_create_with_userns: true
+dc_jdownloader2_image_version: "latest"
+dc_jdownloader2_container_debug: "0"  # Enables detailed logging when set to 1, useful for troubleshooting.
+dc_jdownloader2_web_listening_port: 5800
+
+# dc_jdownloader2_sup_group_ids: "" # Additional group IDs for the application, enhancing access control.
+dc_jdownloader2_umask: "0022" # Controls default permissions for new files/folders. 0022 allows read for all, write for owner.
+dc_jdownloader2_lang: "{{ system_language }}" # Sets the application's language and character encoding.
+dc_jdownloader2_tz: "{{ timezone }}" # Timezone for the container, affects time-based operations.
+dc_jdownloader2_keep_app_running: "1" # If set to 1, automatically restarts the app if it crashes.
+# dc_jdownloader2_app_niceness: "0" # Sets the CPU scheduling priority. Lower values mean higher priority.
+# dc_jdownloader2_install_packages: "" # Additional packages to install at container startup.
+# dc_jdownloader2_packages_mirror: "" # Custom mirror for package installation, can improve download speeds.
+# dc_jdownloader2_display_width: "1920" # Sets the width of the application window in pixels.
+# dc_jdownloader2_display_height: "1080" # Sets the height of the application window in pixels.
+# dc_jdownloader2_dark_mode: "0" # Enables dark mode for the application interface when set to 1.
+# dc_jdownloader2_web_audio: "0" # Enables audio playback through the browser when set to 1.
+# dc_jdownloader2_web_authentication: "0" # Enables login protection for the web interface when set to 1.
+# dc_jdownloader2_web_authentication_username: "" # Username for web interface login if authentication is enabled.
+# dc_jdownloader2_web_authentication_password: "" # Password for web interface login if authentication is enabled.
+# dc_jdownloader2_secure_connection: "0" # Enables encrypted connection for GUI access when set to 1.
+# dc_jdownloader2_secure_connection_vnc_method: "SSL" # Specifies the encryption method for VNC connections.
+# dc_jdownloader2_secure_connection_certs_check_interval: "60" # Interval in seconds to check for certificate changes.
+# dc_jdownloader2_vnc_listening_port: "5900" # Port for VNC access. -1 disables VNC access.
+# dc_jdownloader2_vnc_password: "" # Password required for VNC connections if set.
+# dc_jdownloader2_enable_cjk_font: "0" # Installs font support for Chinese, Japanese, and Korean characters when set to 1.
+# dc_jdownloader2_myjdownloader_email: "" # Email for MyJDownloader account, enables remote control.
+# dc_jdownloader2_myjdownloader_password: "" # Password for MyJDownloader account.
+# dc_jdownloader2_myjdownloader_device_name: "" # Unique name for this JDownloader instance in MyJDownloader.
+# dc_jdownloader2_jdownloader_headless: "0" # Runs JDownloader without GUI when set to 1, requires MyJDownloader for control.
+# dc_jdownloader2_jdownloader_max_mem: "" # Sets maximum memory usage for JDownloader. Use G, M, or K suffix.
 
 # ? -----------------------------------------------------------------------------
 # *                                  dc_nginx                                   *

@@ -1,2 +1,101 @@
 ---
 # tasks file for roles/dc_jdownloader2
+# * --------------------------- App --------------------------- *
+- name: Create JDownloader2
+  vars:
+    app_name: "{{ dc_jdownloader2_container_name }}"
+    container_type: "app"
+    user: "{{ (dc_jdownloader2_create_with_userns | bool) | ternary(dc_jdownloader2_u_g_id + 100000, dc_jdownloader2_u_g_id) }}"
+    group: "{{ (dc_jdownloader2_create_with_userns | bool) | ternary(dc_jdownloader2_u_g_id + 100000, dc_jdownloader2_u_g_id) }}"
+  block:
+    - name: '[Required] filesystem_manager role'
+      ansible.builtin.import_role:
+        name: filesystem_manager
+      vars:
+        filesystem_manager_appdata_directories_to_create:
+          - path: "config"
+          - path: "downloads"
+      # notify:
+      #   - Restart jdownloader2
+
+
+    - name: Install docker compose jdownloader2 with inline definition
+      community.docker.docker_compose_v2:
+        project_name: "{{ dc_jdownloader2_container_name }}"
+        definition:
+          # ! --------------------------- Networks --------------------------- ! #
+          networks:
+            traefik_net:
+              name: "{{ dc_traefik_net_name }}"  # eg: traefik_net
+              external: true  # indicating that it's a pre-existing network not managed by this Docker Compose file.
+
+
+          # * ---------------------------- App ------------------------------ * #
+          services:
+            jdownloader2:
+              image: jlesage/jdownloader-2:{{ dc_jdownloader2_image_version }}
+              container_name: "{{ dc_jdownloader2_container_name }}"
+              restart: unless-stopped
+              security_opt:
+                - no-new-privileges:true
+              privileged: false
+              userns_mode: "{{ 'host' if dc_jdownloader2_create_with_userns | bool == false else 'remap' }}"
+              # user: "{{ dc_jdownloader2_u_g_id }}:{{ dc_jdownloader2_u_g_id }}" # ! Has to be used with USER_ID and GROUP_ID
+              networks:
+                traefik_net: "{{ {'ipv4_address': dc_traefik_net_jdownloader2_ip} if dc_traefik_net_jdownloader2_ip is defined and dc_traefik_net_jdownloader2_ip | length > 0 else {} }}"
+              # ports:
+              #   - "{{ dc_jdownloader2_web_listening_port | default('5800') }}:{{ dc_jdownloader2_web_listening_port | default('5800') }}"
+              #   - "{{ dc_jdownloader2_vnc_listening_port | default('5900') }}:{{ dc_jdownloader2_vnc_listening_port | default('5900') }}"
+              volumes:
+                - "{{ appdata_type_path }}/config:/config"
+                - "{{ appdata_type_path }}/downloads:/output"
+              environment:
+                USER_ID: "{{ dc_jdownloader2_u_g_id | default('1000') }}" # ID of the user the application runs as. Important for file permissions.
+                GROUP_ID: "{{ dc_jdownloader2_u_g_id | default('1000') }}" # ID of the group the application runs as. Affects file access rights.
+                SUP_GROUP_IDS: "{{ dc_jdownloader2_sup_group_ids | default(omit) }}" # Additional group IDs for the application, enhancing access control.
+                UMASK: "{{ dc_jdownloader2_umask | default('0022') }}" # Controls default permissions for new files/folders. 0022 allows read for all, write for owner.
+                LANG: "{{ dc_jdownloader2_lang | default('en_US.UTF-8') }}" # Sets the application's language and character encoding.
+                TZ: "{{ dc_jdownloader2_tz | default('Etc/UTC') }}" # Timezone for the container, affects time-based operations.
+                KEEP_APP_RUNNING: "{{ dc_jdownloader2_keep_app_running | default('0') }}" # If set to 1, automatically restarts the app if it crashes.
+                APP_NICENESS: "{{ dc_jdownloader2_app_niceness | default('0') }}" # Sets the CPU scheduling priority. Lower values mean higher priority.
+                INSTALL_PACKAGES: "{{ dc_jdownloader2_install_packages | default(omit) }}" # Additional packages to install at container startup.
+                PACKAGES_MIRROR: "{{ dc_jdownloader2_packages_mirror | default(omit) }}" # Custom mirror for package installation, can improve download speeds.
+                CONTAINER_DEBUG: "{{ dc_jdownloader2_container_debug | default('0') }}" # Enables detailed logging when set to 1, useful for troubleshooting.
+                DISPLAY_WIDTH: "{{ dc_jdownloader2_display_width | default('1920') }}" # Sets the width of the application window in pixels.
+                DISPLAY_HEIGHT: "{{ dc_jdownloader2_display_height | default('1080') }}" # Sets the height of the application window in pixels.
+                DARK_MODE: "{{ dc_jdownloader2_dark_mode | default('0') }}" # Enables dark mode for the application interface when set to 1.
+                WEB_AUDIO: "{{ dc_jdownloader2_web_audio | default('0') }}" # Enables audio playback through the browser when set to 1.
+                WEB_AUTHENTICATION: "{{ dc_jdownloader2_web_authentication | default('0') }}" # Enables login protection for the web interface when set to 1.
+                WEB_AUTHENTICATION_USERNAME: "{{ dc_jdownloader2_web_authentication_username | default(omit) }}" # Username for web interface login if authentication is enabled.
+                WEB_AUTHENTICATION_PASSWORD: "{{ dc_jdownloader2_web_authentication_password | default(omit) }}" # Password for web interface login if authentication is enabled.
+                SECURE_CONNECTION: "{{ dc_jdownloader2_secure_connection | default('0') }}" # Enables encrypted connection for GUI access when set to 1.
+                SECURE_CONNECTION_VNC_METHOD: "{{ dc_jdownloader2_secure_connection_vnc_method | default('SSL') }}" # Specifies the encryption method for VNC connections.
+                SECURE_CONNECTION_CERTS_CHECK_INTERVAL: "{{ dc_jdownloader2_secure_connection_certs_check_interval | default('60') }}" # Interval in seconds to check for certificate changes.
+                WEB_LISTENING_PORT: "{{ dc_jdownloader2_web_listening_port | default('5800') }}" # Port for the web interface. -1 disables web access.
+                VNC_LISTENING_PORT: "{{ dc_jdownloader2_vnc_listening_port | default('5900') }}" # Port for VNC access. -1 disables VNC access.
+                VNC_PASSWORD: "{{ dc_jdownloader2_vnc_password | default(omit) }}" # Password required for VNC connections if set.
+                ENABLE_CJK_FONT: "{{ dc_jdownloader2_enable_cjk_font | default('0') }}" # Installs font support for Chinese, Japanese, and Korean characters when set to 1.
+                MYJDOWNLOADER_EMAIL: "{{ dc_jdownloader2_myjdownloader_email | default(omit) }}" # Email for MyJDownloader account, enables remote control.
+                MYJDOWNLOADER_PASSWORD: "{{ dc_jdownloader2_myjdownloader_password | default(omit) }}" # Password for MyJDownloader account.
+                MYJDOWNLOADER_DEVICE_NAME: "{{ dc_jdownloader2_myjdownloader_device_name | default(omit) }}" # Unique name for this JDownloader instance in MyJDownloader.
+                JDOWNLOADER_HEADLESS: "{{ dc_jdownloader2_jdownloader_headless | default('0') }}" # Runs JDownloader without GUI when set to 1, requires MyJDownloader for control.
+                JDOWNLOADER_MAX_MEM: "{{ dc_jdownloader2_jdownloader_max_mem | default(omit) }}" # Sets maximum memory usage for JDownloader. Use G, M, or K suffix.
+              labels:
+                traefik.enable: "true"
+                ## HTTP Routers
+                traefik.http.routers.jdownloader2-rtr.entrypoints: "websecure"
+                traefik.http.routers.jdownloader2-rtr.rule: "Host(`{{ dc_jdownloader2_container_name }}.{{ domain_1 }}`)"
+                ## Middlewares
+                traefik.http.routers.jdownloader2-rtr.middlewares: "middlewares-authelia@file"
+                ## HTTP Services
+                traefik.http.routers.jdownloader2-rtr.service: "jdownloader2-svc"
+                traefik.http.services.jdownloader2-svc.loadbalancer.server.port: "{{ dc_jdownloader2_web_listening_port | default('5800') }}"
+
+                ## Router for Static Assets (sadly needed)
+                traefik.http.routers.jdownloader2-static.entrypoints: "websecure"
+                traefik.http.routers.jdownloader2-static.rule: "Host(`{{ dc_jdownloader2_container_name }}.{{ domain_1 }}`) && PathPrefix(`/vendor/`)"
+                traefik.http.routers.jdownloader2-static.middlewares: "chain-no-auth@file"
+                traefik.http.routers.jdownloader2-static.service: "jdownloader2-svc"
+
+# ! --------------------------- Notes --------------------------- ! #
+# https://github.com/jlesage/docker-jdownloader-2
