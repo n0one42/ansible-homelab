@@ -1,0 +1,15 @@
+http:
+  middlewares:
+    middlewares-authelia:
+      forwardAuth:
+        address: "https://authelia.{{ domain_1 }}/api/authz/forward-auth"
+        tls:
+          insecureSkipVerify: {{ dc_traefik_acme_staging_mode }}
+        trustForwardHeader: true
+        authResponseHeaders:
+          - "Remote-User"
+          - "Remote-Groups"
+          - "Remote-Email"
+          - "Remote-Name"
+
+# ? All traefik`s must trust each other to forward the headers

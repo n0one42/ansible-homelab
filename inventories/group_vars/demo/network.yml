@@ -50,6 +50,8 @@ dc_dmz_net_vm20_metrics_hostname: "demo-vm20-metrics"
 dc_dmz_net_vm20_metrics_ip: "{{ dc_dmz_net_base }}.20" # "10.0.90.20"
 dc_dmz_net_vm31_application_1_hostname: "demo-vm31-application-1"
 dc_dmz_net_vm31_application_1_ip: "{{ dc_dmz_net_base }}.31" # "10.0.90.31"
+dc_dmz_net_vm41_multimedia_1_hostname: "demo-vm41-multimedia-1"
+dc_dmz_net_vm41_multimedia_1_ip: "{{ dc_dmz_net_base }}.41" # "10.0.90.41"
 
 # ? ######################################################################################## #
 # !                                  Docker bridge - docker0                                 #

@@ -1,0 +1,93 @@
+sinks:
+  # console:
+  #   inputs:
+  #     - traefik_access_log_parser
+  #     - traefik_log_parser
+  #   type: console
+  #   encoding:
+  #     codec: json
+
+
+  system_metrics:
+    type: prometheus_exporter
+    inputs:
+      - vector_internal_metrics
+      - host_metrics
+    address: "0.0.0.0:{{ dc_vector_prometheus_exporter_port }}"
+    # ? Labels are set in the prometheus config
+
+  system_logs:
+    type: loki
+    inputs:
+      - vector_internal_logs
+      # - host_logs
+    tls:
+      verify_certificate: {{ not dc_traefik_acme_staging_mode }}
+    endpoint: "https://loki-metrics.{{ domain_1 }}"
+    # auth:
+    #   strategy: basic
+    #   user: "{{ demo_auth_user }}"
+    #   password: "{{ demo_auth_user_pw }}"
+    encoding:
+      codec: json # json
+    labels:
+      job: "vector-{{ dc_traefik_type }}"
+      job_type: "system_logs"
+      parser: "vector_loki"
+      service: "vector"
+      host: "{{ dc_dmz_net_vm41_multimedia_1_hostname }}"  # eg: demo-vm41-multimedia-1
+      instance: "vector-{{ dc_traefik_type }}.{{ domain_1 }}"
+
+
+  docker_logs:
+    type: loki
+    inputs:
+      - remove_label
+    tls:
+      verify_certificate: {{ not dc_traefik_acme_staging_mode }}
+    endpoint: "https://loki-metrics.{{ domain_1 }}"
+    # auth:
+    #   strategy: basic
+    #   user: "{{ demo_auth_user }}"
+    #   password: "{{ demo_auth_user_pw }}"
+    encoding:
+      codec: json # json
+    labels:
+      job: "vector-{{ dc_traefik_type }}"
+      job_type: "docker_logs"
+      parser: vector_loki
+      service: "vector"
+      host: "{{ dc_dmz_net_vm41_multimedia_1_hostname }}"  # eg: demo-vm41-multimedia-1
+      instance: "vector-{{ dc_traefik_type }}.{{ domain_1 }}"
+      {% raw %}
+      container: "{{ .container_name }}"
+      logstream: "{{ .stream }}"
+      level: "{{ .level }}"
+      {% endraw %}
+
+  docker_file_logs:
+    type: loki
+    inputs:
+      - traefik_access_log_parser
+      - traefik_log_parser
+    tls:
+      verify_certificate: {{ not dc_traefik_acme_staging_mode }}
+    endpoint: "https://loki-metrics.{{ domain_1 }}"
+    # auth:
+    #   strategy: basic
+    #   user: "{{ demo_auth_user }}"
+    #   password: "{{ demo_auth_user_pw }}"
+    encoding:
+      codec: json # json
+    labels:
+      job: "vector-{{ dc_traefik_type }}"
+      job_type: "docker_logs"
+      parser: vector_loki
+      service: "vector"
+      host: "{{ dc_dmz_net_vm41_multimedia_1_hostname }}"  # eg: demo-vm41-multimedia-1
+      instance: "vector-{{ dc_traefik_type }}.{{ domain_1 }}"
+      {% raw %}
+      container: "{{ .container_name }}"
+      logstream: "file"
+      level: "{{ .level }}"
+      {% endraw %}

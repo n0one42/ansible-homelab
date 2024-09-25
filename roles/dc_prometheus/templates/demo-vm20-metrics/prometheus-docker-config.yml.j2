@@ -145,6 +145,46 @@ scrape_configs:
           instance: "cadvisor-application-1.{{ domain_1 }}"
 
 
+# ! ---- Scrape config for multimedia-1 vm ---- ! #
+  - job_name: "vector-multimedia-1"  # represents job label
+    scheme: https
+    tls_config:
+      insecure_skip_verify: {{ dc_traefik_acme_staging_mode }}
+    # basic_auth:
+    #   username: "{{ demo_auth_user }}"
+    #   password: "{{ demo_auth_user_pw }}"
+    metrics_path: "/metrics"  # Needed to match exactly the route and rule of traefik with no authentication required for this service
+    # metrics_path: "/ingress/vector/metrics" # ? Just if usng traefik to traefik with forwarding
+    static_configs:
+      # - targets: ["traefik-metrics.{{ domain_1 }}"] # ? Just if usng traefik to traefik with forwarding
+      - targets: ["vector-multimedia-1.{{ domain_1 }}"]
+        labels:
+          # job: # same as job_name
+          job_type: "system_metrics"
+          parser: "vector_prometheus"
+          service: "vector"
+          host: "{{ dc_dmz_net_vm41_multimedia_1_hostname }}"
+          instance: "vector-multimedia-1.{{ domain_1 }}"
+
+  - job_name: "cadvisor-multimedia-1"  # represents job label
+    scheme: https
+    tls_config:
+      insecure_skip_verify: {{ dc_traefik_acme_staging_mode }}
+    # basic_auth:
+    #   username: "{{ demo_auth_user }}"
+    #   password: "{{ demo_auth_user_pw }}"
+    metrics_path: "/metrics"  # Needed to match exactly the route and rule of traefik with no authentication required for this service
+    # metrics_path: "/ingress/cadvisor/metrics"
+    static_configs:
+      # - targets: ['traefik-metrics.{{ domain_1 }}']
+      - targets: ["cadvisor-multimedia-1.{{ domain_1 }}"]
+        labels:
+          job_type: "docker_metrics"
+          parser: "cadvisor_prometheus"
+          service: "cadvisor"
+          host: "{{ dc_dmz_net_vm41_multimedia_1_hostname }}"
+          instance: "cadvisor-multimedia-1.{{ domain_1 }}"
+
 # ! --------------------------- Notes --------------------------- ! #
 # ! Except for Prometheus itself which can use localhost, all other containers have to be defined by the IP of the internal network ips eg {{ dc_grafana_net_cadvisor_ip }} to work.
 # ! To verify if the setup is successful, check the Grafana GUI under Explore --> Metrics. The data source should be Prometheus and the Job should be cadvisor-{{ dc_traefik_type }}. If it's not present, it indicates a failure.

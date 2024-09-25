@@ -1,0 +1,19 @@
+---
+- name: Use templates to set cloud-init (user-data, meta-data, network-data)
+  when: pve_vm_role_template_to_use is defined
+  block:
+    - name: Copy template files
+      ansible.builtin.template:
+        src: "{{ item.src }}"
+        dest: "/var/lib/vz/snippets/{{ item.dest }}"
+        mode: "0644"
+      become: true
+      loop:
+        - src: "{{ pve_vm_role_template_to_use }}/meta.yml.j2"
+          dest: "{{ pve_vm_id }}-meta.yml"
+        - src: "{{ pve_vm_role_template_to_use }}/user.yml.j2"
+          dest: "{{ pve_vm_id }}-user.yml"
+        - src: "{{ pve_vm_role_template_to_use }}/network.yml.j2"
+          dest: "{{ pve_vm_id }}-network.yml"
+        - src: "{{ pve_vm_role_template_to_use }}/vendor.yml.j2"
+          dest: "{{ pve_vm_id }}-vendor.yml"

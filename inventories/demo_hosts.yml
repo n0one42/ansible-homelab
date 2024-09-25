@@ -23,6 +23,10 @@ all:
           ansible_host: "{{ dc_dmz_net_vm31_application_1_ip }}"
           ansible_user: wasd
           ansible_ssh_common_args: '-o IdentitiesOnly=yes'
+        demo-vm41-multimedia-1:
+          ansible_host: "{{ dc_dmz_net_vm41_multimedia_1_ip }}"
+          ansible_user: wasd
+          ansible_ssh_common_args: '-o IdentitiesOnly=yes'
 
 # ! Notes:
 # The private_key will be set through variables. Therefore, set it there.

@@ -1,5 +1,5 @@
 ---
-# - name: Create VM => demo-vm31-application-1
+# - name: Create VM => demo-vm41-multimedia-1
 #   hosts: demo-pve
 #   become: true
 #   gather_facts: false
@@ -8,18 +8,18 @@
 #       vars:
 #         # pve_vm_prune: true  # testing purposes
 #         # pve_vm_start_after_create: false
-#         pve_vm_id: 131
-#         pve_vm_name: "demo-vm31-application-1"
-#         pve_vm_hostname: "demo-vm31-application-1"
-#         pve_vm_ipv4_address_0: "{{ dc_dmz_net_vm31_application_1_ip }}"
+#         pve_vm_id: 141
+#         pve_vm_name: "demo-vm41-multimedia-1"
+#         pve_vm_hostname: "demo-vm41-multimedia-1"
+#         pve_vm_ipv4_address_0: "{{ dc_dmz_net_vm41_multimedia_1_ip }}"
 
 
 - name: Docker Provisioning
-  hosts: demo-vm31-application-1
+  hosts: demo-vm41-multimedia-1
   become: true
   gather_facts: false
   vars:
-    dc_traefik_type: "application-1"
+    dc_traefik_type: "multimedia-1"
     dc_traefik_crowdsec_enabled: false
   pre_tasks:
     - name: Gather only the hostname fact
@@ -32,7 +32,7 @@
         state: restarted
       changed_when: false
   roles:
-    - role: app_webmin
+    # - role: app_webmin
     - role: docker_provisioning
     - role: dc_traefik
     - role: dc_vector
@@ -47,7 +47,5 @@
         dc_cadvisor_standalone: true
         dc_cadvisor_create_with_userns: "{{ dc_grafana_cadvisor_create_with_userns }}"
         dc_cadvisor_image_version: "{{ dc_grafana_cadvisor_image_version }}"
-    - role: dc_homepage
-    - role: dc_it_tools
-    - role: dc_vaultwarden
-    # - role: dc_whoami
+#     - role: dc_gluetun
+#     - role: dc_jdownloader2
