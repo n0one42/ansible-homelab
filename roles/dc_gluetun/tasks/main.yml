@@ -13,6 +13,11 @@
     user: "{{ (dc_gluetun_create_with_userns | bool) | ternary(dc_gluetun_u_g_id + 100000, dc_gluetun_u_g_id) }}"
     group: "{{ (dc_gluetun_create_with_userns | bool) | ternary(dc_gluetun_u_g_id + 100000, dc_gluetun_u_g_id) }}"
   block:
+    - name: Check if gluetun container exists
+      community.docker.docker_container_info:
+        name: "{{ dc_gluetun_container_name }}"
+      register: gluetun_container_info
+
     - name: '[Required] filesystem_manager role'
       ansible.builtin.import_role:
         name: filesystem_manager
@@ -53,10 +58,10 @@
         project_name: "{{ dc_gluetun_container_name }}"
         definition:
           # * ---------------------------- Networks ---------------------------- ! #
-          networks:
-            traefik_net:
-              name: "{{ dc_traefik_net_name }}"
-              external: true
+          # networks:
+          #   traefik_net:
+          #     name: "{{ dc_traefik_net_name }}"
+          #     external: true
 
           # * ---------------------------- Services ---------------------------- * #
           services:
@@ -80,8 +85,9 @@
                 retries: 5
               # networks:
               #   traefik_net: "{{ {'ipv4_address': dc_traefik_net_gluetun_ip} if dc_traefik_net_gluetun_ip is defined and dc_traefik_net_gluetun_ip | length > 0 else {} }}"
-              # ports:
-                # - "{{ dc_gluetun_port }}:8112"  # deluge web interface
+              ports:
+                - "3001:3001"  # Firefox https
+                # - "8112:8112"  # deluge web interface
                 # - "58846:58846"  # deluge RPC
                 # - "6789:6789"  # nzbget
                 # - "9696:9696"  # prowlarr
@@ -125,9 +131,9 @@
                 # HTTPPROXY_PASSWORD_SECRETFILE: "/run/secrets/httpproxy_password"
                 # SHADOWSOCKS_PASSWORD_SECRETFILE: "/run/secrets/shadowsocks_password"
 
-
     - name: Flush handlers
       ansible.builtin.meta: flush_handlers
+
 
 # ! --------------------------- Notes --------------------------- ! #
 # https://github.com/qdm12/gluetun-wiki

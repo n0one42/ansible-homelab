@@ -88,6 +88,7 @@ dc_traefik_net_homepage_ip: "{{ dc_traefik_net_base }}.100"  # 10.100.90.100
 dc_traefik_net_authentik_worker_ip: "{{ dc_traefik_net_base }}.131"  # 10.100.90.131
 dc_traefik_net_authentik_ldap_ip: "{{ dc_traefik_net_base }}.132"  # 10.100.90.132
 
+dc_traefik_net_firefox_ip: "{{ dc_traefik_net_base }}.199"  # 10.100.90.199
 dc_traefik_net_jdownloader2_ip: "{{ dc_traefik_net_base }}.200"  # 10.100.90.200
 dc_traefik_net_portainer_ip: "{{ dc_traefik_net_base }}.241"  # 10.100.90.241
 dc_traefik_net_authelia_ip: "{{ dc_traefik_net_base }}.242"  # 10.100.90.242

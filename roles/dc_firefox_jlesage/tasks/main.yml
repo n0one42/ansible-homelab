@@ -1,0 +1,104 @@
+---
+# tasks file for roles/dc_firefox_jlesage
+# * --------------------------- App --------------------------- *
+- name: Create Firefox
+  vars:
+    app_name: "{{ dc_firefox_jlesage_container_name }}"
+    container_type: "app"
+    user: "{{ (dc_firefox_jlesage_create_with_userns | bool) | ternary(dc_firefox_jlesage_u_g_id + 100000, dc_firefox_jlesage_u_g_id) }}"
+    group: "{{ (dc_firefox_jlesage_create_with_userns | bool) | ternary(dc_firefox_jlesage_u_g_id + 100000, dc_firefox_jlesage_u_g_id) }}"
+  block:
+    - name: '[Required] filesystem_manager role'
+      ansible.builtin.import_role:
+        name: filesystem_manager
+      vars:
+        filesystem_manager_appdata_directories_to_create:
+          - path: "config"
+      # notify:
+      #   - Restart firefox
+
+
+    - name: Install docker compose firefox with inline definition
+      community.docker.docker_compose_v2:
+        project_name: "{{ dc_firefox_jlesage_container_name }}"
+        definition:
+          # ! --------------------------- Networks --------------------------- ! #
+          networks:
+            traefik_net:
+              name: "{{ dc_traefik_net_name }}"  # eg: traefik_net
+              external: true  # indicating that it's a pre-existing network not managed by this Docker Compose file.
+            gluetun:
+              name: "gluetun_default"
+              external: true
+
+          # * ---------------------------- App ------------------------------ * #
+          services:
+            firefox:
+              image: jlesage/firefox:{{ dc_firefox_jlesage_image_version }}
+              container_name: "{{ dc_firefox_jlesage_container_name }}"
+              restart: unless-stopped
+              security_opt:
+                - no-new-privileges:true
+              privileged: false
+              userns_mode: "{{ 'host' if dc_firefox_jlesage_create_with_userns | bool == false else 'remap' }}"
+              # user: "{{ dc_firefox_jlesage_u_g_id }}:{{ dc_firefox_jlesage_u_g_id }}" # ! Has to be used with USER_ID and GROUP_ID
+              shm_size: "{{ dc_firefox_jlesage_shm_size | default('1gb') }}"
+              networks:
+                gluetun:
+                traefik_net: "{{ {'ipv4_address': dc_traefik_net_firefox_ip} if dc_traefik_net_firefox_ip is defined and dc_traefik_net_firefox_ip | length > 0 else {} }}"
+              # ports:
+              #   - "{{ dc_firefox_jlesage_web_listening_port | default('5800') }}:{{ dc_firefox_jlesage_web_listening_port | default('5800') }}"
+              #   - "{{ dc_firefox_jlesage_vnc_listening_port | default('5900') }}:{{ dc_firefox_jlesage_vnc_listening_port | default('5900') }}"
+              volumes:
+                - "{{ appdata_type_path }}/config:/config"
+              # devices:
+              #   - /dev/dri:/dev/dri # Duno if this works also with this container. Only saw it on linuxserver.io firefox container
+              environment:
+                USER_ID: "{{ dc_firefox_jlesage_u_g_id | default('1000') }}" # ID of the user the application runs as. Important for file permissions.
+                GROUP_ID: "{{ dc_firefox_jlesage_u_g_id | default('1000') }}" # ID of the group the application runs as. Affects file access rights.
+                SUP_GROUP_IDS: "{{ dc_firefox_jlesage_sup_group_ids | default(omit) }}" # Additional group IDs for the application, enhancing access control.
+                UMASK: "{{ dc_firefox_jlesage_umask | default('0022') }}" # Controls default permissions for new files/folders. 0022 allows read for all, write for owner.
+                LANG: "{{ dc_firefox_jlesage_lang | default('en_US.UTF-8') }}" # Sets the application's language and character encoding.
+                TZ: "{{ dc_firefox_jlesage_tz | default('Etc/UTC') }}" # Timezone for the container, affects time-based operations.
+                KEEP_APP_RUNNING: "{{ dc_firefox_jlesage_keep_app_running | default('0') }}" # If set to 1, automatically restarts the app if it crashes.
+                APP_NICENESS: "{{ dc_firefox_jlesage_app_niceness | default('0') }}" # Sets the CPU scheduling priority. Lower values mean higher priority.
+                INSTALL_PACKAGES: "{{ dc_firefox_jlesage_install_packages | default(omit) }}" # Additional packages to install at container startup.
+                PACKAGES_MIRROR: "{{ dc_firefox_jlesage_packages_mirror | default(omit) }}" # Custom mirror for package installation, can improve download speeds.
+                CONTAINER_DEBUG: "{{ dc_firefox_jlesage_container_debug | default('0') }}" # Enables detailed logging when set to 1, useful for troubleshooting.
+                DISPLAY_WIDTH: "{{ dc_firefox_jlesage_display_width | default('1920') }}" # Sets the width of the application window in pixels.
+                DISPLAY_HEIGHT: "{{ dc_firefox_jlesage_display_height | default('1080') }}" # Sets the height of the application window in pixels.
+                DARK_MODE: "{{ dc_firefox_jlesage_dark_mode | default('0') }}" # Enables dark mode for the application interface when set to 1.
+                WEB_AUDIO: "{{ dc_firefox_jlesage_web_audio | default('0') }}" # Enables audio playback through the browser when set to 1.
+                WEB_AUTHENTICATION: "{{ dc_firefox_jlesage_web_authentication | default('0') }}" # Enables login protection for the web interface when set to 1.
+                WEB_AUTHENTICATION_USERNAME: "{{ dc_firefox_jlesage_web_authentication_username | default(omit) }}" # Username for web interface login if authentication is enabled.
+                WEB_AUTHENTICATION_PASSWORD: "{{ dc_firefox_jlesage_web_authentication_password | default(omit) }}" # Password for web interface login if authentication is enabled.
+                SECURE_CONNECTION: "{{ dc_firefox_jlesage_secure_connection | default('0') }}" # Enables encrypted connection for GUI access when set to 1.
+                SECURE_CONNECTION_VNC_METHOD: "{{ dc_firefox_jlesage_secure_connection_vnc_method | default('SSL') }}" # Specifies the encryption method for VNC connections.
+                SECURE_CONNECTION_CERTS_CHECK_INTERVAL: "{{ dc_firefox_jlesage_secure_connection_certs_check_interval | default('60') }}" # Interval in seconds to check for certificate changes.
+                WEB_LISTENING_PORT: "{{ dc_firefox_jlesage_web_listening_port | default('5800') }}" # Port for the web interface. -1 disables web access.
+                VNC_LISTENING_PORT: "{{ dc_firefox_jlesage_vnc_listening_port | default('5900') }}" # Port for VNC access. -1 disables VNC access.
+                VNC_PASSWORD: "{{ dc_firefox_jlesage_vnc_password | default(omit) }}" # Password required for VNC connections if set.
+                ENABLE_CJK_FONT: "{{ dc_firefox_jlesage_enable_cjk_font | default('0') }}" # Installs font support for Chinese, Japanese, and Korean characters when set to 1.
+                FF_OPEN_URL: "{{ dc_firefox_jlesage_open_url | default(omit) }}" # The URL to open when Firefox starts.
+                FF_KIOSK: "{{ dc_firefox_jlesage_kiosk | default('0') }}" # Set to 1 to enable kiosk mode. This mode launches Firefox in a very restricted and limited mode best suitable for public areas or customer-facing displays.
+                FF_CUSTOM_ARGS: "{{ dc_firefox_jlesage_custom_args | default(omit) }}" # Custom argument(s) to pass when launching Firefox.
+              labels:
+                traefik.enable: "true"
+                ## HTTP Routers
+                traefik.http.routers.firefox-rtr.entrypoints: "websecure"
+                traefik.http.routers.firefox-rtr.rule: "Host(`{{ dc_firefox_jlesage_container_name }}.{{ domain_1 }}`)"
+                ## Middlewares
+                traefik.http.routers.firefox-rtr.middlewares: "middlewares-authelia@file"
+                ## HTTP Services
+                traefik.http.routers.firefox-rtr.service: "firefox-svc"
+                traefik.http.services.firefox-svc.loadbalancer.server.port: "{{ dc_firefox_jlesage_web_listening_port | default('5800') }}"
+
+                ## Router for Static Assets (sadly needed)
+                traefik.http.routers.firefox-static.entrypoints: "websecure"
+                traefik.http.routers.firefox-static.rule: "Host(`{{ dc_firefox_jlesage_container_name }}.{{ domain_1 }}`) && PathPrefix(`/vendor/`)"
+                traefik.http.routers.firefox-static.middlewares: "chain-no-auth@file"
+                traefik.http.routers.firefox-static.service: "firefox-svc"
+
+# ! --------------------------- Notes --------------------------- ! #
+# https://github.com/jlesage/docker-firefox
+# After testings, I prefer the linuxserver version because they are using the kasmvnc. Still, this works also good.
