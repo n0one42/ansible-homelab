@@ -13,6 +13,15 @@
     user: "{{ (dc_gluetun_create_with_userns | bool) | ternary(dc_gluetun_u_g_id + 100000, dc_gluetun_u_g_id) }}"
     group: "{{ (dc_gluetun_create_with_userns | bool) | ternary(dc_gluetun_u_g_id + 100000, dc_gluetun_u_g_id) }}"
   block:
+  # ! --------------------------- Networks --------------------------- ! #
+    # - name: Create network for --> {{ app_name }} # Needed if using as a http proxy to add external services
+    #   community.docker.docker_network:
+    #     name: "{{ app_name }}_net"
+    #     driver: bridge
+    #     internal: true
+    #     ipam_config:
+    #       - subnet: "{{ dc_gluetun_net_cidr }}"
+
     - name: Check if gluetun container exists
       community.docker.docker_container_info:
         name: "{{ dc_gluetun_container_name }}"
@@ -58,10 +67,13 @@
         project_name: "{{ dc_gluetun_container_name }}"
         definition:
           # * ---------------------------- Networks ---------------------------- ! #
-          # networks:
-          #   traefik_net:
-          #     name: "{{ dc_traefik_net_name }}"
-          #     external: true
+          networks:
+            app_net:
+              name: "{{ app_name }}_net"
+              external: true
+            traefik_net:
+              name: "{{ dc_traefik_net_name }}"
+              external: true
 
           # * ---------------------------- Services ---------------------------- * #
           services:
@@ -72,10 +84,8 @@
               security_opt:
                 - no-new-privileges:true
               privileged: false
-              userns_mode: "host" # ! Needs to be like that
+              userns_mode: "{{ 'host' if dc_gluetun_create_with_userns | bool == false else 'remap' }}"
               user: "0" # ! Needs to be like that
-              # userns_mode: "{{ 'host' if dc_gluetun_create_with_userns | bool == false else 'remap' }}"
-              # user: "{{ dc_gluetun_u_g_id }}:{{ dc_gluetun_u_g_id }}" # Will not work here since it needs to be root at this level
               cap_add:
                 - NET_ADMIN
               healthcheck:
@@ -83,9 +93,12 @@
                 interval: 60s
                 timeout: 20s
                 retries: 5
-              # networks:
-              #   traefik_net: "{{ {'ipv4_address': dc_traefik_net_gluetun_ip} if dc_traefik_net_gluetun_ip is defined and dc_traefik_net_gluetun_ip | length > 0 else {} }}"
+              networks:
+                # app_net:
+                traefik_net: "{{ {'ipv4_address': dc_traefik_net_gluetun_ip} if dc_traefik_net_gluetun_ip is defined and dc_traefik_net_gluetun_ip | length > 0 else {} }}"
               ports:
+                - "8888:8888"  # http proxy
+                - "3000:3000"  # Firefox http
                 - "3001:3001"  # Firefox https
                 # - "8112:8112"  # deluge web interface
                 # - "58846:58846"  # deluge RPC
@@ -94,6 +107,7 @@
               volumes:
                 - "{{ appdata_type_path }}/config:/gluetun"
                 - "{{ secrets_type_path }}:/run/secrets"
+                - /dev/net/tun:/dev/net/tun
               environment:
                 # * ---------------------------- Optionals ---------------------------- * #
                 TZ: "{{ timezone }}"
@@ -130,6 +144,10 @@
                 # HTTPPROXY_USER_SECRETFILE: "/run/secrets/httpproxy_user"
                 # HTTPPROXY_PASSWORD_SECRETFILE: "/run/secrets/httpproxy_password"
                 # SHADOWSOCKS_PASSWORD_SECRETFILE: "/run/secrets/shadowsocks_password"
+                HTTPPROXY: "on"
+                HTTPPROXY_LOG: "on"
+                # HTTPPROXY_USER: "{{ dc_gluetun_httpproxy_user }}"
+                # HTTPPROXY_PASSWORD: "{{ dc_gluetun_httpproxy_password }}"
 
     - name: Flush handlers
       ansible.builtin.meta: flush_handlers

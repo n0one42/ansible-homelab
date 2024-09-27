@@ -43,9 +43,10 @@
               userns_mode: "{{ 'host' if dc_firefox_jlesage_create_with_userns | bool == false else 'remap' }}"
               # user: "{{ dc_firefox_jlesage_u_g_id }}:{{ dc_firefox_jlesage_u_g_id }}" # ! Has to be used with USER_ID and GROUP_ID
               shm_size: "{{ dc_firefox_jlesage_shm_size | default('1gb') }}"
-              networks:
-                gluetun:
-                traefik_net: "{{ {'ipv4_address': dc_traefik_net_firefox_ip} if dc_traefik_net_firefox_ip is defined and dc_traefik_net_firefox_ip | length > 0 else {} }}"
+              network_mode: "service:gluetun"
+              # networks:
+                # gluetun:
+                # traefik_net: "{{ {'ipv4_address': dc_traefik_net_firefox_ip} if dc_traefik_net_firefox_ip is defined and dc_traefik_net_firefox_ip | length > 0 else {} }}"
               # ports:
               #   - "{{ dc_firefox_jlesage_web_listening_port | default('5800') }}:{{ dc_firefox_jlesage_web_listening_port | default('5800') }}"
               #   - "{{ dc_firefox_jlesage_vnc_listening_port | default('5900') }}:{{ dc_firefox_jlesage_vnc_listening_port | default('5900') }}"

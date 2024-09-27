@@ -1,2 +1,106 @@
 ---
 # tasks file for roles/dc_firefox
+# * --------------------------- App --------------------------- *
+- name: Create Firefox
+  vars:
+    app_name: "{{ dc_firefox_container_name }}"
+    container_type: "app"
+    user: "{{ (dc_firefox_create_with_userns | bool) | ternary(dc_firefox_u_g_id + 100000, dc_firefox_u_g_id) }}"
+    group: "{{ (dc_firefox_create_with_userns | bool) | ternary(dc_firefox_u_g_id + 100000, dc_firefox_u_g_id) }}"
+  block:
+    - name: '[Required] filesystem_manager role'
+      ansible.builtin.import_role:
+        name: filesystem_manager
+      vars:
+        filesystem_manager_appdata_directories_to_create:
+          - path: "config"
+      # notify:
+      #   - Restart firefox
+
+
+    - name: Install docker compose firefox with inline definition
+      community.docker.docker_compose_v2:
+        project_name: "{{ dc_firefox_container_name }}"
+        definition:
+          # ! --------------------------- Networks --------------------------- ! #
+          networks:
+            traefik_net:
+              name: "{{ dc_traefik_net_name }}"  # eg: traefik_net
+              external: true  # indicating that it's a pre-existing network not managed by this Docker Compose file.
+            gluetun_net:
+              name: "{{ dc_gluetun_container_name }}_net"
+              external: true
+
+          # * ---------------------------- App ------------------------------ * #
+          services:
+            firefox:
+              image: lscr.io/linuxserver/firefox:{{ dc_firefox_image_version }}
+              container_name: "{{ dc_firefox_container_name }}"
+              restart: unless-stopped
+              security_opt:
+                - no-new-privileges:true
+              privileged: false
+              userns_mode: "{{ 'host' if dc_firefox_create_with_userns | bool == false else 'remap' }}"
+              # user: "{{ dc_firefox_u_g_id }}:{{ dc_firefox_u_g_id }}"
+              shm_size: "{{ dc_firefox_shm_size | default('1gb') }}"
+              network_mode: "container:gluetun" # ? will work
+              # networks:
+              #   gluetun_net: # ? will also work together with gluetun "HTTPPROXY:on" & setting proxy in firefox
+              #   traefik_net: "{{ {'ipv4_address': dc_traefik_net_firefox_ip} if dc_traefik_net_firefox_ip is defined and dc_traefik_net_firefox_ip | length > 0 else {} }}"
+              # ports:
+              #   - "{{ dc_firefox_http_port | default('3000') }}:{{ dc_firefox_http_port | default('3000') }}"
+              #   - "{{ dc_firefox_https_port | default('3001') }}:{{ dc_firefox_https_port | default('3001') }}"
+              volumes:
+                - "{{ appdata_type_path }}/config:/config"
+              # devices:
+              #   - /dev/dri:/dev/dri # Mount a GPU into the container, this can be used in conjunction with the DRINODE environment variable to leverage a host video card for GPU accelerated appplications.
+                                      # Only Open Source drivers are supported IE (Intel,AMDGPU,Radeon,ATI,Nouveau)
+              environment:
+                PUID: "{{ dc_firefox_u_g_id | default('1000') }}" # ID of the user the application runs as. Important for file permissions.
+                PGID: "{{ dc_firefox_u_g_id | default('1000') }}" # ID of the group the application runs as. Affects file access rights.
+                UMASK: "{{ dc_firefox_umask | default('0022') }}" # Controls default permissions for new files/folders. 0022 allows read for all, write for owner.
+                TZ: "{{ dc_firefox_tz | default('Etc/UTC') }}" # Timezone for the container, affects time-based operations.
+                FIREFOX_CLI: "{{ dc_firefox_cli | default('https://www.linuxserver.io/') }}" # Custom command line arguments for Firefox.
+
+
+                CUSTOM_PORT: "{{ dc_firefox_http_port | default('3000') }}" # Internal port the container listens on for http if it needs to be swapped from the default 3000.
+                CUSTOM_HTTPS_PORT: "{{ dc_firefox_https_port | default('3001') }}" # Internal port the container listens on for https if it needs to be swapped from the default 3001.
+                CUSTOM_USER: "{{ dc_firefox_custom_user | default(omit) }}" # HTTP Basic auth username, abc is default.
+                PASSWORD: "{{ dc_firefox_password | default(omit) }}" # HTTP Basic auth password, abc is default. If unset there will be no auth
+                SUBFOLDER: "{{ dc_firefox_subfolder | default(omit) }}" # Subfolder for the application if running a subfolder reverse proxy, need both slashes IE /subfolder/
+                TITLE: "{{ dc_firefox_title | default('KasmVNC Client') }}" # The page title displayed on the web browser, default "KasmVNC Client".
+                FM_HOME: "{{ dc_firefox_fm_home | default('/config') }}" # This is the home directory (landing) for the file manager, default "/config".
+                START_DOCKER: "{{ dc_firefox_start_docker | default(omit) }}" # If set to false a container with privilege will not automatically start the DinD Docker setup.
+                DRINODE: "{{ dc_firefox_drinode | default(omit) }}" # If mounting in /dev/dri for DRI3 GPU Acceleration allows you to specify the device to use IE /dev/dri/renderD128
+                LC_ALL: "{{ dc_firefox_lc_all | default(omit) }}" # Set the Language for the container to run as IE fr_FR.UTF-8 ar_AE.UTF-8
+                NO_DECOR: "{{ dc_firefox_no_decor | default(omit) }}" # If set the application will run without window borders for use as a PWA.
+                NO_FULL: "{{ dc_firefox_no_full | default(omit) }}" # Do not autmatically fullscreen applications when using openbox.
+              labels:
+                traefik.enable: "true"
+                ## HTTP Routers
+                traefik.http.routers.firefox-rtr.entrypoints: "websecure"
+                traefik.http.routers.firefox-rtr.rule: "Host(`{{ dc_firefox_container_name }}.{{ domain_1 }}`)"
+                ## Middlewares
+                traefik.http.routers.firefox-rtr.middlewares: "middlewares-authelia@file"
+                ## HTTP Services
+                traefik.http.routers.firefox-rtr.service: "firefox-svc"
+                traefik.http.services.firefox-svc.loadbalancer.server.port: "{{ dc_firefox_http_port | default('3000') }}"
+
+
+# sudo docker run -d \
+# --name=firefox2 \
+# -e PUID=1007 \
+# -e PGID=1007 \
+# -e TZ=Europe/Berlin \
+# --network=container:gluetun \
+# --userns=host \
+# --shm-size="1gb" \
+# linuxserver/firefox:latest
+
+
+# ! --------------------------- Notes --------------------------- ! #
+# https://github.com/jlesage/docker-firefox
+# https://docs.linuxserver.io/images/docker-firefox/#nvidia-gpu-support
+# https://docs.linuxserver.io/images/docker-firefox/#lossless-mode
+
+# After testings, I prefer the linuxserver version because they are using the kasmvnc. Still, this works also good.

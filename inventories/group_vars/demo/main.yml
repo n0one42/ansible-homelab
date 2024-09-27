@@ -95,6 +95,7 @@ dc_homepage_u_g_id: 22034 # with userns --> 122034
 dc_vaultwarden_u_g_id: 22035 # with userns --> 122035
 dc_jdownloader2_u_g_id: 22036 # with userns --> 122036
 dc_firefox_jlesage_u_g_id: 22037 # with userns --> 122037
+dc_firefox_u_g_id: 22038 # with userns --> 122038
 dc_gluetun_u_g_id: 22099 # with userns --> 122099 # ! Note: Container will run as root and will use just the environment: PUID and PGID as non root user
 
 # ? -----------------------------------------------------------------------------
@@ -316,7 +317,7 @@ dc_vaultwarden_db_port: 5432
 # * ------------->>> Container Configuration <<<------------ * #
 # * >>> Container variables
 dc_gluetun_container_name: "gluetun"
-dc_gluetun_create_with_userns: false # must be false + user: 0
+dc_gluetun_create_with_userns: true
 dc_gluetun_image_version: "latest"
 dc_gluetun_log_level: ""
 dc_gluetun_port: 8112
@@ -388,7 +389,35 @@ dc_jdownloader2_keep_app_running: "1" # If set to 1, automatically restarts the 
 # dc_jdownloader2_jdownloader_max_mem: "" # Sets maximum memory usage for JDownloader. Use G, M, or K suffix.
 
 # ? -----------------------------------------------------------------------------
-# *                               dc_firefox_jlesage                                   *
+# *                                 dc_firefox                                  *
+# ? -----------------------------------------------------------------------------
+# * ------------->>> Container Configuration <<<------------ * #
+# * >>> Container variables
+dc_firefox_container_name: "firefox"
+dc_firefox_create_with_userns: true
+dc_firefox_image_version: "latest"
+dc_firefox_container_debug: "0"  # Enables detailed logging when set to 1, useful for troubleshooting.
+dc_firefox_http_port: 3000
+dc_firefox_https_port: 3001
+dc_firefox_shm_size: "1gb" # Default in docker is 64MB
+
+dc_firefox_umask: "0022" # Controls default permissions for new files/folders. 0022 allows read for all, write for owner.
+dc_firefox_tz: "{{ timezone }}" # Timezone for the container, affects time-based operations.
+
+dc_firefox_cli: "https://www.perplexity.ai/" # The URL to open when Firefox starts.
+# dc_firefox_custom_user: "{{ demo_auth_user }}" # HTTP Basic auth username, abc is default.
+# dc_firefox_password: "{{ demo_auth_pw_argon2id }}" # HTTP Basic auth password, abc is default. If unset there will be no auth
+# dc_firefox_subfolder: "/firefox" # Subfolder for the application if running a subfolder reverse proxy, need both slashes IE /subfolder/
+# dc_firefox_title: "KasmVNC Client" # The page title displayed on the web browser, default "KasmVNC Client".
+# dc_firefox_fm_home: "/config" # This is the home directory (landing) for the file manager, default "/config".
+# dc_firefox_start_docker: "{{ dc_firefox_start_docker | default(omit) }}" # If set to false a container with privilege will not automatically start the DinD Docker setup.
+# dc_firefox_drinode: "{{ dc_firefox_drinode | default(omit) }}" # If mounting in /dev/dri for DRI3 GPU Acceleration allows you to specify the device to use IE /dev/dri/renderD128
+dc_firefox_lc_all: "{{ system_language }}" # Sets the application's language and character encoding.
+# dc_firefox_no_decor: "{{ dc_firefox_no_decor | default(omit) }}" # If set the application will run without window borders for use as a PWA.
+# dc_firefox_no_full: "{{ dc_firefox_no_full | default(omit) }}" # Do not autmatically fullscreen applications when using openbox.
+
+# ? -----------------------------------------------------------------------------
+# *                              dc_firefox_jlesage                             *
 # ? -----------------------------------------------------------------------------
 # * ------------->>> Container Configuration <<<------------ * #
 # * >>> Container variables
