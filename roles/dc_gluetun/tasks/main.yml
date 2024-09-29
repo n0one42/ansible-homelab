@@ -124,7 +124,7 @@
                 VPN_TYPE: "{{ dc_gluetun_vpn_type }}"
                 SERVER_COUNTRIES: "{{ dc_gluetun_server_countries }}"
                 SERVER_CITIES: "{{ dc_gluetun_server_cities }}"
-                FIREWALL_VPN_INPUT_PORTS: "{{ dc_gluetun_firewall_vpn_input_ports }}"
+                # FIREWALL_VPN_INPUT_PORTS: "{{ dc_gluetun_firewall_vpn_input_ports }}" # For port forwarding if needed
 
                 # * ---------------------------- Wireguard ---------------------------- * #
                 # WIREGUARD_CONF_SECRETFILE: "/gluetun/wireguard.conf"
@@ -144,6 +144,8 @@
                 # HTTPPROXY_USER_SECRETFILE: "/run/secrets/httpproxy_user"
                 # HTTPPROXY_PASSWORD_SECRETFILE: "/run/secrets/httpproxy_password"
                 # SHADOWSOCKS_PASSWORD_SECRETFILE: "/run/secrets/shadowsocks_password"
+
+                # FIREWALL_OUTBOUND_SUBNETS: # eg: "192.168.1.0/24" # ? Needed to access your LAN through gluetun
                 HTTPPROXY: "on"
                 HTTPPROXY_LOG: "on"
                 # HTTPPROXY_USER: "{{ dc_gluetun_httpproxy_user }}"
@@ -159,6 +161,10 @@
 # https://github.com/qdm12/gluetun-wiki/blob/main/setup/options/others.md
 # https://github.com/qdm12/gluetun-wiki/blob/main/setup/advanced/docker-secrets.md
 # https://www.youtube.com/watch?v=_tz2wUFT8VQ
+
+# https://github.com/qdm12/gluetun-wiki/blob/main/setup/connect-a-container-to-gluetun.md
+# https://github.com/qdm12/gluetun-wiki/blob/main/setup/connect-a-lan-device-to-gluetun.md
+# https://github.com/qdm12/gluetun-wiki/blob/main/setup/inter-containers-networking.md
 
 # docker run --rm --userns=host --network=container:gluetun alpine:3.20 sh -c "apk add wget && wget -qO- https://ipinfo.io"
 

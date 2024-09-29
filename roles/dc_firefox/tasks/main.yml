@@ -87,17 +87,6 @@
                 traefik.http.services.firefox-svc.loadbalancer.server.port: "{{ dc_firefox_http_port | default('3000') }}"
 
 
-# sudo docker run -d \
-# --name=firefox2 \
-# -e PUID=1007 \
-# -e PGID=1007 \
-# -e TZ=Europe/Berlin \
-# --network=container:gluetun \
-# --userns=host \
-# --shm-size="1gb" \
-# linuxserver/firefox:latest
-
-
 # ! --------------------------- Notes --------------------------- ! #
 # https://github.com/jlesage/docker-firefox
 # https://docs.linuxserver.io/images/docker-firefox/#nvidia-gpu-support
