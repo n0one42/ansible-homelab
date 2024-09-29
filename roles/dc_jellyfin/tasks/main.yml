@@ -1,0 +1,100 @@
+---
+# tasks file for roles/dc_jellyfin
+# * --------------------------- App --------------------------- *
+- name: Create Jellyfin
+  vars:
+    app_name: "{{ dc_jellyfin_container_name }}"
+    container_type: "app"
+    user: "{{ (dc_jellyfin_create_with_userns | bool) | ternary(dc_jellyfin_u_g_id + 100000, dc_jellyfin_u_g_id) }}"
+    group: "{{ (dc_jellyfin_create_with_userns | bool) | ternary(dc_jellyfin_u_g_id + 100000, dc_jellyfin_u_g_id) }}"
+  block:
+    - name: '[Required] filesystem_manager role'
+      ansible.builtin.import_role:
+        name: filesystem_manager
+      vars:
+        filesystem_manager_appdata_directories_to_create:
+          - path: "config"
+          - path: "data/media1"
+          - path: "data/media2"
+          - path: "data/downloads"
+        filesystem_manager_set_acl_to_path:
+          - path: "/dev/dri/renderD128"
+            permissions: rw-  # rw- needed
+      # notify:
+      #   - Restart jellyfin
+
+
+    - name: Install docker compose jellyfin with inline definition
+      community.docker.docker_compose_v2:
+        project_name: "{{ dc_jellyfin_container_name }}"
+        definition:
+          # ! --------------------------- Networks --------------------------- ! #
+          # networks:
+          #   traefik_net:
+          #     name: "{{ dc_traefik_net_name }}"  # eg: traefik_net
+          #     external: true
+
+          # * ---------------------------- App ------------------------------ * #
+          services:
+            jellyfin:
+              image: jellyfin/jellyfin:{{ dc_jellyfin_image_version }}
+              container_name: "{{ dc_jellyfin_container_name }}"
+              restart: unless-stopped
+              security_opt:
+                - no-new-privileges:true
+              privileged: false
+              userns_mode: "{{ 'host' if dc_jellyfin_create_with_userns | bool == false else 'remap' }}"
+              user: "{{ dc_jellyfin_u_g_id }}:{{ dc_jellyfin_u_g_id }}"
+              shm_size: "{{ dc_jellyfin_shm_size | default('1gb') }}"
+              # networks:
+              #   traefik_net: "{{ {'ipv4_address': dc_traefik_net_jellyfin_ip} if dc_traefik_net_jellyfin_ip is defined and dc_traefik_net_jellyfin_ip | length > 0 else {} }}"
+              ports:
+                - "{{ dc_jellyfin_http_port | default('8096') }}:8096"
+                # - "{{ dc_jellyfin_https_port | default('8920') }}:8920" # needs ssl cert
+              volumes:
+                - "{{ appdata_type_path }}/config:/config"
+                - "{{ appdata_type_path }}/data/media1:/data/media1"
+                - "{{ appdata_type_path }}/data/media2:/data/media2"
+                - "{{ appdata_type_path }}/data/downloads:/data/downloads"
+                # - /dev/shm:/data/transcode # Offload transcoding to RAM if you have enough RAM but better to use shm_size
+              # group_add: # ? Will not work. Maybe because of userns_mode. Therefore I will use setfacl to set the correct permissions.
+              #   - "122" # getent group render | cut -d: -f3
+              devices:
+                # - /dev/dri:/dev/dri # for harware transcoding (quick sync)
+                - /dev/dri/renderD128:/dev/dri/renderD128 # for harware transcoding (quick sync)
+              environment:
+                UMASK: "{{ dc_jellyfin_umask | default('0022') }}" # Controls default permissions for new files/folders. 0022 allows read for all, write for owner.
+                TZ: "{{ timezone }}" # Timezone for the container, affects time-based operations.
+              # labels:
+              #   traefik.enable: "true"
+              #   ## HTTP Routers
+              #   traefik.http.routers.jellyfin-rtr.entrypoints: "websecure"
+              #   traefik.http.routers.jellyfin-rtr.rule: "Host(`{{ dc_jellyfin_container_name }}.{{ domain_1 }}`)"
+              #   ## Middlewares
+              #   traefik.http.routers.jellyfin-rtr.middlewares: "middlewares-authelia@file"
+              #   ## HTTP Services
+              #   traefik.http.routers.jellyfin-rtr.service: "jellyfin-svc"
+              #   traefik.http.services.jellyfin-svc.loadbalancer.server.port: "8096"
+
+
+# ! --------------------------- Notes --------------------------- ! #
+# https://jellyfin.org/docs/general/administration/hardware-acceleration/intel
+
+# getent group render | cut -d: -f3
+# sudo docker exec -it jellyfin /usr/lib/jellyfin-ffmpeg/vainfo
+# sudo docker exec -it jellyfin /usr/lib/jellyfin-ffmpeg/ffmpeg -v verbose -init_hw_device vaapi=va -init_hw_device opencl@va
+# sudo intel_gpu_top
+
+# ! Note 1: Since I did passthrough my igpu after the installation of my ubuntu server and it also wasnt able to get the i915 drivers, I had to manually install it. This is what helped:
+# sudo apt update
+# sudo apt install linux-modules-extra-$(uname -r) intel-gpu-tools
+# sudo modprobe i915
+# sudo intel_gpu_top
+
+# Note 2: You also have ofc to enable Transcoding in Jellyfin under Dashboard --> Playback --> Transcoding
+
+# Note 3: jellyfin comes already with the ffmpeg therefore no need to install it or such. It should work out of the box if it has the correct permissions.
+# Therefore if the jellyfin-ffmpeg/vainfo gives an error, it is likely an permission issue.
+# Performance tests: even an i5 7300u vm with only 1 socket and 2 cores and just 2gb of ram were able to transcode 4k to like 480p in real time which is impressive!
+
+# While /dev/shm:/data/transcode and shm_size works, the shm_size is preffered.
