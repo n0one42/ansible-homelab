@@ -9,23 +9,23 @@ all:
           ansible_ssh_common_args: '-o IdentitiesOnly=yes'
         demo-vm09-aio:
           ansible_host: "{{ dc_dmz_net_vm09_aio_ip }}"
-          ansible_user: wasd
+          ansible_user: "{{ pve_vm_primary_user_name }}"
           ansible_ssh_common_args: '-o IdentitiesOnly=yes'
         demo-vm10-ingress:
           ansible_host: "{{ dc_dmz_net_vm10_ingress_ip }}"
-          ansible_user: wasd
+          ansible_user: "{{ pve_vm_primary_user_name }}"
           ansible_ssh_common_args: '-o IdentitiesOnly=yes'
         demo-vm20-metrics:
           ansible_host: "{{ dc_dmz_net_vm20_metrics_ip }}"
-          ansible_user: wasd
+          ansible_user: "{{ pve_vm_primary_user_name }}"
           ansible_ssh_common_args: '-o IdentitiesOnly=yes'
         demo-vm31-application-1:
           ansible_host: "{{ dc_dmz_net_vm31_application_1_ip }}"
-          ansible_user: wasd
+          ansible_user: "{{ pve_vm_primary_user_name }}"
           ansible_ssh_common_args: '-o IdentitiesOnly=yes'
         demo-vm41-multimedia-1:
           ansible_host: "{{ dc_dmz_net_vm41_multimedia_1_ip }}"
-          ansible_user: wasd
+          ansible_user: "{{ pve_vm_primary_user_name }}"
           ansible_ssh_common_args: '-o IdentitiesOnly=yes'
 
 # ! Notes:

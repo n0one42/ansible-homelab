@@ -266,7 +266,7 @@
 # ? ######################################################################################## #
 
 - name: Set read access on specified paths
-  when: filesystem_manager_give_full_read_access_to_path | default([]) | length > 0
+  when: filesystem_manager_set_acl_to_path | default([]) | length > 0
   block:
     - name: Set default ACL for specified paths
       become: true
@@ -274,12 +274,12 @@
         path: "{{ item.path }}"
         entity: "{{ user }}"
         etype: user
-        permissions: r-x
+        permissions: "{{ item.permissions | default('r-x') }}"
         state: present
         recurse: true
         default: true
         recalculate_mask: no_mask
-      loop: "{{ filesystem_manager_give_full_read_access_to_path }}"
+      loop: "{{ filesystem_manager_set_acl_to_path }}"
 
     - name: Set ACL for existing files in specified paths
       become: true
@@ -287,11 +287,11 @@
         path: "{{ item.path }}"
         entity: "{{ user }}"
         etype: user
-        permissions: r-x
+        permissions: "{{ item.permissions | default('r-x') }}"
         state: present
         recurse: true
         recalculate_mask: no_mask
-      loop: "{{ filesystem_manager_give_full_read_access_to_path }}"
+      loop: "{{ filesystem_manager_set_acl_to_path }}"
 
 
 # ? ######################################################################################## #

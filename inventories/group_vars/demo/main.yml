@@ -55,16 +55,6 @@ logs_type_path: "{{ docker_logs }}/{{ app_name }}/{{ container_type }}" # eg: lo
 
 
 # ? ######################################################################################## #
-# !                              Mandatory Container Variables                               #
-# ? ######################################################################################## #
-# This are crucial variables for an operating container and has to be set
-# * Uncomment and set it accordingly
-
-# * >>>>>>>>>>>>>>>>>>> Traefik <<<<<<<<<<<<<<<<<<<
-# dc_traefik_cf_dns_api_token: ""
-
-
-# ? ######################################################################################## #
 # *                                  Docker Container Variables                              #
 # ? ######################################################################################## #
 
@@ -464,9 +454,6 @@ dc_firefox_jlesage_open_url: "https://www.perplexity.ai/" # The URL to open when
 # ? -----------------------------------------------------------------------------
 # ! ------------------>>> Dependencies <<<------------------ ! #
 # ? Has to be set by vars
-# timezone
-# domain_1
-# dc_traefik_cf_dns_api_token
 # dc_traefik_type --> "ingress" / "metrics" / "application-1" # Has to match the dc_traefik/templates folder name
 
 # * ------------->>> Container Configuration <<<------------ * #
@@ -477,6 +464,7 @@ dc_traefik_image_version: "3.1"
 dc_traefik_log_level: "INFO" # (Default: error) TRACE, DEBUG, INFO, WARN, ERROR, FATAL, PANIC # Needs at least info for crowdsec
 
 dc_traefik_acme_staging_mode: true  # true = LetsEncrypt Staging Server - false = LetsEncrypt Production Server
+# dc_traefik_cf_dns_api_token: "" # ! Mandatory !
 dc_traefik_crowdsec_enabled: true
 dc_traefik_crowdsec_log_level: "INFO"
 dc_traefik_crowdsec_bouncer_key: "" # Empty for generated key
