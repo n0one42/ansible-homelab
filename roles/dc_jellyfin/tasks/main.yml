@@ -83,7 +83,6 @@
 # getent group render | cut -d: -f3
 # sudo docker exec -it jellyfin /usr/lib/jellyfin-ffmpeg/vainfo
 # sudo docker exec -it jellyfin /usr/lib/jellyfin-ffmpeg/ffmpeg -v verbose -init_hw_device vaapi=va -init_hw_device opencl@va
-# sudo intel_gpu_top
 
 # ! Note 1: Since I did passthrough my igpu after the installation of my ubuntu server and it also wasnt able to get the i915 drivers, I had to manually install it. This is what helped:
 # sudo apt update
