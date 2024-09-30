@@ -1,0 +1,187 @@
+---
+# tasks file for roles/dc_immich
+- name: Create Immich with PostgreSQL and Redis
+  vars:
+    app_name: "{{ dc_immich_container_name }}"
+    db_name: "{{ dc_immich_db_name }}"
+    db_user_name: "{{ dc_immich_db_user_name }}"
+    db_user_pw: "{{ dc_immich_db_user_pw }}"  # ! MUST BE HERE BECAUSE SHARED !
+    db_port: "{{ dc_immich_db_port }}" # "5432"
+    redis_pw: "{{ dc_immich_redis_pw }}"  # ! MUST BE HERE BECAUSE SHARED!
+    redis_port: "{{ dc_immich_redis_port }}" # "6379"
+  block:
+  # ! --------------------------- Networks --------------------------- ! #
+    - name: Create network for --> {{ app_name }}
+      community.docker.docker_network:
+        name: "{{ app_name }}_net"
+        driver: bridge
+        internal: true
+        ipam_config:
+          - subnet: "{{ dc_immich_net_cidr }}"
+
+
+  # * ------------------------ Immich DB ------------------------ * #
+    - name: Include postgresql role
+      ansible.builtin.import_role:
+        name: dc_postgresql_bitnami
+      vars:
+        dc_postgresql_bitnami_create_with_userns: "{{ dc_immich_db_create_with_userns }}"
+        dc_postgresql_bitnami_image_version: "{{ dc_immich_db_image_version }}"
+        dc_postgresql_bitnami_db_superuser_pw: "{{ dc_immich_db_superuser_pw }}"
+        dc_postgresql_bitnami_db_name: "{{ dc_immich_db_name }}"
+        dc_postgresql_bitnami_db_user_name: "{{ dc_immich_db_user_name }}"
+        dc_postgresql_bitnami_db_port: "{{ dc_immich_db_port }}"
+        dc_postgresql_bitnami_net_ip: "{{ dc_immich_net_db_ip }}"
+
+    #     POSTGRES_INITDB_ARGS: '--data-checksums'
+    # healthcheck:
+    #   test: pg_isready --dbname='${DB_DATABASE_NAME}' --username='${DB_USERNAME}' || exit 1; Chksum="$$(psql --dbname='${DB_DATABASE_NAME}' --username='${DB_USERNAME}' --tuples-only --no-align --command='SELECT COALESCE(SUM(checksum_failures), 0) FROM pg_stat_database')"; echo "checksum failure count is $$Chksum"; [ "$$Chksum" = '0' ] || exit 1
+    #   interval: 5m
+    #   start_interval: 30s
+    #   start_period: 5m
+    # command: ["postgres", "-c", "shared_preload_libraries=vectors.so", "-c", 'search_path="$$user", public, vectors', "-c", "logging_collector=on", "-c", "max_wal_size=2GB", "-c", "shared_buffers=512MB", "-c", "wal_compression=on"]    
+
+
+  # * ------------------------ Immich Redis ------------------------ * #
+    - name: Include redis role
+      ansible.builtin.import_role:
+        name: dc_redis_bitnami
+      vars:
+        dc_redis_bitnami_create_with_userns: "{{ dc_immich_redis_create_with_userns }}"
+        dc_redis_bitnami_image_version: "{{ dc_immich_redis_image_version }}"
+        dc_redis_bitnami_redis_port: "{{ dc_immich_redis_port }}"
+        dc_redis_bitnami_net_ip: "{{ dc_immich_net_redis_ip }}"
+
+
+  # * ----------------------- Immich App ------------------------- *
+    - name: Create app --> {{ app_name }}
+      vars:
+        container_type: "app" # => app, db, redis
+        user: "{{ (dc_immich_create_with_userns | bool) | ternary(dc_immich_u_g_id + 100000, dc_immich_u_g_id) }}"
+        group: "{{ (dc_immich_create_with_userns | bool) | ternary(dc_immich_u_g_id + 100000, dc_immich_u_g_id) }}"
+      block:
+        - name: '[Required] filesystem_manager role'
+          ansible.builtin.import_role:
+            name: filesystem_manager
+          vars:
+            filesystem_manager_appdata_directories_to_create:
+              - path: "upload"
+              - path: "model-cache"
+            filesystem_manager_secret_files_to_create:
+              - var_name: redis_pw
+                content: "{{ redis_pw }}"
+              - var_name: db_user_pw
+                content: "{{ db_user_pw }}"
+
+
+        - name: Install docker compose immich with inline definition
+          community.docker.docker_compose_v2:
+            project_name: "{{ app_name }}"  # eg: immich
+            definition:
+              # ! --------------------------- Networks --------------------------- ! #
+              networks:
+                app_net:
+                  name: "{{ app_name }}_net"
+                  external: true
+                traefik_net:
+                  name: "{{ dc_traefik_net_name }}"
+                  external: true
+
+
+              # * ---------------------------- App ------------------------------ * #
+              services:
+                immich_server:
+                  image: ghcr.io/immich-app/immich-server:{{ dc_immich_image_version | default('release') }}
+                  container_name: "{{ app_name }}_server"
+                  restart: unless-stopped
+                  security_opt:
+                    - no-new-privileges:true
+                  privileged: false
+                  userns_mode: "{{ 'host' if dc_immich_create_with_userns | bool == false else 'remap' }}"
+                  user: "{{ dc_immich_u_g_id }}:{{ dc_immich_u_g_id }}"
+                  deploy:
+                    resources:
+                      limits:
+                        cpus: '0.5'
+                  command: server
+                  networks:
+                    app_net: "{{ {'ipv4_address': dc_immich_net_app_server_ip} if dc_immich_net_app_server_ip is defined and dc_immich_net_app_server_ip | length > 0 else {} }}"
+                    traefik_net: "{{ {'ipv4_address': dc_traefik_net_authentik_server_ip} if dc_traefik_net_authentik_server_ip is defined and dc_traefik_net_authentik_server_ip | length > 0 else {} }}"
+                  ports:
+                    - "{{ dc_immich_port | default('3001') }}:{{ dc_immich_port | default('3001') }}"
+                  volumes:
+                    - "{{ appdata_type_path }}/upload:/usr/src/app/upload"
+                    - "{{ secrets_type_path }}:/run/secrets"
+                  environment:
+                    IMMICH_PORT: "{{ dc_immich_port | default('3001') }}"
+                    TZ: "{{ timezone }}"
+                    IMMICH_ENV: "{{ dc_immich_env | default('production') }}" # (production, development)
+                    IMMICH_LOG_LEVEL: "{{ dc_immich_log_level | default('log') }}" # (verbose, debug, log, warn, error)
+                    IMMICH_MEDIA_LOCATION: "{{ dc_immich_media_location | default('./upload') }}" # Media Location inside the container ⚠️You probably shouldn't set this*2⚠️
+                    IMMICH_CONFIG_FILE: "{{ dc_immich_config_file | default(omit) }}"
+                    NO_COLOR: "{{ dc_immich_no_color | default('false') }}" # Set to true to disable color-coded log output
+                    CPU_CORES: "{{ dc_immich_cpu_cores | default(omit) }}"
+                    IMMICH_API_METRICS_PORT: "{{ dc_immich_api_metrics_port | default('8081') }}"
+                    IMMICH_MICROSERVICES_METRICS_PORT: "{{ dc_immich_microservices_metrics_port | default('8082') }}"
+                    IMMICH_PROCESS_INVALID_IMAGES: "{{ dc_immich_process_invalid_images | default(omit) }}" # When true, generate thumbnails for invalid images
+                    IMMICH_TRUSTED_PROXIES: "{{ dc_immich_trusted_proxies | default(omit) }}" # List of comma separated IPs set as trusted proxies
+
+                    REDIS_HOSTNAME: "{{ dc_immich_net_redis_ip }}"
+                    REDIS_PASSWORD_FILE: "/run/secrets/redis_pw"
+                    DB_HOSTNAME: "{{ dc_immich_net_db_ip }}"
+                    DB_DATABASE_NAME: "{{ db_name }}"
+                    DB_USERNAME: "{{ db_user_name }}"
+                    DB_PASSWORD_FILE: "/run/secrets/db_user_pw"
+
+
+                  # labels:
+                  #   traefik.enable: "true"
+                  #   ## Router for general application traffic
+                  #   traefik.http.routers.immich-rtr.entrypoints: "websecure"
+                  #   traefik.http.routers.immich-rtr.rule: "Host(`{{ app_name }}.{{ domain_1 }}`)"
+                  #   # traefik.http.routers.immich-rtr.middlewares: "chain-no-auth@file"
+                  #   traefik.http.routers.immich-rtr.priority: "10"
+                  #   traefik.http.routers.immich-rtr.service: "immich-svc"
+
+                  #   ## Router specifically for Immich's outpost
+                  #   traefik.http.routers.immich-rtr-outpost.entrypoints: "websecure"
+                  #   traefik.http.routers.immich-rtr-outpost.rule: "Host(`{{ app_name }}.{{ domain_1 }}`) && PathPrefix(`/outpost.goauthentik.io/`)"
+                  #   # traefik.http.routers.immich-rtr-outpost.rule: "HostRegexp(`{subdomain:[a-z0-9-]+}.{{ domain_1 }}`) && PathPrefix(`/outpost.goauthentik.io/`)"
+                  #   traefik.http.routers.immich-rtr-outpost.priority: "15"
+                  #   traefik.http.routers.immich-rtr-outpost.service: "immich-svc"
+
+                  #   ## HTTP Services
+                  #   traefik.http.services.immich-svc.loadbalancer.server.port: "{{ dc_immich_http_port }}"
+
+
+                immich_machine_learning:
+                  # For hardware acceleration, add one of -[armnn, cuda, openvino] to the image tag.
+                  # Example tag: ${IMMICH_VERSION:-release}-cuda
+                  image: ghcr.io/immich-app/immich-machine-learning:{{ dc_immich_image_version | default('release') }}
+                  container_name: "{{ app_name }}_machine_learning"
+                  restart: unless-stopped
+                  security_opt:
+                    - no-new-privileges:true
+                  privileged: false
+                  userns_mode: "{{ 'host' if dc_immich_create_with_userns | bool == false else 'remap' }}"
+                  user: "{{ dc_immich_u_g_id }}:{{ dc_immich_u_g_id }}"
+                  deploy:
+                    resources:
+                      limits:
+                        cpus: '0.5'
+                  command: worker
+                  networks:
+                    app_net: "{{ {'ipv4_address': dc_immich_net_app_worker_ip} if dc_immich_net_app_worker_ip is defined and dc_immich_net_app_worker_ip | length > 0 else {} }}"
+                    # socketproxy_net: "{{ {'ipv4_address': dc_immich_socketproxy_net_app_worker_ip} if dc_immich_socketproxy_net_app_worker_ip is defined and dc_immich_socketproxy_net_app_worker_ip | length > 0 else {} }}"
+                  volumes:
+                    - "{{ appdata_type_path }}/model-cache:/cache"
+                    - "{{ secrets_type_path }}:/run/secrets"
+                  environment:
+                    IMMICH_PORT: "{{ dc_immich_ml_port | default('3003') }}"
+                    IMMICH_ENV: "{{ dc_immich_env | default('production') }}" # (production, development)
+                    IMMICH_LOG_LEVEL: "{{ dc_immich_log_level | default('log') }}" # (verbose, debug, log, warn, error)
+                    NO_COLOR: "{{ dc_immich_no_color | default('false') }}" # Set to true to disable color-coded log output
+
+
+# ! --------------------------- Notes --------------------------- ! #
+# https://immich.app/docs/install/environment-variables/
