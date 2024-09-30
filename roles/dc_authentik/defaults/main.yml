@@ -11,7 +11,7 @@ dc_authentik_http_port: 9000 # Default: 9000
 dc_authentik_https_port: 9443 # Default: 9443
 dc_authentik_healthcheck_port: 9300 # Default: 9300
 # * Worker only for sure
-dc_authentik_bootstrap_pw: "{{ demo_auth_user_pw }}" # Empty for generated password # Configure the default password for the akadmin user. Only read on the first startup.
+dc_authentik_bootstrap_pw: "{{ auth_user_pw }}" # Empty for generated password # Configure the default password for the akadmin user. Only read on the first startup.
 
 # * ---------------- authentik DB Configuration ------------------- * #
 ## Environment variables

@@ -127,11 +127,11 @@
                   command: # CLI arguments # ? decided to use traefik.yml instead
                     - --configFile=/etc/traefik/traefik.yml
                   extra_hosts:
-                    - "authelia.{{ domain_1 }}:{{ dc_dmz_net_vm10_ingress_ip }}"
-                    - "authentik.{{ domain_1 }}:{{ dc_dmz_net_vm10_ingress_ip }}"
+                    - "authelia.{{ domain_1 }}:{{ dc_vms_net_vm10_ingress_ip }}"
+                    - "authentik.{{ domain_1 }}:{{ dc_vms_net_vm10_ingress_ip }}"
                     # # Just rly needed if using both traefiks together
-                    # - "traefik-ingress.{{ domain_1 }}:{{ dc_dmz_net_vm10_ingress_ip }}"  # Yes, this is correct!
-                    # - "traefik-metrics.{{ domain_1 }}:{{ dc_dmz_net_vm20_metrics_ip }}"  # Yes, this is correct!
+                    # - "traefik-ingress.{{ domain_1 }}:{{ dc_vms_net_vm10_ingress_ip }}"  # Yes, this is correct!
+                    # - "traefik-metrics.{{ domain_1 }}:{{ dc_vms_net_vm20_metrics_ip }}"  # Yes, this is correct!
                   networks:
                     traefik_net: "{{ {'ipv4_address': dc_traefik_net_ip} if dc_traefik_net_ip is defined and dc_traefik_net_ip | length > 0 else {} }}"
                     socketproxy_net: "{{ {'ipv4_address': dc_traefik_socketproxy_net_app_ip} if dc_traefik_socketproxy_net_app_ip is defined and dc_traefik_socketproxy_net_app_ip | length > 0 else {} }}"

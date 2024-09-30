@@ -5,7 +5,8 @@
 # ? -----------------------------------------------------------------------------
 # *                                   Default                                   *
 # ? -----------------------------------------------------------------------------
-dc_default_net_internal_domain_name: "demo.default"
+dc_default_net_search_domain: "demo-default.{{ domain_1 }}"
+dc_default_net_bridge_name: "vmbr0"
 dc_default_net_vlan_id: 1
 dc_default_net_base: 192.168.1
 dc_default_net_address: "{{ dc_default_net_base }}.0"
@@ -19,7 +20,8 @@ dc_default_net_pve01_ip: "{{ dc_default_net_base }}.210" # "192.168.1.210"
 # ? -----------------------------------------------------------------------------
 # *                                     MGMT                                    *
 # ? -----------------------------------------------------------------------------
-dc_mgmt_net_internal_domain_name: "demo.mgmt"
+dc_mgmt_net_search_domain: "demo-mgmt.{{ domain_1 }}"
+dc_mgmt_net_bridge_name: "vmbr5"
 dc_mgmt_net_vlan_id: 5
 dc_mgmt_net_base: 10.0.5
 dc_mgmt_net_address: "{{ dc_mgmt_net_base }}.0"
@@ -31,27 +33,28 @@ dc_mgmt_net_dns_server: "{{ dc_mgmt_net_gateway }}"
 dc_mgmt_net_pve01_ip: "{{ dc_mgmt_net_base }}.10" # "10.0.5.10"
 
 # ? -----------------------------------------------------------------------------
-# *                                     DMZ                                     *
+# *                                     VMs                                     *
 # ? -----------------------------------------------------------------------------
-dc_dmz_net_internal_domain_name: "demo.dmz"
-dc_dmz_net_vlan_id: 90
-dc_dmz_net_base: 10.0.90
-dc_dmz_net_address: "{{ dc_dmz_net_base }}.0"
-dc_dmz_net_prefix_length: 24
-dc_dmz_net_cidr: "{{ dc_dmz_net_address }}/{{ dc_dmz_net_prefix_length }}"
-dc_dmz_net_gateway: "{{ dc_dmz_net_base }}.5"
-dc_dmz_net_dns_server: "{{ dc_dmz_net_gateway }}"
+dc_vms_net_search_domain: "demo-vms.{{ domain_1 }}"
+dc_vms_net_bridge_name: "vmbr90"
+dc_vms_net_vlan_id: 90
+dc_vms_net_base: 10.0.90
+dc_vms_net_address: "{{ dc_vms_net_base }}.0"
+dc_vms_net_prefix_length: 24
+dc_vms_net_cidr: "{{ dc_vms_net_address }}/{{ dc_vms_net_prefix_length }}"
+dc_vms_net_gateway: "{{ dc_vms_net_base }}.5"
+dc_vms_net_dns_server: "{{ dc_vms_net_gateway }}"
 
-dc_dmz_net_vm09_aio_hostname: "demo-vm09-aio"
-dc_dmz_net_vm09_aio_ip: "{{ dc_dmz_net_base }}.9" # "10.0.90.9"
-dc_dmz_net_vm10_ingress_hostname: "demo-vm10-ingress"
-dc_dmz_net_vm10_ingress_ip: "{{ dc_dmz_net_base }}.10" # "10.0.90.10"
-dc_dmz_net_vm20_metrics_hostname: "demo-vm20-metrics"
-dc_dmz_net_vm20_metrics_ip: "{{ dc_dmz_net_base }}.20" # "10.0.90.20"
-dc_dmz_net_vm31_application_1_hostname: "demo-vm31-application-1"
-dc_dmz_net_vm31_application_1_ip: "{{ dc_dmz_net_base }}.31" # "10.0.90.31"
-dc_dmz_net_vm41_multimedia_1_hostname: "demo-vm41-multimedia-1"
-dc_dmz_net_vm41_multimedia_1_ip: "{{ dc_dmz_net_base }}.41" # "10.0.90.41"
+dc_vms_net_vm09_aio_hostname: "demo-vm09-aio"
+dc_vms_net_vm09_aio_ip: "{{ dc_vms_net_base }}.9" # "10.0.90.9"
+dc_vms_net_vm10_ingress_hostname: "demo-vm10-ingress"
+dc_vms_net_vm10_ingress_ip: "{{ dc_vms_net_base }}.10" # "10.0.90.10"
+dc_vms_net_vm20_metrics_hostname: "demo-vm20-metrics"
+dc_vms_net_vm20_metrics_ip: "{{ dc_vms_net_base }}.20" # "10.0.90.20"
+dc_vms_net_vm31_application_1_hostname: "demo-vm31-application-1"
+dc_vms_net_vm31_application_1_ip: "{{ dc_vms_net_base }}.31" # "10.0.90.31"
+dc_vms_net_vm41_multimedia_1_hostname: "demo-vm41-multimedia-1"
+dc_vms_net_vm41_multimedia_1_ip: "{{ dc_vms_net_base }}.41" # "10.0.90.41"
 
 # ? ######################################################################################## #
 # !                                  Docker bridge - docker0                                 #
@@ -239,7 +242,7 @@ dc_authelia_net_db_ip: "{{ dc_authelia_net_base }}.3"  # 10.100.50.3/29
 dc_authelia_net_redis_ip: "{{ dc_authelia_net_base }}.4"  # 10.100.50.4/29
 
 # ? -----------------------------------------------------------------------------
-# *                                  Vaultwarden                                   *
+# *                                 Vaultwarden                                 *
 # ? -----------------------------------------------------------------------------
 dc_vaultwarden_net_base: 10.100.50
 dc_vaultwarden_net_address: "{{ dc_vaultwarden_net_base }}.8"
@@ -247,6 +250,17 @@ dc_vaultwarden_net_prefix_length: 29  # 6 usable octets eg 10.100.50.10 - 10.100
 dc_vaultwarden_net_cidr: "{{ dc_vaultwarden_net_address }}/{{ dc_vaultwarden_net_prefix_length }}"  # 10.100.50.8/29
 dc_vaultwarden_net_app_ip: "{{ dc_vaultwarden_net_base }}.10"  # 10.100.50.10/29
 dc_vaultwarden_net_db_ip: "{{ dc_vaultwarden_net_base }}.11"  # 10.100.50.11/29
+
+# ? -----------------------------------------------------------------------------
+# *                                   Immich                                    *
+# ? -----------------------------------------------------------------------------
+dc_immich_net_base: 10.100.50
+dc_immich_net_address: "{{ dc_immich_net_base }}.16"
+dc_immich_net_prefix_length: 29  # 6 usable octets eg 10.100.50.18 - 10.100.50.22
+dc_immich_net_cidr: "{{ dc_immich_net_address }}/{{ dc_immich_net_prefix_length }}"  # 10.100.50.16/29
+dc_immich_net_app_ip: "{{ dc_immich_net_base }}.18"  # 10.100.50.18/29
+dc_immich_net_db_ip: "{{ dc_immich_net_base }}.19"  # 10.100.50.19/29
+dc_immich_net_redis_ip: "{{ dc_immich_net_base }}.20"  # 10.100.50.20/29
 
 # ? -----------------------------------------------------------------------------
 # *                                  Crowdsec                                   *

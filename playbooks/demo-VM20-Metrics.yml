@@ -11,7 +11,7 @@
 #         pve_vm_id: 120
 #         pve_vm_name: "demo-vm20-metrics"
 #         pve_vm_hostname: "demo-vm20-metrics"
-#         pve_vm_ipv4_address_0: "{{ dc_dmz_net_vm20_metrics_ip }}"
+#         pve_vm_ipv4_address_0: "{{ dc_vms_net_vm20_metrics_ip }}"
 
 
 - name: Docker Provisioning

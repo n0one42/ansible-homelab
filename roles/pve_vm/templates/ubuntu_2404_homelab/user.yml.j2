@@ -2,13 +2,13 @@
 hostname: {{ pve_vm_hostname }}
 fqdn: {{ pve_vm_fqdn }}
 manage_etc_hosts: true
-locale: {{ pve_vm_locale }}
-timezone: {{ pve_vm_timezone }}
-user: {{ pve_vm_primary_user_name }}
-password: {{ pve_vm_primary_user_hashed_pw }}
+locale: {{ system_locale }}
+timezone: {{ timezone }}
+user: {{ primary_user_name }}
+password: {{ primary_user_hashed_pw }}
 lock_passwd: false  # Defaults to true. If true, it disables any type of authentication with password, also serial.
 ssh_authorized_keys:
-  - {{ pve_vm_primary_user_pub_key }}
+  - {{ primary_user_pub_key }}
 chpasswd:
   expire: False
 
@@ -25,8 +25,8 @@ write_files:
       PermitEmptyPasswords no
       X11Forwarding no
       UseDNS no
-      AllowUsers {{ pve_vm_primary_user_name }}
-      Port {{ pve_vm_ssh_port }}
+      AllowUsers {{ primary_user_name }}
+      Port {{ ssh_port }}
 
 package_update: true
 package_upgrade: true
@@ -37,8 +37,8 @@ packages:
   # - qemu-guest-agent
 
 runcmd:
-  - usermod -u {{ pve_vm_primary_user_uid }} {{ pve_vm_primary_user_name }}
-  - groupmod -g {{ pve_vm_primary_user_uid }} {{ pve_vm_primary_user_name }}
+  - usermod -u {{ primary_user_uid }} {{ primary_user_name }}
+  - groupmod -g {{ primary_user_uid }} {{ primary_user_name }}
   - apt install -y qemu-guest-agent
   - systemctl enable qemu-guest-agent
   - systemctl start qemu-guest-agent

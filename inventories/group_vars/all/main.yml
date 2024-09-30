@@ -1,0 +1,24 @@
+---
+# ? ######################################################################################## #
+# *                                     Common Variables                                     #
+# ? ######################################################################################## #
+
+ansible_ssh_private_key_file: "{{ '~/.ssh/id_ecdsa_sk' if ssh_key_type is defined and ssh_key_type == 'ecdsa-sk' else '~/.ssh/id_ed25519' }}"
+ansible_port: "{{ ssh_port }}"
+ansible_ssh_common_args: '-o IdentitiesOnly=yes'
+
+docker_home: "/opt/docker"
+# Subdirectories for specific types of Docker-related files
+docker_appdata: "{{ docker_home }}/appdata"  # Application data
+docker_custom: "{{ docker_home }}/custom"    # Custom configurations
+docker_logs: "{{ docker_home }}/logs"        # Log files
+docker_scripts: "{{ docker_home }}/scripts"  # Utility scripts
+docker_secrets: "{{ docker_home }}/secrets"  # Sensitive data
+docker_compose: "{{ docker_home }}/compose"  # compose datafiles
+
+appdata_base_path: "{{ docker_appdata }}/{{ app_name }}"
+appdata_type_path: "{{ docker_appdata }}/{{ app_name }}/{{ container_type }}" # eg: appdata/grafana/app ; appdata/grafana/promtail
+secrets_base_path: "{{ docker_secrets }}/{{ app_name }}"
+secrets_type_path: "{{ docker_secrets }}/{{ app_name }}/{{ container_type }}" # eg: secrets/grafana/app ; secrets/grafana/promtail
+logs_base_path: "{{ docker_logs }}/{{ app_name }}"
+logs_type_path: "{{ docker_logs }}/{{ app_name }}/{{ container_type }}" # eg: logs/grafana/app ; logs/grafana/promtail

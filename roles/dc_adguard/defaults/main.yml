@@ -8,5 +8,5 @@ dc_adguard_image_version: "latest"
 dc_adguard_u_g_id: 22007 # with userns --> 122007
 # dc_adguard_port: 9091
 dc_adguard_override_config_file: false  # ! Overrides the config file with the template one
-dc_adguard_auth_user: "{{ demo_auth_user }}"
-dc_adguard_auth_pw_bcrypt: "{{ demo_auth_pw_bcrypt }}"
+dc_adguard_auth_user: "{{ auth_user }}"
+dc_adguard_auth_pw_bcrypt: "{{ auth_pw_bcrypt }}"

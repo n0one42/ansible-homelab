@@ -26,8 +26,8 @@ scrape_configs:
     tls_config:
       insecure_skip_verify: {{ dc_traefik_acme_staging_mode }}
     # basic_auth:
-    #   username: "{{ demo_auth_user }}"
-    #   password: "{{ demo_auth_user_pw }}"
+    #   username: "{{ auth_user }}"
+    #   password: "{{ auth_user_pw }}"
     metrics_path: "/metrics"  # Needed to match exactly the route and rule of traefik with no authentication required for this service
     # metrics_path: "/ingress/vector/metrics" # ? Just if usng traefik to traefik with forwarding
     static_configs:
@@ -38,7 +38,7 @@ scrape_configs:
           job_type: "system_metrics"
           parser: "vector_prometheus"
           service: "vector"
-          host: "{{ dc_dmz_net_vm10_ingress_hostname }}"
+          host: "{{ dc_vms_net_vm10_ingress_hostname }}"
           instance: "vector-ingress.{{ domain_1 }}"
 
   - job_name: "cadvisor-ingress"  # represents job label
@@ -46,8 +46,8 @@ scrape_configs:
     tls_config:
       insecure_skip_verify: {{ dc_traefik_acme_staging_mode }}
     # basic_auth:
-    #   username: "{{ demo_auth_user }}"
-    #   password: "{{ demo_auth_user_pw }}"
+    #   username: "{{ auth_user }}"
+    #   password: "{{ auth_user_pw }}"
     metrics_path: "/metrics"  # Needed to match exactly the route and rule of traefik with no authentication required for this service
     # metrics_path: "/ingress/cadvisor/metrics"
     static_configs:
@@ -57,7 +57,7 @@ scrape_configs:
           job_type: "docker_metrics"
           parser: "cadvisor_prometheus"
           service: "cadvisor"
-          host: "{{ dc_dmz_net_vm10_ingress_hostname }}"
+          host: "{{ dc_vms_net_vm10_ingress_hostname }}"
           instance: "cadvisor-ingress.{{ domain_1 }}"
 
 
@@ -69,7 +69,7 @@ scrape_configs:
           job_type: "prometheus_metrics"
           parser: "prometheus_self"
           service: "prometheus"
-          host: "{{ dc_dmz_net_vm20_metrics_hostname }}"
+          host: "{{ dc_vms_net_vm20_metrics_hostname }}"
           instance: "prometheus-metrics.{{ domain_1 }}"
 
   # ? using vector instead of node exporter
@@ -80,7 +80,7 @@ scrape_configs:
           job_type: "system_metrics"
           parser: "vector_prometheus"
           service: "vector"
-          host: "{{ dc_dmz_net_vm20_metrics_hostname }}"
+          host: "{{ dc_vms_net_vm20_metrics_hostname }}"
           instance: "vector-metrics.{{ domain_1 }}"
 
   - job_name: "cadvisor-metrics"  # represents job label
@@ -90,7 +90,7 @@ scrape_configs:
           job_type: "docker_metrics"
           parser: "cadvisor_prometheus"
           service: "cadvisor"
-          host: "{{ dc_dmz_net_vm20_metrics_hostname }}"
+          host: "{{ dc_vms_net_vm20_metrics_hostname }}"
           instance: "cadvisor-metrics.{{ domain_1 }}"
 
   # ? To much overhead and not rly needed
@@ -110,8 +110,8 @@ scrape_configs:
     tls_config:
       insecure_skip_verify: {{ dc_traefik_acme_staging_mode }}
     # basic_auth:
-    #   username: "{{ demo_auth_user }}"
-    #   password: "{{ demo_auth_user_pw }}"
+    #   username: "{{ auth_user }}"
+    #   password: "{{ auth_user_pw }}"
     metrics_path: "/metrics"  # Needed to match exactly the route and rule of traefik with no authentication required for this service
     # metrics_path: "/ingress/vector/metrics" # ? Just if usng traefik to traefik with forwarding
     static_configs:
@@ -122,7 +122,7 @@ scrape_configs:
           job_type: "system_metrics"
           parser: "vector_prometheus"
           service: "vector"
-          host: "{{ dc_dmz_net_vm31_application_1_hostname }}"
+          host: "{{ dc_vms_net_vm31_application_1_hostname }}"
           instance: "vector-application-1.{{ domain_1 }}"
 
   - job_name: "cadvisor-application-1"  # represents job label
@@ -130,8 +130,8 @@ scrape_configs:
     tls_config:
       insecure_skip_verify: {{ dc_traefik_acme_staging_mode }}
     # basic_auth:
-    #   username: "{{ demo_auth_user }}"
-    #   password: "{{ demo_auth_user_pw }}"
+    #   username: "{{ auth_user }}"
+    #   password: "{{ auth_user_pw }}"
     metrics_path: "/metrics"  # Needed to match exactly the route and rule of traefik with no authentication required for this service
     # metrics_path: "/ingress/cadvisor/metrics"
     static_configs:
@@ -141,7 +141,7 @@ scrape_configs:
           job_type: "docker_metrics"
           parser: "cadvisor_prometheus"
           service: "cadvisor"
-          host: "{{ dc_dmz_net_vm31_application_1_hostname }}"
+          host: "{{ dc_vms_net_vm31_application_1_hostname }}"
           instance: "cadvisor-application-1.{{ domain_1 }}"
 
 
@@ -151,8 +151,8 @@ scrape_configs:
     tls_config:
       insecure_skip_verify: {{ dc_traefik_acme_staging_mode }}
     # basic_auth:
-    #   username: "{{ demo_auth_user }}"
-    #   password: "{{ demo_auth_user_pw }}"
+    #   username: "{{ auth_user }}"
+    #   password: "{{ auth_user_pw }}"
     metrics_path: "/metrics"  # Needed to match exactly the route and rule of traefik with no authentication required for this service
     # metrics_path: "/ingress/vector/metrics" # ? Just if usng traefik to traefik with forwarding
     static_configs:
@@ -163,7 +163,7 @@ scrape_configs:
           job_type: "system_metrics"
           parser: "vector_prometheus"
           service: "vector"
-          host: "{{ dc_dmz_net_vm41_multimedia_1_hostname }}"
+          host: "{{ dc_vms_net_vm41_multimedia_1_hostname }}"
           instance: "vector-multimedia-1.{{ domain_1 }}"
 
   - job_name: "cadvisor-multimedia-1"  # represents job label
@@ -171,8 +171,8 @@ scrape_configs:
     tls_config:
       insecure_skip_verify: {{ dc_traefik_acme_staging_mode }}
     # basic_auth:
-    #   username: "{{ demo_auth_user }}"
-    #   password: "{{ demo_auth_user_pw }}"
+    #   username: "{{ auth_user }}"
+    #   password: "{{ auth_user_pw }}"
     metrics_path: "/metrics"  # Needed to match exactly the route and rule of traefik with no authentication required for this service
     # metrics_path: "/ingress/cadvisor/metrics"
     static_configs:
@@ -182,7 +182,7 @@ scrape_configs:
           job_type: "docker_metrics"
           parser: "cadvisor_prometheus"
           service: "cadvisor"
-          host: "{{ dc_dmz_net_vm41_multimedia_1_hostname }}"
+          host: "{{ dc_vms_net_vm41_multimedia_1_hostname }}"
           instance: "cadvisor-multimedia-1.{{ domain_1 }}"
 
 # ! --------------------------- Notes --------------------------- ! #

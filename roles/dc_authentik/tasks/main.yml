@@ -229,7 +229,7 @@
                 #   userns_mode: "{{ 'host' if dc_authentik_create_with_userns | bool == false else 'remap' }}"
                 #   user: "{{ dc_authentik_u_g_id }}:{{ dc_authentik_u_g_id }}"
                 #   extra_hosts:
-                #     - "authentik.{{ domain_1 }}:{{ dc_dmz_net_vm10_ingress_ip }}"
+                #     - "authentik.{{ domain_1 }}:{{ dc_vms_net_vm10_ingress_ip }}"
                 #   networks:
                 #     traefik_net: "{{ {'ipv4_address': dc_traefik_net_authentik_ldap_ip} if dc_traefik_net_authentik_ldap_ip is defined and dc_traefik_net_authentik_ldap_ip | length > 0 else {} }}"
                 #   ports:
@@ -265,7 +265,7 @@
 
 # ? Each app which uses oauth2/openid and so on has to be either able to resolve the authentik.yourdom.com or by adding those lines:
       # ? extra_hosts:
-      # ?  - "authentik.{{ domain_1 }}:{{ dc_dmz_net_vm10_ingress_ip }}"
+      # ?  - "authentik.{{ domain_1 }}:{{ dc_vms_net_vm10_ingress_ip }}"
 
 
 # nc -v 10.0.90.10 3389

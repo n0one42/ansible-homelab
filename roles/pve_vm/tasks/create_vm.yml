@@ -37,8 +37,8 @@
         qm set {{ pve_vm_id }} --sockets {{ pve_vm_sockets }} --cores {{ pve_vm_cores }} --cpu host,flags=+aes
         qm set {{ pve_vm_id }} --memory {{ pve_vm_memory | default(2048) }} {{'--balloon' + pve_vm_balloon if pve_vm_balloon is defined else '--balloon 0' }}
         qm set {{ pve_vm_id }} --scsihw virtio-scsi-single
-        qm set {{ pve_vm_id }} --scsi0 {{ pve_vm_storage }}:0,import-from="{{ pve_vm_image_destination }}/{{ pve_vm_image_url | basename }}",cache=writeback,ssd=1,discard=on,iothread=1
-        qm set {{ pve_vm_id }} --scsi1 {{ pve_vm_storage }}:cloudinit
+        qm set {{ pve_vm_id }} --scsi0 {{ pve_storage }}:0,import-from="{{ pve_vm_image_destination }}/{{ pve_vm_image_url | basename }}",cache=writeback,ssd=1,discard=on,iothread=1
+        qm set {{ pve_vm_id }} --scsi1 {{ pve_storage }}:cloudinit
         qm set {{ pve_vm_id }} --boot c --bootdisk scsi0
         qm set {{ pve_vm_id }} --net0 virtio,bridge={{ pve_vm_bridge_0_name }}{{ ',macaddr=' + pve_vm_mac_address_0 if pve_vm_mac_address_0 is defined }},firewall=1
         qm set {{ pve_vm_id }} --serial0 socket --vga serial0
@@ -53,7 +53,7 @@
       when: pve_vm_enable_uefi | default(true)
       ansible.builtin.shell: |
         qm set {{ pve_vm_id }} --bios=ovmf
-        qm set {{ pve_vm_id }} --efidisk0 {{ pve_vm_storage }}:1,format=raw,efitype=4m,pre-enrolled-keys=0
+        qm set {{ pve_vm_id }} --efidisk0 {{ pve_storage }}:1,format=raw,efitype=4m,pre-enrolled-keys=0
       changed_when: true
 
     - name: Use templates to set cloud-init (user-data, meta-data, network-data)
@@ -98,8 +98,8 @@
 
 # ! sudo cloud-init schema --system
 
-        # qm set {{ pve_vm_id }} --ciuser {{ pve_vm_primary_user_name }}
+        # qm set {{ pve_vm_id }} --ciuser {{ primary_user_name }}
         # qm set {{ pve_vm_id }} --sshkeys "/tmp/{{ pve_vm_id }}_primary_user.pub"
 
-        # qm set {{ pve_vm_id }} --ipconfig0 "ip={{ pve_vm_ipv4_address_0 }}/{{ pve_vm_net_prefix_length_0 }},gw={{ pve_vm_gateway_ip }}"
-        # qm set {{ pve_vm_id }} --nameserver "{{ pve_vm_dns_server }}" --searchdomain {{ pve_vm_domain_name }}
+        # qm set {{ pve_vm_id }} --ipconfig0 "ip={{ pve_vm_ipv4_address_0 }}/{{ pve_vm_net_prefix_length_0 }},gw={{ dc_vms_net_gateway }}"
+        # qm set {{ pve_vm_id }} --nameserver "{{ dc_vms_net_dns_server }}" --searchdomain {{ dc_vms_net_search_domain }}

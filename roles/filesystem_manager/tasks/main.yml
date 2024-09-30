@@ -125,7 +125,7 @@
     - name: Set sub-directory default ACL --> {{ app_name + '/' + container_type }}
       ansible.posix.acl:
         path: "{{ appdata_type_path }}"
-        entity: "{{ pve_vm_primary_user_name }}"  # My real user
+        entity: "{{ primary_user_name }}"  # My real user
         etype: user
         permissions: rwx
         state: present
@@ -136,7 +136,7 @@
     - name: Set sub-directory ACL for existing files in --> {{ app_name + '/' + container_type }}
       ansible.posix.acl:
         path: "{{ appdata_type_path }}"
-        entity: "{{ pve_vm_primary_user_name }}"  # My real user
+        entity: "{{ primary_user_name }}"  # My real user
         etype: user
         permissions: rwx
         state: present

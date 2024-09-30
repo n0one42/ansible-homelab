@@ -26,8 +26,8 @@ sinks:
     endpoint: "https://loki-metrics.{{ domain_1 }}"
     # auth:
     #   strategy: basic
-    #   user: "{{ demo_auth_user }}"
-    #   password: "{{ demo_auth_user_pw }}"
+    #   user: "{{ auth_user }}"
+    #   password: "{{ auth_user_pw }}"
     encoding:
       codec: json # json
     labels:
@@ -35,7 +35,7 @@ sinks:
       job_type: "system_logs"
       parser: "vector_loki"
       service: "vector"
-      host: "{{ dc_dmz_net_vm41_multimedia_1_hostname }}"  # eg: demo-vm41-multimedia-1
+      host: "{{ dc_vms_net_vm41_multimedia_1_hostname }}"  # eg: demo-vm41-multimedia-1
       instance: "vector-{{ dc_traefik_type }}.{{ domain_1 }}"
 
 
@@ -48,8 +48,8 @@ sinks:
     endpoint: "https://loki-metrics.{{ domain_1 }}"
     # auth:
     #   strategy: basic
-    #   user: "{{ demo_auth_user }}"
-    #   password: "{{ demo_auth_user_pw }}"
+    #   user: "{{ auth_user }}"
+    #   password: "{{ auth_user_pw }}"
     encoding:
       codec: json # json
     labels:
@@ -57,7 +57,7 @@ sinks:
       job_type: "docker_logs"
       parser: vector_loki
       service: "vector"
-      host: "{{ dc_dmz_net_vm41_multimedia_1_hostname }}"  # eg: demo-vm41-multimedia-1
+      host: "{{ dc_vms_net_vm41_multimedia_1_hostname }}"  # eg: demo-vm41-multimedia-1
       instance: "vector-{{ dc_traefik_type }}.{{ domain_1 }}"
       {% raw %}
       container: "{{ .container_name }}"
@@ -75,8 +75,8 @@ sinks:
     endpoint: "https://loki-metrics.{{ domain_1 }}"
     # auth:
     #   strategy: basic
-    #   user: "{{ demo_auth_user }}"
-    #   password: "{{ demo_auth_user_pw }}"
+    #   user: "{{ auth_user }}"
+    #   password: "{{ auth_user_pw }}"
     encoding:
       codec: json # json
     labels:
@@ -84,7 +84,7 @@ sinks:
       job_type: "docker_logs"
       parser: vector_loki
       service: "vector"
-      host: "{{ dc_dmz_net_vm41_multimedia_1_hostname }}"  # eg: demo-vm41-multimedia-1
+      host: "{{ dc_vms_net_vm41_multimedia_1_hostname }}"  # eg: demo-vm41-multimedia-1
       instance: "vector-{{ dc_traefik_type }}.{{ domain_1 }}"
       {% raw %}
       container: "{{ .container_name }}"
