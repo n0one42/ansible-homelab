@@ -8,10 +8,10 @@
 #       vars:
 #         # pve_vm_prune: true  # testing purposes
 #         # pve_vm_start_after_create: false
-#         pve_vm_id: 110
+#         pve_vm_id: 2110
 #         pve_vm_name: "demo-vm10-ingress"
 #         pve_vm_hostname: "demo-vm10-ingress"
-#         pve_vm_ipv4_address_0: "{{ dc_vms_net_vm10_ingress_ip }}"
+#         pve_vm_ipv4_address_0: "{{ vms_net_vm10_ingress_ip }}"
 
 
 - name: Docker Provisioning

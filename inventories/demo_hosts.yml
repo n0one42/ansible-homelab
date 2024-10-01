@@ -1,32 +1,38 @@
 all:
   children:
-    # ! DEMO
-    demo:
-      hosts:
-        demo-pve:
-          ansible_host: "{{ dc_mgmt_net_pve01_ip }}"
-          ansible_user: root
-          ansible_ssh_common_args: '-o IdentitiesOnly=yes'
-        demo-vm09-aio:
-          ansible_host: "{{ dc_vms_net_vm09_aio_ip }}"
-          ansible_user: "{{ primary_user_name }}"
-          ansible_ssh_common_args: '-o IdentitiesOnly=yes'
-        demo-vm10-ingress:
-          ansible_host: "{{ dc_vms_net_vm10_ingress_ip }}"
-          ansible_user: "{{ primary_user_name }}"
-          ansible_ssh_common_args: '-o IdentitiesOnly=yes'
-        demo-vm20-metrics:
-          ansible_host: "{{ dc_vms_net_vm20_metrics_ip }}"
-          ansible_user: "{{ primary_user_name }}"
-          ansible_ssh_common_args: '-o IdentitiesOnly=yes'
-        demo-vm31-application-1:
-          ansible_host: "{{ dc_vms_net_vm31_application_1_ip }}"
-          ansible_user: "{{ primary_user_name }}"
-          ansible_ssh_common_args: '-o IdentitiesOnly=yes'
-        demo-vm41-multimedia-1:
-          ansible_host: "{{ dc_vms_net_vm41_multimedia_1_ip }}"
-          ansible_user: "{{ primary_user_name }}"
-          ansible_ssh_common_args: '-o IdentitiesOnly=yes'
+    demo: # ? DEMO
+      children:
+        pve-servers:
+          hosts:
+# * ---------------------------------------------------------------------------------------- * #
+# *                                           PVEs                                           * #
+# * ---------------------------------------------------------------------------------------- * #
+            demo-pve:
+              ansible_host: "{{ mgmt_net_pve01_ip }}"
+              ansible_user: "{{ pve_root_user_name }}"
+# * ---------------------------------------------------------------------------------------- * #
+# *                                           VMs                                            * #
+# * ---------------------------------------------------------------------------------------- * #
+        vms:
+          hosts:
+            demo-vm09-aio:
+              ansible_host: "{{ vms_net_vm09_aio_ip }}"
+              ansible_user: "{{ primary_user_name }}"
+            demo-vm10-ingress:
+              ansible_host: "{{ vms_net_vm10_ingress_ip }}"
+              ansible_user: "{{ primary_user_name }}"
+            demo-vm20-metrics:
+              ansible_host: "{{ vms_net_vm20_metrics_ip }}"
+              ansible_user: "{{ primary_user_name }}"
+            demo-vm31-application-1:
+              ansible_host: "{{ vms_net_vm31_application_1_ip }}"
+              ansible_user: "{{ primary_user_name }}"
+            demo-vm41-multimedia-1:
+              ansible_host: "{{ vms_net_vm41_multimedia_1_ip }}"
+              ansible_user: "{{ primary_user_name }}"
+            demo-vm99-testing:
+              ansible_host: "{{ vms_net_vm99_testing_ip }}"
+              ansible_user: "{{ primary_user_name }}"
 
 # ! Notes:
 # The private_key will be set through variables. Therefore, set it there.

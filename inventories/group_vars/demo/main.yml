@@ -11,6 +11,7 @@
 # *                                     Global Variables                                     #
 # ? ######################################################################################## #
 
+env: "demo"
 timezone: "America/New_York"
 system_locale: "en_US.UTF-8"
 system_language: "en_US.UTF-8"
@@ -19,6 +20,7 @@ alpha2code: "us"
 # ssh_key_type: "ecdsa-sk"  # comment out for ed25519
 ssh_port: 2222
 
+pve_root_user_name: "root"
 primary_user_name: "wasd"
 primary_user_hashed_pw: "$6$LCOTQrP6OD6fFxR5$okd0.2iW9bRxICAmFRM47o9nKJh7f9GdrGXNj/WTNR9QyssYrpsV07cBFxkIxg83.X9M0xyqL31c9st4BShW61" # 404PasswordNotFound
 primary_user_uid: 1022
@@ -34,6 +36,15 @@ auth_pw_argon2id: "$argon2id$v=19$m=65536,t=3,p=4$QOywno04Z2XsMBPPI09CFQ$2pAn6Ez
 auth_pw_bcrypt: "$2a$10$i2MGNwuNW9iq1R5HJz9SCOt/nPQuf/jvEo5wq5dR7MHnpMlWx9EGa" # 404PasswordNotFound
 
 pve_storage: "local-zfs"
+
+
+vms_net_vm09_aio_pve_id: "{{ 2000 + vms_net_vm09_aio_host_identifier }}"
+vms_net_vm10_ingress_pve_id: "{{ 2000 + vms_net_vm10_ingress_host_identifier }}"
+vms_net_vm20_metrics_pve_id: "{{ 2000 + vms_net_vm20_metrics_host_identifier }}"
+vms_net_vm31_application_1_pve_id: "{{ 2000 + vms_net_vm31_application_1_host_identifier }}"
+vms_net_vm41_multimedia_1_pve_id: "{{ 2000 + vms_net_vm41_multimedia_1_host_identifier }}"
+vms_net_vm99_testing_pve_id: "{{ 2000 + vms_net_vm99_testing_host_identifier }}"
+
 
 # ? ######################################################################################## #
 # *                                  Docker Container Variables                              #
@@ -457,7 +468,7 @@ dc_traefik_cloudflare_ip_ranges: >
   108.162.192.0/18, 190.93.240.0/20, 188.114.96.0/20, 197.234.240.0/22, 198.41.128.0/17,
   162.158.0.0/15, 104.16.0.0/13, 104.24.0.0/14, 172.64.0.0/13, 131.0.72.0/22
 # ? dc_traefik_local_ip_ranges is needed if using authelia / authentik also for the services inside the other vms. The traefik`s must trust each other to forward the headers
-dc_traefik_local_ip_ranges: "{{ dc_vms_net_vm09_aio_ip }}/32, {{ dc_vms_net_vm10_ingress_ip }}/32, {{ dc_vms_net_vm20_metrics_ip }}/32, {{ dc_vms_net_vm31_application_1_ip }}/32, {{ dc_vms_net_vm41_multimedia_1_ip }}/32"
+dc_traefik_local_ip_ranges: "{{ vms_net_vm09_aio_ip }}/32, {{ vms_net_vm10_ingress_ip }}/32, {{ vms_net_vm20_metrics_ip }}/32, {{ vms_net_vm31_application_1_ip }}/32, {{ vms_net_vm41_multimedia_1_ip }}/32"
 
 # * ------------>>> SocketProxy Configuration <<<------------ * #
 # * >>> Container variables

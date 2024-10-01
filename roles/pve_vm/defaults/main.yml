@@ -11,8 +11,8 @@
 # primary_user_hashed_pw
 # primary_user_pub_key
 # pve_storage
-# dc_vms_net_gateway
-# dc_vms_net_dns_server
+# vms_net_gateway
+# vms_net_dns_server
 
 # ? ######################################################################################## #
 # *                                  Docker Container Variables                              #
@@ -36,9 +36,9 @@ pve_vm_sockets: 1
 pve_vm_cores: 2
 # pve_vm_j2templates_dir: "{{ pve_vm_automation_files_dir }}/templates"
 pve_vm_hostname: "ubuntu-2404-template"
-pve_vm_fqdn: "{{ pve_vm_hostname }}.{{ domain_1 | default(dc_vms_net_internal_domain_name) }}"
+pve_vm_fqdn: "{{ pve_vm_hostname }}.{{ domain_1 | default(vms_net_internal_domain_name) }}"
 pve_vm_disk_size: "16G"
 # pve_vm_mac_address_0: ""
-pve_vm_net_prefix_length_0: "{{ dc_vms_net_prefix_length }}"
-pve_vm_ipv4_address_0: "{{ dc_vms_net_vm_default_ip }}"
-pve_vm_bridge_0_name: "{{ dc_vms_net_bridge_name }}"
+pve_vm_net_prefix_length_0: "{{ vms_net_prefix_length }}"
+pve_vm_ipv4_address_0: "{{ vms_net_vm_default_ip }}"
+pve_vm_bridge_0_name: "{{ vms_net_bridge_name }}"

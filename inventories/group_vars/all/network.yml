@@ -1,0 +1,44 @@
+# ? ######################################################################################## #
+# !                                         Networks                                         #
+# ? ######################################################################################## #
+
+# ? -----------------------------------------------------------------------------
+# *                          untagged Default (mostly VLAN 1)                   *
+# ? -----------------------------------------------------------------------------
+# ? override it through z_network.yml if needed to match your network
+default_net_search_domain: "default.{{ domain_1 }}"
+default_net_bridge_name: "vmbr0"
+default_net_vlan_id: 1
+default_net_base: 192.168.1
+default_net_address: "{{ default_net_base }}.0"
+default_net_prefix_length: 24
+default_net_cidr: "{{ default_net_address }}/{{ default_net_prefix_length }}"
+default_net_gateway: "{{ default_net_base }}.1"
+default_net_dns_server: "{{ default_net_gateway }}"
+
+default_net_pve01_ip: "{{ default_net_base }}.210" # "192.168.1.210"
+
+
+# ! Warning => The host identifier must be unique for each VM in the network and should not be changed once used otherwise it could have negative side effects
+# ! The identifier is also used for networking, therefore use ids between 1 - 254
+vms_net_vm09_aio_hostname: "{{ env }}-vm09-aio"
+vms_net_vm09_aio_host_identifier: 9
+vms_net_vm09_aio_ip: "{{ vms_net_base }}.{{ vms_net_vm09_aio_host_identifier }}" # Depending on env: "10.20.90.9" / "192.168.90.9" / ...
+vms_net_vm10_ingress_hostname: "{{ env }}-vm10-ingress"
+vms_net_vm10_ingress_host_identifier: 10
+vms_net_vm10_ingress_ip: "{{ vms_net_base }}.{{ vms_net_vm10_ingress_host_identifier }}"
+vms_net_vm20_metrics_hostname: "{{ env }}-vm20-metrics"
+vms_net_vm20_metrics_host_identifier: 20
+vms_net_vm20_metrics_ip: "{{ vms_net_base }}.{{ vms_net_vm20_metrics_host_identifier }}"
+vms_net_vm31_application_1_hostname: "{{ env }}-vm31-application-1"
+vms_net_vm31_application_1_host_identifier: 31
+vms_net_vm31_application_1_ip: "{{ vms_net_base }}.{{ vms_net_vm31_application_1_host_identifier }}"
+vms_net_vm41_multimedia_1_hostname: "{{ env }}-vm41-multimedia-1"
+vms_net_vm41_multimedia_1_host_identifier: 41
+vms_net_vm41_multimedia_1_ip: "{{ vms_net_base }}.{{ vms_net_vm41_multimedia_1_host_identifier }}"
+vms_net_vm99_testing_hostname: "{{ env }}-vm99-testing"
+vms_net_vm99_testing_host_identifier: 99
+vms_net_vm99_testing_ip: "{{ vms_net_base }}.{{ vms_net_vm99_testing_host_identifier }}"
+
+
+# ! --------------------------- Notes --------------------------- ! #

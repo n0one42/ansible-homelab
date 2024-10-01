@@ -1,0 +1,8 @@
+vms_net_vm09_aio_pve_id: "{{ 1000 + vms_net_vm09_aio_host_identifier }}"
+vms_net_vm10_ingress_pve_id: "{{ 1000 + vms_net_vm10_ingress_host_identifier }}"
+vms_net_vm20_metrics_pve_id: "{{ 1000 + vms_net_vm20_metrics_host_identifier }}"
+vms_net_vm31_application_1_pve_id: "{{ 1000 + vms_net_vm31_application_1_host_identifier }}"
+vms_net_vm41_multimedia_1_pve_id: "{{ 1000 + vms_net_vm41_multimedia_1_host_identifier }}"
+vms_net_vm99_testing_pve_id: "{{ 1000 + vms_net_vm99_testing_host_identifier }}"
+
+# Only for demonstration purposes. Put your own values into network.yml

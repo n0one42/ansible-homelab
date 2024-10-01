@@ -3,13 +3,13 @@
 # ? ######################################################################################## #
 
 # ? -----------------------------------------------------------------------------
-# *                            tagged demo-mgmt VLAN                            *
+# *                            tagged dev-mgmt VLAN                             *
 # ? -----------------------------------------------------------------------------
-# ? 10.20.5.0 - 10.20.5.255 # usable => 10.20.5.1 - 10.20.5.254
-mgmt_net_search_domain: "demo-mgmt.{{ domain_1 }}"
+# ? 10.10.5.0 - 10.10.5.255 # usable => 10.10.5.1 - 10.10.5.254
+mgmt_net_search_domain: "dev-mgmt.{{ domain_1 }}"
 mgmt_net_bridge_name: "vmbr{{ mgmt_net_vlan_id }}"
-mgmt_net_vlan_id: 2005
-mgmt_net_base: 10.20.5
+mgmt_net_vlan_id: 1005
+mgmt_net_base: 10.10.5
 mgmt_net_address: "{{ mgmt_net_base }}.0"
 mgmt_net_prefix_length: 24
 mgmt_net_cidr: "{{ mgmt_net_address }}/{{ mgmt_net_prefix_length }}"
@@ -19,15 +19,17 @@ mgmt_net_dns_server: "{{ mgmt_net_gateway }}"
 mgmt_net_pve01_ip: "{{ mgmt_net_base }}.10"
 
 # ? -----------------------------------------------------------------------------
-# *                             tagged demo-vms VLAN                            *
+# *                             tagged dev-vms VLAN                             *
 # ? -----------------------------------------------------------------------------
-# ? 10.20.90.0 - 10.20.90.255 # usable => 10.20.90.1 - 10.20.90.254
-vms_net_search_domain: "demo-vms.{{ domain_1 }}"
+# ? 10.10.90.0 - 10.10.90.255 # usable => 10.10.90.1 - 10.10.90.254
+vms_net_search_domain: "dev-vms.{{ domain_1 }}"
 vms_net_bridge_name: "vmbr{{ vms_net_vlan_id }}"
-vms_net_vlan_id: 2090
-vms_net_base: 10.20.90
+vms_net_vlan_id: 1090
+vms_net_base: 10.10.90
 vms_net_address: "{{ vms_net_base }}.0"
 vms_net_prefix_length: 24
 vms_net_cidr: "{{ vms_net_address }}/{{ vms_net_prefix_length }}"
 vms_net_gateway: "{{ vms_net_base }}.3"
 vms_net_dns_server: "{{ vms_net_gateway }}"
+
+# Only for demonstration purposes. Put your own values into network.yml

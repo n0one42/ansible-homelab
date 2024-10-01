@@ -46,9 +46,3 @@ dc_traefik_socketproxy_env_log_level: "info"  # debug, info, notice, warning, er
 dc_traefik_socketproxy_env_containers: "1"
 
 # ## * Network settings
-# dc_traefik_socketproxy_net_base: 10.100.50
-# dc_traefik_socketproxy_net_address: "{{ dc_traefik_socketproxy_net_base }}.0"
-# dc_traefik_socketproxy_net_prefix_length: 29 # 6 usable octets eg 10.100.50.2 - 10.100.50.6
-# dc_traefik_socketproxy_net_cidr: "{{ dc_traefik_socketproxy_net_address }}/{{ dc_traefik_socketproxy_net_prefix_length }}"  # 10.100.50.0/29
-# dc_traefik_socketproxy_net_ip: "{{ dc_traefik_socketproxy_net_base }}.5"  # 10.100.50.5
-# dc_traefik_socketproxy_net_app_ip: "{{ dc_traefik_socketproxy_net_base }}.6"  # 10.100.50.6

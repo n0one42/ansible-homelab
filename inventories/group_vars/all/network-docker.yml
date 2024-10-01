@@ -1,0 +1,285 @@
+# ? ######################################################################################## #
+# !                                  Docker bridge - docker0                                 #
+# ? ######################################################################################## #
+# The default bridge is named "docker0"
+docker_provisioning_docker_net_base: "10.250.{{ host_identifier }}"
+docker_provisioning_docker_net_address: "{{ docker_provisioning_docker_net_base }}.0"
+docker_provisioning_docker_net_prefix_length: 24
+docker_provisioning_docker_net_cidr: "{{ docker_provisioning_docker_net_address }}/{{ docker_provisioning_docker_net_prefix_length }}"
+docker_provisioning_docker_net_gateway: "{{ docker_provisioning_docker_net_base }}.1"
+# docker_provisioning_docker_net_dns_server: "{{ docker_provisioning_docker_net_gateway }}"
+docker_provisioning_default_address_pools:
+  - base: "10.251.{{ host_identifier }}.0/24"
+    size: 28
+  - base: "10.252.{{ host_identifier }}.0/24"
+    size: 28
+  - base: "10.253.{{ host_identifier }}.0/24"
+    size: 28
+
+# ? ######################################################################################## #
+# !                                       Special cases                                      #
+# ? ######################################################################################## #
+
+# ? -----------------------------------------------------------------------------
+# *                                   Traefik                                   *
+# ? -----------------------------------------------------------------------------
+# ? 10.100.x.0 - 10.100.x.255 # usable => 10.100.x.2 - 10.100.x.254
+dc_traefik_net_name: "traefik_net"
+dc_traefik_net_base: "10.100.{{ host_identifier }}" # eg 10.100.9 ; 10.100.10 ; 10.100.20 ; 10.100.31 ; ...
+dc_traefik_net_address: "{{ dc_traefik_net_base }}.0"
+dc_traefik_net_prefix_length: 24  # usable => 10.100.x.2 - 10.100.x.254
+dc_traefik_net_cidr: "{{ dc_traefik_net_address }}/{{ dc_traefik_net_prefix_length }}"  # 10.100.x.0/24
+
+
+dc_traefik_net_cert_dumper_ip: "{{ dc_traefik_net_base }}.98"  # 10.100.x.98
+dc_traefik_net_vaultwarden_ip: "{{ dc_traefik_net_base }}.99"  # 10.100.x.99
+dc_traefik_net_homepage_ip: "{{ dc_traefik_net_base }}.100"  # 10.100.x.100
+
+# dc_traefik_net_authentik_server_ip: "{{ dc_traefik_net_base }}.130"  # 10.100.x.130  # not needed
+dc_traefik_net_authentik_worker_ip: "{{ dc_traefik_net_base }}.131"  # 10.100.x.131
+dc_traefik_net_authentik_ldap_ip: "{{ dc_traefik_net_base }}.132"  # 10.100.x.132
+
+dc_traefik_net_firefox_ip: "{{ dc_traefik_net_base }}.199"  # 10.100.x.199
+dc_traefik_net_jdownloader2_ip: "{{ dc_traefik_net_base }}.200"  # 10.100.x.200
+dc_traefik_net_portainer_ip: "{{ dc_traefik_net_base }}.241"  # 10.100.x.241
+dc_traefik_net_authelia_ip: "{{ dc_traefik_net_base }}.242"  # 10.100.x.242
+dc_traefik_net_elasticsearch_ip: "{{ dc_traefik_net_base }}.243"  # 10.100.x.243
+dc_traefik_net_wud_ip: "{{ dc_traefik_net_base }}.244"  # 10.100.x.244
+dc_traefik_net_nodeexporter_ip: "{{ dc_traefik_net_base }}.245"  # 10.100.x.245
+dc_traefik_net_promethus_ip: "{{ dc_traefik_net_base }}.246"  # 10.100.x.246
+dc_traefik_net_promtail_ip: "{{ dc_traefik_net_base }}.247"  # 10.100.x.247
+dc_traefik_net_loki_ip: "{{ dc_traefik_net_base }}.248"  # 10.100.x.248
+dc_traefik_net_it_tools_ip: "{{ dc_traefik_net_base }}.249"  # 10.100.x.249
+dc_traefik_net_adguard_ip: "{{ dc_traefik_net_base }}.250"  # 10.100.x.250
+
+dc_traefik_net_crowdsec_ip: "{{ dc_traefik_net_base }}.253"  # 10.100.x.253
+dc_traefik_net_ip: "{{ dc_traefik_net_base }}.254"  # 10.100.x.254
+
+# ? ######################################################################################## #
+# !                                      Socket Proxyies                                     #
+# ? ######################################################################################## #
+# ? 10.120.x.0/29 => 0,8,16,24,32,40,48,56,64,72,80,88,96,104,112,120,128,136,144,152,160,168,176,184,192,200,208,216,224,232,240,248
+# 10.120.x.0 - 10.120.x.7 # usable => 10.120.x.2 - 10.120.x.6
+# 10.120.x.8 - 10.120.x.15 # usable => 10.120.x.10 - 10.120.x.14
+# 10.120.x.16 - 10.120.x.23 # usable => 10.120.x.18 - 10.120.x.22
+# ...
+# 10.120.x.232 - 10.120.x.239 # usable => 10.120.x.234 - 10.120.x.238
+# 10.120.x.240 - 10.120.x.247 # usable => 10.120.x.242 - 10.120.x.246
+# 10.120.x.248 - 10.120.x.255 # usable => 10.120.x.250 - 10.120.x.254
+core_socketproxy_net_base: 10.120.{{ host_identifier }}
+core_socketproxy_net_prefix_length: 29
+
+# ? -----------------------------------------------------------------------------
+# *                                   Traefik                                   *
+# ? -----------------------------------------------------------------------------
+# ? 10.120.x.0 - 10.120.x.7 # usable => 10.120.x.2 - 10.120.x.6
+dc_traefik_socketproxy_net_address: "{{ core_socketproxy_net_base }}.0"
+dc_traefik_socketproxy_net_cidr: "{{ dc_traefik_socketproxy_net_address }}/{{ core_socketproxy_net_prefix_length }}"
+
+dc_traefik_socketproxy_net_app_ip: "{{ core_socketproxy_net_base }}.2"
+dc_traefik_socketproxy_net_ip: "{{ core_socketproxy_net_base }}.3"
+
+# ? -----------------------------------------------------------------------------
+# *                                   Promtail                                   *
+# ? -----------------------------------------------------------------------------
+# ? 10.120.x.8 - 10.120.x.15 # usable => 10.120.x.10 - 10.120.x.14
+dc_promtail_socketproxy_net_address: "{{ core_socketproxy_net_base }}.8"
+dc_promtail_socketproxy_net_cidr: "{{ dc_promtail_socketproxy_net_address }}/{{ core_socketproxy_net_prefix_length }}"
+
+dc_promtail_socketproxy_net_app_ip: "{{ core_socketproxy_net_base }}.10"
+dc_promtail_socketproxy_net_ip: "{{ core_socketproxy_net_base }}.11"
+
+# ? -----------------------------------------------------------------------------
+# *                            Whats-Up-Docker (WUD)                            *
+# ? -----------------------------------------------------------------------------
+# ? 10.120.x.16 - 10.120.x.23 # usable => 10.120.x.18 - 10.120.x.22
+dc_wud_socketproxy_net_address: "{{ core_socketproxy_net_base }}.16"
+dc_wud_socketproxy_net_cidr: "{{ dc_wud_socketproxy_net_address }}/{{ core_socketproxy_net_prefix_length }}"
+
+dc_wud_socketproxy_net_app_ip: "{{ core_socketproxy_net_base }}.18"
+dc_wud_socketproxy_net_ip: "{{ core_socketproxy_net_base }}.19"
+
+# ? -----------------------------------------------------------------------------
+# *                                  Telegraf                                   *
+# ? -----------------------------------------------------------------------------
+# ? 10.120.x.24 - 10.120.x.31 # usable => 10.120.x.26 - 10.120.x.30
+dc_telegraf_socketproxy_net_address: "{{ core_socketproxy_net_base }}.24"
+dc_telegraf_socketproxy_net_cidr: "{{ dc_telegraf_socketproxy_net_address }}/{{ core_socketproxy_net_prefix_length }}"
+
+dc_telegraf_socketproxy_net_app_ip: "{{ core_socketproxy_net_base }}.26"
+dc_telegraf_socketproxy_net_ip: "{{ core_socketproxy_net_base }}.27"
+
+# ? -----------------------------------------------------------------------------
+# *                                   Vector                                    *
+# ? -----------------------------------------------------------------------------
+# ? 10.120.x.32 - 10.120.x.39 # usable => 10.120.x.34 - 10.120.x.38
+dc_vector_socketproxy_net_address: "{{ core_socketproxy_net_base }}.32"
+dc_vector_socketproxy_net_cidr: "{{ dc_vector_socketproxy_net_address }}/{{ core_socketproxy_net_prefix_length }}"
+
+dc_vector_socketproxy_net_app_ip: "{{ core_socketproxy_net_base }}.34"
+dc_vector_socketproxy_net_ip: "{{ core_socketproxy_net_base }}.35"
+
+# ? -----------------------------------------------------------------------------
+# *                                  Homepage                                   *
+# ? -----------------------------------------------------------------------------
+# ? 10.120.x.40 - 10.120.x.47 # usable => 10.120.x.42 - 10.120.x.46
+dc_homepage_socketproxy_net_address: "{{ core_socketproxy_net_base }}.40"
+dc_homepage_socketproxy_net_cidr: "{{ dc_homepage_socketproxy_net_address }}/{{ core_socketproxy_net_prefix_length }}"
+
+dc_homepage_socketproxy_net_app_ip: "{{ core_socketproxy_net_base }}.42"
+dc_homepage_socketproxy_net_ip: "{{ core_socketproxy_net_base }}.43"
+
+# ? -----------------------------------------------------------------------------
+# *                                  Authentik                                  *
+# ? -----------------------------------------------------------------------------
+# ? 10.120.x.48 - 10.120.x.55 # usable => 10.120.x.50 - 10.120.x.54
+dc_authentik_socketproxy_net_address: "{{ core_socketproxy_net_base }}.48"
+dc_authentik_socketproxy_net_cidr: "{{ dc_authentik_socketproxy_net_address }}/{{ core_socketproxy_net_prefix_length }}"
+
+# dc_authentik_socketproxy_net_app_server_ip: "{{ core_socketproxy_net_base }}.51"  # not needed
+dc_authentik_socketproxy_net_app_worker_ip: "{{ core_socketproxy_net_base }}.50"
+dc_authentik_socketproxy_net_ip: "{{ core_socketproxy_net_base }}.51"
+
+# ? -----------------------------------------------------------------------------
+# *                                  Portainer                                  *
+# ? -----------------------------------------------------------------------------
+# ? 10.120.x.56 - 10.120.x.63 # usable => 10.120.x.58 - 10.120.x.62
+dc_portainer_socketproxy_net_address: "{{ core_socketproxy_net_base }}.56"
+dc_portainer_socketproxy_net_cidr: "{{ dc_portainer_socketproxy_net_address }}/{{ core_socketproxy_net_prefix_length }}"
+
+dc_portainer_socketproxy_net_app_ip: "{{ core_socketproxy_net_base }}.58"
+dc_portainer_socketproxy_net_ip: "{{ core_socketproxy_net_base }}.59"
+
+
+# ? ######################################################################################## #
+# !                                            Apps                                          #
+# ? ######################################################################################## #
+# ? 10.130.x.0/28 => 0,16,32,48,64,80,96,112,128,144,160,176,192,208,224,240
+# 10.130.x.0 - 10.130.x.15 # usable => 10.130.x.2 - 10.130.x.14
+# 10.130.x.16 - 10.130.x.31 # usable => 10.130.x.18 - 10.130.x.30
+# 10.130.x.32 - 10.130.x.47 # usable => 10.130.x.34 - 10.130.x.46
+# ...
+# 10.130.x.208 - 10.130.x.223 # usable => 10.130.x.210 - 10.130.x.222
+# 10.130.x.224 - 10.130.x.239 # usable => 10.130.x.226 - 10.130.x.238
+# 10.130.x.240 - 10.130.x.255 # usable => 10.130.x.242 - 10.130.x.254
+core_apps_net_base: 10.130.{{ host_identifier }}
+core_apps_net_prefix_length: 28
+
+# ? -----------------------------------------------------------------------------
+# *                                  Authelia                                   *
+# ? -----------------------------------------------------------------------------
+# ? 10.130.x.0 - 10.130.x.15 # usable => 10.130.x.2 - 10.130.x.14
+dc_authelia_net_address: "{{ core_apps_net_base }}.0"
+dc_authelia_net_cidr: "{{ dc_authelia_net_address }}/{{ core_apps_net_prefix_length }}"
+dc_authelia_net_app_ip: "{{ core_apps_net_base }}.2"
+dc_authelia_net_db_ip: "{{ core_apps_net_base }}.3"
+dc_authelia_net_redis_ip: "{{ core_apps_net_base }}.4"
+
+# ? -----------------------------------------------------------------------------
+# *                                 Vaultwarden                                 *
+# ? -----------------------------------------------------------------------------
+# ? 10.130.x.16 - 10.130.x.31 # usable => 10.130.x.18 - 10.130.x.30
+dc_vaultwarden_net_address: "{{ core_apps_net_base }}.16"
+dc_vaultwarden_net_cidr: "{{ dc_vaultwarden_net_address }}/{{ core_apps_net_prefix_length }}"
+dc_vaultwarden_net_app_ip: "{{ core_apps_net_base }}.18"
+dc_vaultwarden_net_db_ip: "{{ core_apps_net_base }}.19"
+
+# ? -----------------------------------------------------------------------------
+# *                                   Immich                                    *
+# ? -----------------------------------------------------------------------------
+# ? 10.130.x.32 - 10.130.x.47 # usable => 10.130.x.34 - 10.130.x.46
+dc_immich_net_address: "{{ core_apps_net_base }}.32"
+dc_immich_net_cidr: "{{ dc_immich_net_address }}/{{ core_apps_net_prefix_length }}"
+dc_immich_net_app_ip: "{{ core_apps_net_base }}.34"
+dc_immich_net_db_ip: "{{ core_apps_net_base }}.35"
+dc_immich_net_redis_ip: "{{ core_apps_net_base }}.36"
+
+# ? -----------------------------------------------------------------------------
+# *                                  Crowdsec                                   *
+# ? -----------------------------------------------------------------------------
+# ? 10.130.x.48 - 10.130.x.63 # usable => 10.130.x.50 - 10.130.x.62
+dc_crowdsec_net_name: "crowdsec_net"
+dc_crowdsec_net_address: "{{ core_apps_net_base }}.48"
+dc_crowdsec_net_cidr: "{{ dc_crowdsec_net_address }}/{{ core_apps_net_prefix_length }}"
+
+dc_crowdsec_net_app_ip: "{{ core_apps_net_base }}.50"
+dc_crowdsec_net_bouncer_ip: "{{ core_apps_net_base }}.51"
+# dc_crowdsec_net_db_ip: "{{ core_apps_net_base }}.52"
+# dc_crowdsec_net_redis_ip: "{{ core_apps_net_base }}.53"
+dc_crowdsec_net_traefik_ip: "{{ core_apps_net_base }}.54"
+
+# ? -----------------------------------------------------------------------------
+# *                                  Authentik                                  *
+# ? -----------------------------------------------------------------------------
+# ? 10.130.x.64 - 10.130.x.79 # usable => 10.130.x.66 - 10.130.x.78
+dc_authentik_net_address: "{{ core_apps_net_base }}.64"
+dc_authentik_net_cidr: "{{ dc_authentik_net_address }}/{{ core_apps_net_prefix_length }}"
+dc_authentik_net_app_server_ip: "{{ core_apps_net_base }}.66"
+dc_authentik_net_app_worker_ip: "{{ core_apps_net_base }}.67"
+dc_authentik_net_db_ip: "{{ core_apps_net_base }}.68"
+dc_authentik_net_redis_ip: "{{ core_apps_net_base }}.69"
+# dc_authentik_net_ldap_ip: "{{ core_apps_net_base }}.70" # not needed
+
+# ? -----------------------------------------------------------------------------
+# *                                   Grafana                                   *
+# ? -----------------------------------------------------------------------------
+# ? 10.130.x.80 - 10.130.x.95 # usable => 10.130.x.82 - 10.130.x.94
+dc_grafana_net_address: "{{ core_apps_net_base }}.80"
+dc_grafana_net_cidr: "{{ dc_grafana_net_address }}/{{ core_apps_net_prefix_length }}"
+dc_grafana_net_app_ip: "{{ core_apps_net_base }}.82"
+dc_grafana_net_db_ip: "{{ core_apps_net_base }}.83"
+dc_grafana_net_loki_ip: "{{ core_apps_net_base }}.84"
+dc_grafana_net_prometheus_ip: "{{ core_apps_net_base }}.85"
+dc_grafana_net_vector_ip: "{{ core_apps_net_base }}.86"
+dc_grafana_net_cadvisor_ip: "{{ core_apps_net_base }}.87"
+dc_grafana_net_promtail_ip: "{{ core_apps_net_base }}.88"
+dc_grafana_net_nodeexporter_ip: "{{ core_apps_net_base }}.89"
+dc_grafana_net_influxdb_ip: "{{ core_apps_net_base }}.90"
+dc_grafana_net_elasticsearch_ip: "{{ core_apps_net_base }}.91"
+dc_grafana_net_testing_ip: "{{ core_apps_net_base }}.92"
+
+# ? ######################################################################################## #
+# !                                   Standalone containers                                  #
+# ? ######################################################################################## #
+# ? for external apps or for testing as a single container
+# ? 10.140.x.0/29 => 0,8,16,24,32,40,48,56,64,72,80,88,96,104,112,120,128,136,144,152,160,168,176,184,192,200,208,216,224,232,240,248
+# 10.140.x.0 - 10.140.x.7 # usable => 10.140.x.2 - 10.140.x.6
+# 10.140.x.8 - 10.140.x.15 # usable => 10.140.x.10 - 10.140.x.14
+# 10.140.x.16 - 10.140.x.23 # usable => 10.140.x.18 - 10.140.x.22
+# ...
+# 10.140.x.232 - 10.140.x.239 # usable => 10.140.x.234 - 10.140.x.238
+# 10.140.x.240 - 10.140.x.247 # usable => 10.140.x.242 - 10.140.x.246
+# 10.140.x.248 - 10.140.x.255 # usable => 10.140.x.250 - 10.140.x.254
+core_standalone_net_base: 10.140.{{ host_identifier }}
+core_standalone_net_prefix_length: 29
+
+# ? -----------------------------------------------------------------------------
+# *                     Socket Proxy - standalone container                     *
+# ? -----------------------------------------------------------------------------
+# ? 10.140.x.0 - 10.140.x.7 # usable => 10.140.x.2 - 10.140.x.6
+dc_socketproxy_net_address: "{{ core_standalone_net_base }}.0"
+dc_socketproxy_net_cidr: "{{ dc_socketproxy_net_address }}/{{ core_standalone_net_prefix_length }}"
+dc_socketproxy_net_ip: "{{ core_standalone_net_base }}.2"
+
+# ? -----------------------------------------------------------------------------
+# *                  PostgreSQL Bitnami - standalone container                  *
+# ? -----------------------------------------------------------------------------
+# ? 10.140.x.8 - 10.140.x.15 # usable => 10.140.x.10 - 10.140.x.14
+dc_postgresql_bitnami_net_address: "{{ core_standalone_net_base }}.8"
+dc_postgresql_bitnami_net_cidr: "{{ dc_postgresql_bitnami_net_address }}/{{ core_standalone_net_prefix_length }}"
+dc_postgresql_bitnami_net_ip: "{{ core_standalone_net_base }}.10"
+
+# ? -----------------------------------------------------------------------------
+# *                     Redis Bitnami - standalone container                    *
+# ? -----------------------------------------------------------------------------
+# ? 10.140.x.16 - 10.140.x.23 # usable => 10.140.x.18 - 10.140.x.22
+dc_redis_bitnami_net_address: "{{ core_standalone_net_base }}.16"
+dc_redis_bitnami_net_cidr: "{{ dc_redis_bitnami_net_address }}/{{ core_standalone_net_prefix_length }}"
+dc_redis_bitnami_net_ip: "{{ core_standalone_net_base }}.18"
+
+
+# ! --------------------------- Notes --------------------------- ! #
+# Docker uses the first ip for the gateway. Therefore first ip is not usable.
+# Eg. usable ips starts at 10.140.x.2 instead of 10.140.x.1
+
+# host_identifier has to be set by the playbook

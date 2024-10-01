@@ -12,7 +12,12 @@ inventories/host_vars/**
 !inventories/host_vars/demo-VM2-Metrics.yml
 !inventories/host_vars/demo-VM3-Application-1.yml
 
-## macOS ##¨
+!inventories/group_vars/dev
+inventories/group_vars/dev/**
+!inventories/group_vars/dev/_main.yml
+!inventories/group_vars/dev/_network.yml
+
+## macOS ##
 .DS_Store
 .AppleDouble
 .LSOverride

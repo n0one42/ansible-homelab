@@ -69,7 +69,7 @@
                   user: "{{ dc_portainer_u_g_id }}:{{ dc_portainer_u_g_id }}"
                   command: -H tcp://{{ app_name }}-socketproxy:2375
                   extra_hosts:
-                    - "authentik.{{ domain_1 }}:{{ dc_vms_net_vm10_ingress_ip }}" # ! EACH APP NEEDS THIS IF USING AUTHENTIK and without chain-authentik if using oauth2 or openid
+                    - "authentik.{{ domain_1 }}:{{ vms_net_vm10_ingress_ip }}" # ! EACH APP NEEDS THIS IF USING AUTHENTIK and without chain-authentik if using oauth2 or openid
                   networks:
                     socketproxy_net: "{{ {'ipv4_address': dc_portainer_socketproxy_net_app_ip} if dc_portainer_socketproxy_net_app_ip is defined and dc_portainer_socketproxy_net_app_ip | length > 0 else {} }}"
                     traefik_net: "{{ {'ipv4_address': dc_traefik_net_portainer_ip} if dc_traefik_net_portainer_ip is defined and dc_traefik_net_portainer_ip | length > 0 else {} }}"

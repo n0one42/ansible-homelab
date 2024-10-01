@@ -7,11 +7,11 @@ network:
         name: "en*"
       # set-name: eth0
       dhcp4: no
-      gateway4: {{ dc_vms_net_gateway }}
+      gateway4: {{ vms_net_gateway }}
       addresses:
        - "{{ pve_vm_ipv4_address_0 }}/{{ pve_vm_net_prefix_length_0 }}"
       nameservers:
-        addresses: [{{ dc_vms_net_dns_server }}]
+        addresses: [{{ vms_net_dns_server }}]
       # routes:
       #   - to: 192.168.99.0/24
       #     via: 192.168.99.1

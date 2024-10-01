@@ -101,5 +101,5 @@
         # qm set {{ pve_vm_id }} --ciuser {{ primary_user_name }}
         # qm set {{ pve_vm_id }} --sshkeys "/tmp/{{ pve_vm_id }}_primary_user.pub"
 
-        # qm set {{ pve_vm_id }} --ipconfig0 "ip={{ pve_vm_ipv4_address_0 }}/{{ pve_vm_net_prefix_length_0 }},gw={{ dc_vms_net_gateway }}"
-        # qm set {{ pve_vm_id }} --nameserver "{{ dc_vms_net_dns_server }}" --searchdomain {{ dc_vms_net_search_domain }}
+        # qm set {{ pve_vm_id }} --ipconfig0 "ip={{ pve_vm_ipv4_address_0 }}/{{ pve_vm_net_prefix_length_0 }},gw={{ vms_net_gateway }}"
+        # qm set {{ pve_vm_id }} --nameserver "{{ vms_net_dns_server }}" --searchdomain {{ vms_net_search_domain }}
