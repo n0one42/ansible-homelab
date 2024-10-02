@@ -16,7 +16,8 @@ default_net_cidr: "{{ default_net_address }}/{{ default_net_prefix_length }}"
 default_net_gateway: "{{ default_net_base }}.1"
 default_net_dns_server: "{{ default_net_gateway }}"
 
-default_net_pve01_ip: "{{ default_net_base }}.210" # "192.168.1.210"
+# ? Since not everyone has multiuple pve servers for each env, we can use the same server for each env. Recommended to also asign an ip into the prod mgmt network.
+default_net_pve_aio_ip: "{{ default_net_base }}.210" # "192.168.1.210"
 
 
 # ! Warning => The host identifier must be unique for each VM in the network and should not be changed once used otherwise it could have negative side effects

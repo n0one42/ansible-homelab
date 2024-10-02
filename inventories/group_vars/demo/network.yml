@@ -16,7 +16,6 @@ mgmt_net_cidr: "{{ mgmt_net_address }}/{{ mgmt_net_prefix_length }}"
 mgmt_net_gateway: "{{ mgmt_net_base }}.3"
 mgmt_net_dns_server: "{{ mgmt_net_gateway }}"
 
-mgmt_net_pve01_ip: "{{ mgmt_net_base }}.10"
 
 # ? -----------------------------------------------------------------------------
 # *                             tagged demo-vms VLAN                            *

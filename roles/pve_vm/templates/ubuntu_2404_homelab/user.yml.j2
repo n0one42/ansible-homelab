@@ -1,6 +1,7 @@
 #cloud-config
 hostname: {{ pve_vm_hostname }}
 fqdn: {{ pve_vm_fqdn }}
+prefer_fqdn_over_hostname: {{ prefer_fqdn_over_hostname | default(false) }}
 manage_etc_hosts: true
 locale: {{ system_locale }}
 timezone: {{ timezone }}
