@@ -54,7 +54,7 @@
               # ! --------------------------- Networks --------------------------- ! #
               networks:
                 traefik_net:
-                  name: "{{ dc_traefik_net_name }}"  # eg: traefik_net
+                  name: "{{ dc_traefik_net.name }}"  # eg: traefik_net
                   external: true  # indicating that it's a pre-existing network not managed by this Docker Compose file.
 
 
@@ -76,7 +76,7 @@
                   cap_drop:
                     - "ALL"
                   networks:
-                    traefik_net: "{{ {'ipv4_address': dc_traefik_net_adguard_ip} if dc_traefik_net_adguard_ip is defined and dc_traefik_net_adguard_ip | length > 0 else {} }}"
+                    traefik_net: "{{ {'ipv4_address': dc_traefik_net.adguard_ip} if dc_traefik_net.adguard_ip is defined and dc_traefik_net.adguard_ip | length > 0 else {} }}"
                   ports:
                     # DNS Ports
                     - "53:53/tcp"
