@@ -1,52 +1,62 @@
 ---
 # tasks file for roles/app_webmin
-- name: Update APT package index
-  ansible.builtin.apt:
-    update_cache: true
-
-- name: Install required dependencies
-  ansible.builtin.apt:
-    name: apt-transport-https
-    state: present
-
-- name: Download Webmin GPG key
-  ansible.builtin.get_url:
-    url: http://www.webmin.com/jcameron-key.asc
-    dest: /tmp/jcameron-key.asc
-    mode: '0644'
-
-- name: Convert Webmin GPG key to .gpg format
+- name: Check if Webmin is installed
   ansible.builtin.command:
-    cmd: gpg --dearmor -o /usr/share/keyrings/webmin.gpg /tmp/jcameron-key.asc
-  args:
-    creates: /usr/share/keyrings/webmin.gpg
-
-- name: Add Webmin repository
-  ansible.builtin.apt_repository:
-    repo: 'deb [signed-by=/usr/share/keyrings/webmin.gpg] http://download.webmin.com/download/repository sarge contrib'
-    state: present
-
-- name: Update APT package index after adding Webmin repo
-  ansible.builtin.apt:
-    update_cache: true
-
-- name: Install Webmin
-  ansible.builtin.apt:
-    name: webmin
-    state: present
-
-- name: Ensure Webmin is running
-  ansible.builtin.systemd:
-    name: webmin
-    enabled: true
-    state: started
-
-- name: Set Webmin password for root user
-  when: app_webmin_root_password is defined and app_webmin_root_password | length > 0
-  ansible.builtin.command:
-    cmd: sudo /usr/share/webmin/changepass.pl /etc/webmin root {{ app_webmin_root_password }}
-  no_log: true
+    cmd: which webmin
+  register: webmin_check
   changed_when: false
+  failed_when: false
+
+- name: Install Webmin if not present
+  when: webmin_check.rc != 0
+  block:
+    - name: Update APT package index
+      ansible.builtin.apt:
+        update_cache: true
+
+    - name: Install required dependencies
+      ansible.builtin.apt:
+        name: apt-transport-https
+        state: present
+
+    - name: Download Webmin GPG key
+      ansible.builtin.get_url:
+        url: http://www.webmin.com/jcameron-key.asc
+        dest: /tmp/jcameron-key.asc
+        mode: '0644'
+
+    - name: Convert Webmin GPG key to .gpg format
+      ansible.builtin.command:
+        cmd: gpg --dearmor -o /usr/share/keyrings/webmin.gpg /tmp/jcameron-key.asc
+      args:
+        creates: /usr/share/keyrings/webmin.gpg
+
+    - name: Add Webmin repository
+      ansible.builtin.apt_repository:
+        repo: 'deb [signed-by=/usr/share/keyrings/webmin.gpg] http://download.webmin.com/download/repository sarge contrib'
+        state: present
+
+    - name: Update APT package index after adding Webmin repo
+      ansible.builtin.apt:
+        update_cache: true
+
+    - name: Install Webmin
+      ansible.builtin.apt:
+        name: webmin
+        state: present
+
+    - name: Ensure Webmin is running
+      ansible.builtin.systemd:
+        name: webmin
+        enabled: true
+        state: started
+
+    - name: Set Webmin password for root user
+      when: app_webmin_root_password is defined and app_webmin_root_password | length > 0
+      ansible.builtin.command:
+        cmd: sudo /usr/share/webmin/changepass.pl /etc/webmin root {{ app_webmin_root_password }}
+      no_log: true
+      changed_when: false
 
 # ! --------------------------- Notes --------------------------- ! #
 # The defaults are https://<server-ip>:10000/

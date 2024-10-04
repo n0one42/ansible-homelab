@@ -36,8 +36,6 @@ docker_env_net_alloc: # Recursions inside its own variable not possible
     crowdsec_ip:  "{{ docker_env_cidr[env]  | ansible.utils.ipsubnet(24, 8) | ansible.utils.ipaddr('4') | ansible.utils.ipaddr('address') }}" # 10.142.200.4 (prod)
 
 
-
-
 # ? ######################################################################################## #
 # !                                       Special cases                                      #
 # ? ######################################################################################## #

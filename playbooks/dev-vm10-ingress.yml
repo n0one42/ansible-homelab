@@ -1,21 +1,21 @@
 ---
-# - name: Create VM => dev-vm10-ingress
-#   hosts: pve-qotom_env_dev
-#   become: true
-#   gather_facts: false
-#   roles:
-#     - role: pve_vm
-#       vars:
-#         # pve_vm_prune: true  # testing purposes
-#         # pve_vm_start_after_create: false
-#         pve_vm_id: "{{ vms_net_vm10_ingress_pve_id }}"
-#         pve_vm_name: "{{ vms_net_vm10_ingress_hostname }}"
-#         pve_vm_hostname: "{{ vms_net_vm10_ingress_hostname }}"
-#         pve_vm_fqdn: "{{ vms_net_vm10_ingress_hostname }}.{{ vms_net_search_domain }}"
-#         pve_vm_search_domain: "{{ vms_net_search_domain }}"
-#         pve_vm_ipv4_address_0: "{{ vms_net_vm10_ingress_ip }}"
-#         pve_vm_bridge_0_name: "{{ vms_net_bridge_name }}"
-#         pve_vm_net_prefix_length_0: "{{ vms_net_prefix_length }}"
+- name: Create VM => dev-vm10-ingress
+  hosts: pve-qotom_env_dev
+  become: true
+  gather_facts: false
+  roles:
+    - role: pve_vm
+      vars:
+        # pve_vm_prune: true  # testing purposes
+        # pve_vm_start_after_create: false
+        pve_vm_id: "{{ vms_net_vm10_ingress_pve_id }}"
+        pve_vm_name: "{{ vms_net_vm10_ingress_hostname }}"
+        pve_vm_hostname: "{{ vms_net_vm10_ingress_hostname }}"
+        pve_vm_fqdn: "{{ vms_net_vm10_ingress_hostname }}.{{ vms_net_search_domain }}"
+        pve_vm_search_domain: "{{ vms_net_search_domain }}"
+        pve_vm_ipv4_address_0: "{{ vms_net_vm10_ingress_ip }}"
+        pve_vm_bridge_0_name: "{{ vms_net_bridge_name }}"
+        pve_vm_net_prefix_length_0: "{{ vms_net_prefix_length }}"
 
 
 - name: Docker Provisioning

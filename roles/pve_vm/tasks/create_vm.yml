@@ -1,27 +1,6 @@
 ---
-- name: "Check if the VM already exists --> VM ID: {{ pve_vm_id }}"
-  ansible.builtin.command:
-    cmd: "qm status {{ pve_vm_id }}"
-  register: vm_template_check
-  changed_when: false
-  failed_when: false
-
-# ! ##############################################################################
-# ! Testing only!!! Don't use in production
-- name: Remove VM {{ pve_vm_id }}
-  when: "pve_vm_prune and 'does not exist' not in vm_template_check.stderr"
-  ansible.builtin.shell: |
-    qm stop {{ pve_vm_id }}
-    qm destroy {{ pve_vm_id }} -skiplock -purge
-    rm -r /var/lib/vz/snippets/{{ pve_vm_id }}*
-  args:
-    executable: /bin/bash
-  changed_when: true
-  failed_when: false
-# ! ##############################################################################
-
 - name: Create VM Task
-  when: "'does not exist' in vm_template_check.stderr"
+  when: "pve_vm_prune or 'does not exist' in vm_template_check.stderr"
   vars:
     pve_vm_meta_data: "meta=local:snippets/{{ pve_vm_id }}-meta.yml"
     pve_vm_user_data: "user=local:snippets/{{ pve_vm_id }}-user.yml"

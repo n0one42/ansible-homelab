@@ -1,6 +1,6 @@
 ---
-- name: Create VM => demo-vm20-metrics
-  hosts: pve-qotom_env_demo
+- name: Create VM => dev-vm20-metrics
+  hosts: pve-qotom_env_dev
   become: true
   gather_facts: false
   roles:
@@ -19,7 +19,7 @@
 
 
 - name: Docker Provisioning
-  hosts: demo-vm20-metrics
+  hosts: dev-vm20-metrics
   become: true
   gather_facts: false
   vars:
