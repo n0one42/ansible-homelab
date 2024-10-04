@@ -1,2 +1,9 @@
 ---
 # handlers file for roles/filesystem_manager
+- name: Restart container => {{ app_name }}
+  listen: "restart_container"
+  community.docker.docker_container:
+    name: "{{ app_name }}"
+    state: started
+    restart: true
+  when: filesystem_manager_restart_container_on_template_change | default(true) and container_info.exists

@@ -31,8 +31,10 @@
       ansible.builtin.import_role:
         name: filesystem_manager
       vars:
+        filesystem_manager_restart_container_on_template_change: true
         filesystem_manager_appdata_directories_to_create:
           - path: "config"
+            mode: '0755'
         # ! Individual step, so uncomment what needed
         filesystem_manager_secret_files_to_create:
         #   - var_name: wireguard_private_key
@@ -59,8 +61,8 @@
         #     content: "{{ dc_gluetun_httpproxy_password }}"
         #   - var_name: shadowsocks_password
         #     content: "{{ dc_gluetun_shadowsocks_password }}"
-      notify:
-        - Restart gluetun
+      # notify:
+      #   - Restart gluetun
 
     - name: Install docker compose Gluetun with inline definition
       community.docker.docker_compose_v2:
@@ -151,8 +153,8 @@
                 # HTTPPROXY_USER: "{{ dc_gluetun_httpproxy_user }}"
                 # HTTPPROXY_PASSWORD: "{{ dc_gluetun_httpproxy_password }}"
 
-    - name: Flush handlers
-      ansible.builtin.meta: flush_handlers
+    # - name: Flush handlers
+    #   ansible.builtin.meta: flush_handlers
 
 
 # ! --------------------------- Notes --------------------------- ! #

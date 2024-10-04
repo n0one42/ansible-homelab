@@ -16,8 +16,6 @@ mgmt_net_cidr: "{{ mgmt_net_address }}/{{ mgmt_net_prefix_length }}"
 mgmt_net_gateway: "{{ mgmt_net_base }}.3"
 mgmt_net_dns_server: "{{ mgmt_net_gateway }}"
 
-mgmt_net_pve01_ip: "{{ mgmt_net_base }}.10"
-
 # ? -----------------------------------------------------------------------------
 # *                             tagged dev-vms VLAN                             *
 # ? -----------------------------------------------------------------------------
@@ -31,5 +29,3 @@ vms_net_prefix_length: 24
 vms_net_cidr: "{{ vms_net_address }}/{{ vms_net_prefix_length }}"
 vms_net_gateway: "{{ vms_net_base }}.3"
 vms_net_dns_server: "{{ vms_net_gateway }}"
-
-# Only for demonstration purposes. Put your own values into network.yml

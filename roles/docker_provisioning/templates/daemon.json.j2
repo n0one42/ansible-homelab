@@ -1,9 +1,7 @@
 {
-    "bip": "{{ docker_provisioning_docker_net_gateway }}/{{ docker_provisioning_docker_net_prefix_length }}",
-    "fixed-cidr": "{{ docker_provisioning_docker_net_cidr }}",
+    "bip": "{{ docker_env_net_alloc.docker_net.bip }}",
     "mtu": 1500,
-    "default-gateway": "{{ docker_provisioning_docker_net_gateway }}",
-    "default-address-pools": {{ docker_provisioning_default_address_pools | to_json }},
+    "default-address-pools": {{ docker_env_net_alloc.docker_net.default_address_pools | to_nice_json }},
     "ipv6": false,
     "storage-driver": "overlay2",
     "userns-remap": "{{ docker_provisioning_dockerino_user_name }}",

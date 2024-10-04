@@ -85,42 +85,55 @@
             item_dest: "{{ filesystem_manager_appdata_files_in_directory_to_copy | selectattr('src', 'equalto', item.path | dirname) | map(attribute='dest') | first }}/{{ item.path | basename }}"
 
 
-    - name: Copy template files
-      when: filesystem_manager_appdata_templates_to_copy | default([]) | length > 0
-      ansible.builtin.template:
-        src: "{{ item.src }}"
-        dest: "{{ appdata_type_path }}/{{ item.dest }}"
-        owner: "{{ user }}"
-        group: "{{ group }}"
-        mode: "{{ item.mode | default('0440') }}"  # 0550 for executable
-        force: "{{ item.force | default(true) }}"
-      loop: "{{ filesystem_manager_appdata_templates_to_copy | default([]) }}"
-      # notify: Restart container # ? This will triggers the handler from the specific role eg promtail. Check promtail handler for infos
-
-    - name: Copy all files from a template directory
-      when: filesystem_manager_appdata_templates_in_directory_to_copy | default([]) | length > 0
+    - name: Template files
       block:
-        - name: Find all template files in the directory
-          delegate_to: localhost
-          become: false
-          ansible.builtin.find:
-            paths: "{{ item.src }}"
-            file_type: file
-          register: found_templates
-          loop: "{{ filesystem_manager_appdata_templates_in_directory_to_copy }}"
-
-        - name: Copy template files found in the directories
+        - name: Copy template files
+          when: filesystem_manager_appdata_templates_to_copy | default([]) | length > 0
           ansible.builtin.template:
-            src: "{{ item.path }}"
-            dest: "{{ appdata_type_path }}/{{ item_dest | regex_replace('\\.j2$', '') }}"
+            src: "{{ item.src }}"
+            dest: "{{ appdata_type_path }}/{{ item.dest }}"
             owner: "{{ user }}"
             group: "{{ group }}"
-            mode: "{{ item.mode | default('0440') }}"
+            mode: "{{ item.mode | default('0440') }}"  # 0550 for executable
             force: "{{ item.force | default(true) }}"
-          loop: "{{ found_templates.results | map(attribute='files') | flatten(levels=1) }}"
-          vars:
-            item_dest: "{{ filesystem_manager_appdata_templates_in_directory_to_copy | selectattr('src', 'equalto', item.path | dirname) | map(attribute='dest') | first }}/{{ item.path | basename }}"
+          loop: "{{ filesystem_manager_appdata_templates_to_copy | default([]) }}"
+          register: template_copy_result
 
+        - name: Copy all files from a template directory
+          when: filesystem_manager_appdata_templates_in_directory_to_copy | default([]) | length > 0
+          block:
+            - name: Find all template files in the directory
+              delegate_to: localhost
+              become: false
+              ansible.builtin.find:
+                paths: "{{ item.src }}"
+                file_type: file
+              register: found_templates
+              loop: "{{ filesystem_manager_appdata_templates_in_directory_to_copy }}"
+
+            - name: Copy template files found in the directories
+              ansible.builtin.template:
+                src: "{{ item.path }}"
+                dest: "{{ appdata_type_path }}/{{ item_dest | regex_replace('\\.j2$', '') }}"
+                owner: "{{ user }}"
+                group: "{{ group }}"
+                mode: "{{ item.mode | default('0440') }}"
+                force: "{{ item.force | default(true) }}"
+              loop: "{{ found_templates.results | map(attribute='files') | flatten(levels=1) }}"
+              vars:
+                item_dest: "{{ filesystem_manager_appdata_templates_in_directory_to_copy | selectattr('src', 'equalto', item.path | dirname) | map(attribute='dest') | first }}/{{ item.path | basename }}"
+              register: template_copy_result
+
+        - name: Evaluate restarting container
+          when: 
+            - filesystem_manager_restart_container_on_template_change
+            - template_copy_result.results is defined
+            - template_copy_result.results | selectattr('changed', 'equalto', true) | list | length > 0
+          community.docker.docker_container_info:
+            name: "{{ app_name }}"
+          register: container_info
+          notify: "restart_container" # ? This will triggers the handler from the specific role eg promtail. Check promtail handler for infos
+          changed_when: container_info.exists
 
     - name: Set sub-directory default ACL --> {{ app_name + '/' + container_type }}
       ansible.posix.acl:
@@ -293,6 +306,8 @@
         recalculate_mask: no_mask
       loop: "{{ filesystem_manager_set_acl_to_path }}"
 
+- name: Flush handlers
+  ansible.builtin.meta: flush_handlers
 
 # ? ######################################################################################## #
 # !                                          Notes                                           #

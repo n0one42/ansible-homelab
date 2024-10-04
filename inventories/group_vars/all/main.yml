@@ -39,24 +39,18 @@ primary_user_pub_key: "{{ lookup('file', '~/.ssh/id_ecdsa_sk.pub' if ssh_key_typ
 auth_user: "AOAUserNotFound" # Eg: Logins for => authelia, traefik etc.
 auth_user_email: "{{ auth_user }}@{{ domain_1 }}" # eg: AOAUserNotFound@demo.net
 auth_user_pw: "404PasswordNotFound"
-auth_user_pw_htpasswd: "$apr1$z19bu7pc$F4eZc.lSBtThI29L366PS1" # "404PasswordNotFound" "404PasswordNotFound" # https://www.web2generators.com/apache-tools/htpasswd-generator
+auth_user_pw_htpasswd: "$apr1$z19bu7pc$F4eZc.lSBtThI29L366PS1" # "404PasswordNotFound" # https://www.web2generators.com/apache-tools/htpasswd-generator
 auth_pw_hashed: "$6$LCOTQrP6OD6fFxR5$okd0.2iW9bRxICAmFRM47o9nKJh7f9GdrGXNj/WTNR9QyssYrpsV07cBFxkIxg83.X9M0xyqL31c9st4BShW61" # 404PasswordNotFound # openssl passwd -6 ; Used for linux user hashed pw
 auth_pw_argon2id: "$argon2id$v=19$m=65536,t=3,p=4$QOywno04Z2XsMBPPI09CFQ$2pAn6Ez/0PQQV1ujUHBScRwAJNn7NlAcgreDlEdV7Nw" # 404PasswordNotFound
 auth_pw_bcrypt: "$2a$10$i2MGNwuNW9iq1R5HJz9SCOt/nPQuf/jvEo5wq5dR7MHnpMlWx9EGa" # 404PasswordNotFound
 
 
-docker_home: "/opt/docker"
-# Subdirectories for specific types of Docker-related files
-docker_appdata: "{{ docker_home }}/appdata"  # Application data
-docker_custom: "{{ docker_home }}/custom"    # Custom configurations
-docker_logs: "{{ docker_home }}/logs"        # Log files
-docker_scripts: "{{ docker_home }}/scripts"  # Utility scripts
-docker_secrets: "{{ docker_home }}/secrets"  # Sensitive data
-docker_compose: "{{ docker_home }}/compose"  # compose datafiles
+# ? ######################################################################################## #
+# *                                        Apps Variables                                    #
+# ? ######################################################################################## #
 
-appdata_base_path: "{{ docker_appdata }}/{{ app_name }}"
-appdata_type_path: "{{ docker_appdata }}/{{ app_name }}/{{ container_type }}" # eg: appdata/grafana/app ; appdata/grafana/promtail
-secrets_base_path: "{{ docker_secrets }}/{{ app_name }}"
-secrets_type_path: "{{ docker_secrets }}/{{ app_name }}/{{ container_type }}" # eg: secrets/grafana/app ; secrets/grafana/promtail
-logs_base_path: "{{ docker_logs }}/{{ app_name }}"
-logs_type_path: "{{ docker_logs }}/{{ app_name }}/{{ container_type }}" # eg: logs/grafana/app ; logs/grafana/promtail
+# ? -----------------------------------------------------------------------------
+# *                                    Webmin                                   *
+# ? -----------------------------------------------------------------------------
+
+app_webmin_root_password: "{{ auth_user_pw }}"

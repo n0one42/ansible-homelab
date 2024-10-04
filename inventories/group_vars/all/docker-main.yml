@@ -1,0 +1,692 @@
+---
+# ? Create a own z_main.yml file in your env folder to override variables when needed. Do the same also for group_vars/all/ files
+
+# ? ######################################################################################## #
+# *                                  Docker Container Variables                              #
+# ? ######################################################################################## #
+
+docker_home: "/opt/docker"
+# Subdirectories for specific types of Docker-related files
+docker_appdata: "{{ docker_home }}/appdata"  # Application data
+docker_custom: "{{ docker_home }}/custom"    # Custom configurations
+docker_logs: "{{ docker_home }}/logs"        # Log files
+docker_scripts: "{{ docker_home }}/scripts"  # Utility scripts
+docker_secrets: "{{ docker_home }}/secrets"  # Sensitive data
+docker_compose: "{{ docker_home }}/compose"  # compose datafiles
+
+appdata_base_path: "{{ docker_appdata }}/{{ app_name }}"
+appdata_type_path: "{{ docker_appdata }}/{{ app_name }}/{{ container_type }}" # eg: appdata/grafana/app ; appdata/grafana/promtail
+secrets_base_path: "{{ docker_secrets }}/{{ app_name }}"
+secrets_type_path: "{{ docker_secrets }}/{{ app_name }}/{{ container_type }}" # eg: secrets/grafana/app ; secrets/grafana/promtail
+logs_base_path: "{{ docker_logs }}/{{ app_name }}"
+logs_type_path: "{{ docker_logs }}/{{ app_name }}/{{ container_type }}" # eg: logs/grafana/app ; logs/grafana/promtail
+
+# ? -----------------------------------------------------------------------------
+# *                              Container U/G IDs                              *
+# ? -----------------------------------------------------------------------------
+
+dc_crowdsec_u_g_id: 0 # !  such an odd container... # ! to many problems... odd container... therefore host mode and root
+dc_cadvisor_u_g_id: 0 # ! needs root sadly
+
+dc_portainer_u_g_id: 22000 # with userns --> 122000
+dc_wud_u_g_id: 22001 # with userns --> 122001
+dc_authelia_u_g_id: 22002 # with userns --> 122002
+dc_traefik_u_g_id: 22003 # with userns --> 122003
+dc_adguard_u_g_id: 22007 # with userns --> 122007
+dc_authentik_u_g_id: 22017 # with userns --> 122017
+dc_it_tools_u_g_id: 22022 # with userns --> 122022
+dc_grafana_u_g_id: 22025 # with userns --> 122025
+dc_loki_u_g_id: 22026 # with userns --> 122026
+dc_promtail_u_g_id: 22027 # with userns --> 122027
+dc_prometheus_u_g_id: 22028 # with userns --> 122028
+dc_nodeexporter_u_g_id: 22029 # with userns --> 122029
+dc_influxdb_u_g_id: 22030 # with userns --> 122030
+dc_telegraf_u_g_id: 22031 # with userns --> 122031
+dc_vector_u_g_id: 22032 # with userns --> 122032
+dc_alloy_u_g_id: 22033 # with userns --> 122033
+dc_homepage_u_g_id: 22034 # with userns --> 122034
+dc_vaultwarden_u_g_id: 22035 # with userns --> 122035
+dc_jdownloader2_u_g_id: 22036 # with userns --> 122036
+dc_firefox_jlesage_u_g_id: 22037 # with userns --> 122037
+dc_firefox_u_g_id: 22038 # with userns --> 122038
+dc_gluetun_u_g_id: 22099 # with userns --> 122099 # ! Note: Container will run as root and will use just the environment: PUID and PGID as non root user
+
+# ? -----------------------------------------------------------------------------
+# *                                  dc_adguard                                 *
+# ? -----------------------------------------------------------------------------
+# * ------------->>> Container Configuration <<<------------ * #
+# * >>> Container variables
+dc_adguard_container_name: "adguard"
+dc_adguard_create_with_userns: true
+dc_adguard_image_version: "latest"
+dc_adguard_log_level: ""
+dc_adguard_override_config_file: false  # ! Overrides the config file with the template one
+dc_adguard_auth_user: "{{ auth_user }}"
+dc_adguard_auth_pw_bcrypt: "{{ auth_pw_bcrypt }}"
+dc_adguard_port: 80
+
+# ? -----------------------------------------------------------------------------
+# *                                 dc_authelia                                 *
+# ? -----------------------------------------------------------------------------
+# * ------------->>> Container Configuration <<<------------ * #
+# * >>> Container variables
+dc_authelia_container_name: "authelia"
+dc_authelia_create_with_userns: true
+dc_authelia_image_version: "latest"
+dc_authelia_log_level: "info" # 'trace', 'debug', 'info', 'warn', or 'error' (case sensitive!)
+dc_authelia_jwt_secret: ""  # Empty for generated password
+dc_authelia_storage_encryption_key: ""  # Empty for generated password
+dc_authelia_session_secret: ""  # Empty for generated password
+dc_authelia_port: 9091
+
+## * Users configuration
+# ? docker run authelia/authelia:latest authelia crypto hash generate argon2 --password 'password'
+dc_authelia_users:
+  AOAUserNotFound:
+    disabled: false
+    displayname: '{{ auth_user }}'
+    password: '{{ auth_pw_argon2id }}'
+    email: '{{ auth_user }}@{{ domain_1 }}'
+    groups:
+      - 'admins'
+      - 'dev'
+
+dc_authelia_use_sqlite: true  # because not many users and db & redis = overhead
+# * ---------------->>> DB Configuration <<<---------------- * #
+# * >>> Container variables
+dc_authelia_db_create_with_userns: true
+dc_authelia_db_image_version: "latest"
+dc_authelia_db_log_level: ""
+dc_authelia_db_superuser_pw: ""  # Empty for generated password ; superuser name --> postgres
+dc_authelia_db_name: "authelia"
+dc_authelia_db_user_name: "authelia"
+dc_authelia_db_user_pw: ""  # Empty for generated password
+dc_authelia_db_port: 5432
+
+# * --------------->>> Redis Configuration <<<-------------- * #
+# * >>> Container variables
+dc_authelia_redis_create_with_userns: true
+dc_authelia_redis_image_version: "latest"
+dc_authelia_redis_log_level: ""
+dc_authelia_redis_pw: ""  # Empty for generated password
+dc_authelia_redis_port: 6379
+
+# ? -----------------------------------------------------------------------------
+# *                                 dc_authentik                                *
+# ? -----------------------------------------------------------------------------
+# * ------------->>> Container Configuration <<<------------ * #
+# * >>> Container variables
+dc_authentik_container_name: "authentik"
+dc_authentik_create_with_userns: true
+dc_authentik_image_version: "2024.6.3" # "latest"
+dc_authentik_log_level: "info" # default: info  # debug, info, warning, error, trace # ! trace also includes sensitive data in logs
+dc_authentik_secret_key: ""  # Empty for generated password
+dc_authentik_http_port: 9000 # Default: 9000
+dc_authentik_https_port: 9443 # Default: 9443
+# dc_authentik_healthcheck_port: 9300 # Default: 9300
+# * Worker only for sure
+dc_authentik_bootstrap_pw: "{{ auth_user_pw }}" # Empty for generated password # Configure the default password for the akadmin user. Only read on the first startup.
+# * LDAP only
+dc_authentik_ldap_authentik_token: "" # token-generated-by-authentik
+
+
+## ? Environment variables for socketproxy
+dc_authentik_socketproxy_env_log_level: "info"  # debug, info, notice, warning, err, crit, alert and emerg
+
+# * Not always needed - Can expose some information that your service does not need
+dc_authentik_socketproxy_env_ping: "1"
+dc_authentik_socketproxy_env_version: "1"
+dc_authentik_socketproxy_env_start: "1"
+dc_authentik_socketproxy_env_stop: "1"
+dc_authentik_socketproxy_env_restarts: "1"
+dc_authentik_socketproxy_env_containers: "1"
+dc_authentik_socketproxy_env_images: "1"
+dc_authentik_socketproxy_env_info: "1"
+dc_authentik_socketproxy_env_post: "1" # ! Security critical - Maximum caution when enabling these.
+
+
+# * ---------------->>> DB Configuration <<<---------------- * #
+# * >>> Container variables
+dc_authentik_db_create_with_userns: true
+dc_authentik_db_image_version: "latest"
+dc_authentik_db_log_level: ""
+dc_authentik_db_superuser_pw: ""  # Empty for generated password ; superuser name --> postgres
+dc_authentik_db_name: "authentik"
+dc_authentik_db_user_name: "authentik"
+dc_authentik_db_user_pw: ""  # Empty for generated password
+dc_authentik_db_port: 5432
+
+# * --------------->>> Redis Configuration <<<-------------- * #
+# * >>> Container variables
+dc_authentik_redis_create_with_userns: true
+dc_authentik_redis_image_version: "latest"
+dc_authentik_redis_log_level: ""
+dc_authentik_redis_pw: ""  # Empty for generated password
+dc_authentik_redis_port: 6379
+
+# ? -----------------------------------------------------------------------------
+# *                                 dc_crowdsec                                 *
+# ? -----------------------------------------------------------------------------
+# * ------------->>> Container Configuration <<<------------ * #
+# * >>> Container variables
+dc_crowdsec_container_name: "crowdsec"
+dc_crowdsec_create_with_userns: false # ! To many problems... odd container... therefore host mode and root
+dc_crowdsec_image_version: "latest"
+dc_crowdsec_log_level: ""
+dc_crowdsec_port: 8080
+
+# ? -----------------------------------------------------------------------------
+# *                                 dc_it-tools                                 *
+# ? -----------------------------------------------------------------------------
+# * ------------->>> Container Configuration <<<------------ * #
+# * >>> Container variables
+dc_it_tools_container_name: "it-tools"
+dc_it_tools_create_with_userns: true
+dc_it_tools_image_version: "latest"
+dc_it_tools_log_level: ""
+
+# ? -----------------------------------------------------------------------------
+# *                                 dc_homepage                                 *
+# ? -----------------------------------------------------------------------------
+# * ------------->>> Container Configuration <<<------------ * #
+# * >>> Container variables
+dc_homepage_container_name: "homepage"
+dc_homepage_create_with_userns: true
+dc_homepage_image_version: "latest"
+# dc_homepage_log_level: ""
+dc_homepage_port: 3000
+
+## ? Environment variables for socketproxy
+dc_homepage_socketproxy_env_log_level: "info"  # debug, info, notice, warning, err, crit, alert and emerg
+
+# * Not always needed - Can expose some information that your service does not need
+dc_homepage_socketproxy_env_containers: "1"
+dc_homepage_socketproxy_env_services: "1"
+dc_homepage_socketproxy_env_tasks: "1"
+
+# ? -----------------------------------------------------------------------------
+# *                                 dc_portainer                                 *
+# ? -----------------------------------------------------------------------------
+# * ------------->>> Container Configuration <<<------------ * #
+# * >>> Container variables
+dc_portainer_container_name: "portainer"
+dc_portainer_create_with_userns: true
+dc_portainer_image_version: "latest"
+# dc_portainer_log_level: ""
+dc_portainer_port: 9000
+
+## ? Environment variables for socketproxy
+dc_portainer_socketproxy_env_log_level: "info"  # debug, info, notice, warning, err, crit, alert and emerg
+
+# * Not always needed - Can expose some information that your service does not need
+dc_portainer_socketproxy_env_post: "1"
+dc_portainer_socketproxy_env_start: "1"
+dc_portainer_socketproxy_env_stop: "1"
+dc_portainer_socketproxy_env_restarts: "1"
+dc_portainer_socketproxy_env_containers: "1"
+dc_portainer_socketproxy_env_images: "1"
+dc_portainer_socketproxy_env_info: "1"
+dc_portainer_socketproxy_env_networks: "1"
+dc_portainer_socketproxy_env_services: "1"
+dc_portainer_socketproxy_env_tasks: "1"
+dc_portainer_socketproxy_env_volumes: "1"
+
+# ? -----------------------------------------------------------------------------
+# *                                  dc_vaultwarden                                 *
+# ? -----------------------------------------------------------------------------
+# * ------------->>> Container Configuration <<<------------ * #
+# * >>> Container variables
+dc_vaultwarden_container_name: "vaultwarden"
+dc_vaultwarden_create_with_userns: true
+dc_vaultwarden_image_version: "latest"
+dc_vaultwarden_log_level: "info"  # "trace", "debug", "info", "warn", "error" or "off"
+dc_vaultwarden_port: 80
+
+dc_vaultwarden_admin_token: "{{ auth_pw_argon2id }}" # openssl rand -base64 48 / 64 or argon2
+dc_vaultwarden_smtp_host: "mail.{{ domain_1 }}"
+dc_vaultwarden_smtp_from: "vaultwarden@{{ domain_1 }}"
+dc_vaultwarden_smtp_port: 587
+dc_vaultwarden_smtp_security: "tls"
+dc_vaultwarden_smtp_username: "vaultwarden@{{ domain_1 }}"
+dc_vaultwarden_smtp_password: ""
+dc_vaultwarden_yubico_client_id: ""
+dc_vaultwarden_yubico_secret_key: ""
+
+dc_vaultwarden_use_sqlite: true # because not many users and data therefore postgresql = overhead
+# * ---------------->>> DB Configuration <<<---------------- * #
+# * >>> Container variables
+dc_vaultwarden_db_create_with_userns: true
+dc_vaultwarden_db_image_version: "latest"
+dc_vaultwarden_db_log_level: ""
+dc_vaultwarden_db_superuser_pw: ""  # Empty for generated password ; superuser name --> postgres
+dc_vaultwarden_db_name: "vaultwarden"
+dc_vaultwarden_db_user_name: "vaultwarden"
+dc_vaultwarden_db_user_pw: ""  # Empty for generated password
+dc_vaultwarden_db_port: 5432
+
+# ? -----------------------------------------------------------------------------
+# *                                  dc_gluetun                                 *
+# ? -----------------------------------------------------------------------------
+# * ------------->>> Container Configuration <<<------------ * #
+# * >>> Container variables
+dc_gluetun_container_name: "gluetun"
+dc_gluetun_create_with_userns: true
+dc_gluetun_image_version: "latest"
+dc_gluetun_log_level: ""
+dc_gluetun_port: 8112
+
+dc_gluetun_publicip_api: "ipinfo" # default (ipinfo) # ipinfo or ip2location # Public IP echo service API to use
+dc_gluetun_publicip_api_token: "" # Optional API token for the public IP echo service to increase rate limiting
+dc_gluetun_publicip_period: "12h" # default (12h) # Period to check for public IP address. Set to 0 to disable.
+dc_gluetun_publicip_file: "/tmp/gluetun/ip" # default (/tmp/gluetun/ip) # Filepath to store the public IP address assigned. This will be removed in the v4 program, instead you might want to use the control server
+dc_gluetun_version_information: "on" # default (on) # on, off # Logs a message indicating if a newer version is available once the VPN is connected
+dc_gluetun_storage_filepath: "/gluetun/servers.json" # default (/gluetun/servers.json) # Path of servers.json file, or empty to disable caching servers
+
+dc_gluetun_vpn_service_provider: "" # "mullvad" / "nordvpn" / "windscribe" / "expressvpn" / "cyberghost" / "ivpn" / "pia" / "protonvpn" / "privateinternetaccess" / "scaleway" / "surfshark" / "torguard" / "vpnunlimited" / "windscribe"
+dc_gluetun_vpn_type: "" # "openvpn" / "wireguard"
+dc_gluetun_server_countries: ""
+dc_gluetun_server_cities: ""
+dc_gluetun_firewall_vpn_input_ports: "" # VPN Port forwarding --> https://github.com/qdm12/gluetun-wiki/blob/main/setup/advanced/vpn-port-forwarding.md#allow-a-forwarded-port-through-the-firewall
+# ? https://github.com/qdm12/gluetun-wiki/blob/main/setup/options/wireguard.md
+dc_gluetun_wireguard_private_key: ""
+dc_gluetun_wireguard_preshared_key: ""
+dc_gluetun_wireguard_addresses: ""
+# ? https://github.com/qdm12/gluetun-wiki/blob/main/setup/options/openvpn.md
+dc_gluetun_openvpn_user: ""
+dc_gluetun_openvpn_password: ""
+dc_gluetun_openvpn_clientkey: ""
+dc_gluetun_openvpn_encrypted_key: ""
+dc_gluetun_openvpn_key_passphrase: ""
+dc_gluetun_openvpn_clientcrt: ""
+
+dc_gluetun_httpproxy_user: ""
+dc_gluetun_httpproxy_password: ""
+dc_gluetun_shadowsocks_password: ""
+
+# ? -----------------------------------------------------------------------------
+# *                               dc_jdownloader2                               *
+# ? -----------------------------------------------------------------------------
+# * ------------->>> Container Configuration <<<------------ * #
+# * >>> Container variables
+dc_jdownloader2_container_name: "jdownloader2"
+dc_jdownloader2_create_with_userns: true
+dc_jdownloader2_image_version: "latest"
+dc_jdownloader2_container_debug: "0"  # Enables detailed logging when set to 1, useful for troubleshooting.
+dc_jdownloader2_web_listening_port: 5800
+
+# dc_jdownloader2_sup_group_ids: "" # Additional group IDs for the application, enhancing access control.
+dc_jdownloader2_umask: "0022" # Controls default permissions for new files/folders. 0022 allows read for all, write for owner.
+dc_jdownloader2_lang: "{{ system_language }}" # Sets the application's language and character encoding.
+dc_jdownloader2_tz: "{{ timezone }}" # Timezone for the container, affects time-based operations.
+dc_jdownloader2_keep_app_running: "1" # If set to 1, automatically restarts the app if it crashes.
+# dc_jdownloader2_app_niceness: "0" # Sets the CPU scheduling priority. Lower values mean higher priority.
+# dc_jdownloader2_install_packages: "" # Additional packages to install at container startup.
+# dc_jdownloader2_packages_mirror: "" # Custom mirror for package installation, can improve download speeds.
+# dc_jdownloader2_display_width: "1920" # Sets the width of the application window in pixels.
+# dc_jdownloader2_display_height: "1080" # Sets the height of the application window in pixels.
+# dc_jdownloader2_dark_mode: "0" # Enables dark mode for the application interface when set to 1.
+# dc_jdownloader2_web_audio: "0" # Enables audio playback through the browser when set to 1.
+# dc_jdownloader2_web_authentication: "0" # Enables login protection for the web interface when set to 1.
+# dc_jdownloader2_web_authentication_username: "" # Username for web interface login if authentication is enabled.
+# dc_jdownloader2_web_authentication_password: "" # Password for web interface login if authentication is enabled.
+# dc_jdownloader2_secure_connection: "0" # Enables encrypted connection for GUI access when set to 1.
+# dc_jdownloader2_secure_connection_vnc_method: "SSL" # Specifies the encryption method for VNC connections.
+# dc_jdownloader2_secure_connection_certs_check_interval: "60" # Interval in seconds to check for certificate changes.
+# dc_jdownloader2_vnc_listening_port: "5900" # Port for VNC access. -1 disables VNC access.
+# dc_jdownloader2_vnc_password: "" # Password required for VNC connections if set.
+# dc_jdownloader2_enable_cjk_font: "0" # Installs font support for Chinese, Japanese, and Korean characters when set to 1.
+# dc_jdownloader2_myjdownloader_email: "" # Email for MyJDownloader account, enables remote control.
+# dc_jdownloader2_myjdownloader_password: "" # Password for MyJDownloader account.
+# dc_jdownloader2_myjdownloader_device_name: "" # Unique name for this JDownloader instance in MyJDownloader.
+# dc_jdownloader2_jdownloader_headless: "0" # Runs JDownloader without GUI when set to 1, requires MyJDownloader for control.
+# dc_jdownloader2_jdownloader_max_mem: "" # Sets maximum memory usage for JDownloader. Use G, M, or K suffix.
+
+# ? -----------------------------------------------------------------------------
+# *                                 dc_firefox                                  *
+# ? -----------------------------------------------------------------------------
+# * ------------->>> Container Configuration <<<------------ * #
+# * >>> Container variables
+dc_firefox_container_name: "firefox"
+dc_firefox_create_with_userns: true
+dc_firefox_image_version: "latest"
+dc_firefox_container_debug: "0"  # Enables detailed logging when set to 1, useful for troubleshooting.
+dc_firefox_http_port: 3000
+dc_firefox_https_port: 3001
+dc_firefox_shm_size: "1gb" # Default in docker is 64MB
+
+dc_firefox_umask: "0022" # Controls default permissions for new files/folders. 0022 allows read for all, write for owner.
+dc_firefox_tz: "{{ timezone }}" # Timezone for the container, affects time-based operations.
+
+dc_firefox_cli: "https://www.perplexity.ai/" # The URL to open when Firefox starts.
+# dc_firefox_custom_user: "{{ auth_user }}" # HTTP Basic auth username, abc is default.
+# dc_firefox_password: "{{ auth_pw_argon2id }}" # HTTP Basic auth password, abc is default. If unset there will be no auth
+# dc_firefox_subfolder: "/firefox" # Subfolder for the application if running a subfolder reverse proxy, need both slashes IE /subfolder/
+# dc_firefox_title: "KasmVNC Client" # The page title displayed on the web browser, default "KasmVNC Client".
+# dc_firefox_fm_home: "/config" # This is the home directory (landing) for the file manager, default "/config".
+# dc_firefox_start_docker: "{{ dc_firefox_start_docker | default(omit) }}" # If set to false a container with privilege will not automatically start the DinD Docker setup.
+# dc_firefox_drinode: "{{ dc_firefox_drinode | default(omit) }}" # If mounting in /dev/dri for DRI3 GPU Acceleration allows you to specify the device to use IE /dev/dri/renderD128
+dc_firefox_lc_all: "{{ system_language }}" # Sets the application's language and character encoding.
+# dc_firefox_no_decor: "{{ dc_firefox_no_decor | default(omit) }}" # If set the application will run without window borders for use as a PWA.
+# dc_firefox_no_full: "{{ dc_firefox_no_full | default(omit) }}" # Do not autmatically fullscreen applications when using openbox.
+
+# ? -----------------------------------------------------------------------------
+# *                              dc_firefox_jlesage                             *
+# ? -----------------------------------------------------------------------------
+# * ------------->>> Container Configuration <<<------------ * #
+# * >>> Container variables
+dc_firefox_jlesage_container_name: "firefox"
+dc_firefox_jlesage_create_with_userns: true
+dc_firefox_jlesage_image_version: "latest"
+dc_firefox_jlesage_container_debug: "0"  # Enables detailed logging when set to 1, useful for troubleshooting.
+dc_firefox_jlesage_web_listening_port: 5800
+dc_firefox_jlesage_shm_size: "1gb" # Default in docker is 64MB
+
+# dc_firefox_jlesage_sup_group_ids: "" # Additional group IDs for the application, enhancing access control.
+dc_firefox_jlesage_umask: "0022" # Controls default permissions for new files/folders. 0022 allows read for all, write for owner.
+dc_firefox_jlesage_lang: "{{ system_language }}" # Sets the application's language and character encoding.
+dc_firefox_jlesage_tz: "{{ timezone }}" # Timezone for the container, affects time-based operations.
+dc_firefox_jlesage_keep_app_running: "1" # If set to 1, automatically restarts the app if it crashes.
+# dc_firefox_jlesage_app_niceness: "0" # Sets the CPU scheduling priority. Lower values mean higher priority.
+# dc_firefox_jlesage_install_packages: "" # Additional packages to install at container startup.
+# dc_firefox_jlesage_packages_mirror: "" # Custom mirror for package installation, can improve download speeds.
+# dc_firefox_jlesage_display_width: "1920" # Sets the width of the application window in pixels.
+# dc_firefox_jlesage_display_height: "1080" # Sets the height of the application window in pixels.
+# dc_firefox_jlesage_dark_mode: "0" # Enables dark mode for the application interface when set to 1.
+dc_firefox_jlesage_web_audio: "1" # Enables audio playback through the browser when set to 1.
+# dc_firefox_jlesage_web_authentication: "0" # Enables login protection for the web interface when set to 1.
+# dc_firefox_jlesage_web_authentication_username: "" # Username for web interface login if authentication is enabled.
+# dc_firefox_jlesage_web_authentication_password: "" # Password for web interface login if authentication is enabled.
+# dc_firefox_jlesage_secure_connection: "0" # Enables encrypted connection for GUI access when set to 1.
+# dc_firefox_jlesage_secure_connection_vnc_method: "SSL" # Specifies the encryption method for VNC connections.
+# dc_firefox_jlesage_secure_connection_certs_check_interval: "60" # Interval in seconds to check for certificate changes.
+# dc_firefox_jlesage_vnc_listening_port: "5900" # Port for VNC access. -1 disables VNC access.
+# dc_firefox_jlesage_vnc_password: "" # Password required for VNC connections if set.
+# dc_firefox_jlesage_enable_cjk_font: "0" # Installs font support for Chinese, Japanese, and Korean characters when set to 1.
+dc_firefox_jlesage_open_url: "https://www.perplexity.ai/" # The URL to open when Firefox starts.
+# dc_firefox_jlesage_kiosk: "0" # Set to 1 to enable kiosk mode. This mode launches Firefox in a very restricted and limited mode best suitable for public areas or customer-facing displays.
+# dc_firefox_jlesage_custom_args: "" # Custom argument(s) to pass when launching Firefox.
+
+# ? -----------------------------------------------------------------------------
+# *                                  dc_nginx                                   *
+# ? -----------------------------------------------------------------------------
+# * ------------->>> Container Configuration <<<------------ * #
+# * >>> Container variables
+
+# ? -----------------------------------------------------------------------------
+# *                                  dc_traefik                                 *
+# ? -----------------------------------------------------------------------------
+# ! ------------------>>> Dependencies <<<------------------ ! #
+# ? Has to be set by vars
+# dc_traefik_type --> "ingress" / "metrics" / "application-1" # Has to match the dc_traefik/templates folder name
+
+# * ------------->>> Container Configuration <<<------------ * #
+# * >>> Container variables
+dc_traefik_container_name: "traefik"
+dc_traefik_create_with_userns: true
+dc_traefik_image_version: "3.1"
+dc_traefik_log_level: "INFO" # (Default: error) TRACE, DEBUG, INFO, WARN, ERROR, FATAL, PANIC # Needs at least info for crowdsec
+
+dc_traefik_acme_staging_mode: true  # true = LetsEncrypt Staging Server - false = LetsEncrypt Production Server
+# dc_traefik_cf_dns_api_token: "" # ! Mandatory !
+dc_traefik_crowdsec_enabled: true
+dc_traefik_crowdsec_log_level: "INFO"
+dc_traefik_crowdsec_bouncer_key: "" # Empty for generated key
+
+dc_traefik_basic_auth_user: "{{ auth_user }}"
+dc_traefik_basic_auth_password_hashed: "{{ auth_user_pw_htpasswd }}" # "404PasswordNotFound" # https://www.web2generators.com/apache-tools/htpasswd-generator
+dc_traefik_cloudflare_ip_ranges: >
+  173.245.48.0/20, 103.21.244.0/22, 103.22.200.0/22, 103.31.4.0/22, 141.101.64.0/18,
+  108.162.192.0/18, 190.93.240.0/20, 188.114.96.0/20, 197.234.240.0/22, 198.41.128.0/17,
+  162.158.0.0/15, 104.16.0.0/13, 104.24.0.0/14, 172.64.0.0/13, 131.0.72.0/22
+# ? dc_traefik_local_ip_ranges is needed if using authelia / authentik also for the services inside the other vms. The traefik`s must trust each other to forward the headers
+dc_traefik_local_ip_ranges: "{{ vms_net_vm09_aio_ip }}/32, {{ vms_net_vm10_ingress_ip }}/32, {{ vms_net_vm20_metrics_ip }}/32, {{ vms_net_vm31_application_1_ip }}/32, {{ vms_net_vm41_multimedia_1_ip }}/32"
+
+# * ------------>>> SocketProxy Configuration <<<------------ * #
+# * >>> Container variables
+
+## ? Environment variables for socketproxy
+dc_traefik_socketproxy_env_log_level: "info"  # debug, info, notice, warning, err, crit, alert and emerg
+
+# * Not always needed - Can expose some information that your service does not need
+dc_traefik_socketproxy_env_containers: "1"
+
+# ? -----------------------------------------------------------------------------
+# *                                  dc_grafana                                 *
+# ? -----------------------------------------------------------------------------
+# ! ------------------>>> Dependencies <<<------------------ ! #
+# ? Has to be set by vars
+
+# * ------------->>> Container Configuration <<<------------ * #
+# * >>> Container variables
+dc_grafana_container_name: "grafana"
+dc_grafana_create_with_userns: true
+dc_grafana_image_version: "latest"
+dc_grafana_log_level: "INFO"
+dc_grafana_admin_user: "{{ auth_user }}"
+dc_grafana_admin_pw: "{{ auth_user_pw }}"  # Empty for generated password
+dc_grafana_port: 3000
+
+dc_grafana_use_sqlite: true  # because not many users and data therefore postgresql = overhead
+
+# * ---------------->>> Grafana Authentik <<<---------------- * #
+dc_grafana_authentik_client_id: ""
+dc_grafana_authentik_client_secret: ""
+
+# * ---------------->>> DB Configuration <<<---------------- * #
+# * >>> Container variables
+dc_grafana_db_create_with_userns: true
+dc_grafana_db_image_version: "latest"
+dc_grafana_db_superuser_pw: ""  # Empty for generated password ; superuser name --> postgres
+dc_grafana_db_name: "grafana"
+dc_grafana_db_user_name: "grafana"
+dc_grafana_db_user_pw: ""  # Empty for generated password
+dc_grafana_db_port: 5432
+
+# * ------------>>> Loki Configuration <<<------------ * #
+# * >>> Container variables
+dc_grafana_loki_create_with_userns: true
+dc_grafana_loki_image_version: "2.9.2"
+dc_grafana_loki_log_level: ""
+
+dc_loki_port: 3100
+
+## ? Environment variables if used in standalone mode (external promtail)
+dc_loki_standalone: false
+
+# * ------------>>> Promtail Configuration <<<------------ * #
+# * >>> Container variables
+dc_grafana_promtail_create_with_userns: true
+dc_grafana_promtail_image_version: "2.9.2"
+dc_grafana_promtail_log_level: "info" # default: info [debug, info, warn, error]
+dc_grafana_promtail_port: 9080
+dc_grafana_promtail_grpc_port: 9043
+
+## ? Environment variables if used in standalone mode (external promtail)
+dc_promtail_standalone: false
+
+## ? Environment variables for socketproxy
+dc_promtail_socketproxy_env_log_level: "info"  # debug, info, notice, warning, err, crit, alert and emerg
+
+# * Not always needed - Can expose some information that your service does not need
+dc_promtail_socketproxy_env_containers: "1"
+dc_promtail_socketproxy_env_networks: "1"
+dc_promtail_socketproxy_env_nodes: "1"
+dc_promtail_socketproxy_env_services: "1"
+dc_promtail_socketproxy_env_tasks: "1"
+
+# * ------------>>> Prometheus Configuration <<<------------ * #
+# * >>> Container variables
+dc_grafana_prometheus_create_with_userns: true
+dc_grafana_prometheus_image_version: "latest"
+dc_grafana_prometheus_log_level: "debug" # default: info [debug, info, warn, error] # ? Best to let debug cuz hard to find when something not working
+
+dc_prometheus_port: 9090
+
+## ? Environment variables if used in standalone mode (external prometheus)
+dc_prometheus_standalone: false
+
+# * ------------>>> Node-Exporter Configuration <<<------------ * #
+# * >>> Container variables
+dc_grafana_nodeexporter_create_with_userns: true
+dc_grafana_nodeexporter_image_version: "latest"
+dc_grafana_nodeexporter_log_level: "info" # default: info [debug, info, warn, error]
+dc_grafana_nodeexporter_port: 9100
+
+## ? Environment variables if used in standalone mode (external nodeexporter)
+dc_nodeexporter_standalone: false
+
+# * ------------>>> Cadvisor Configuration <<<------------ * #
+# * >>> Container variables
+dc_grafana_cadvisor_create_with_userns: false # ! Need this cuz of root sadly
+dc_grafana_cadvisor_image_version: "latest"
+dc_grafana_cadvisor_log_level: "" # seams not to be any available
+dc_cadvisor_port: 8080
+
+## ? Environment variables if used in standalone mode (external cadvisor)
+dc_cadvisor_standalone: false
+
+# * ------------>>> Alloy Configuration <<<------------ * #
+# * >>> Container variables
+dc_grafana_alloy_create_with_userns: true
+dc_grafana_alloy_image_version: "v1.3.1"
+dc_grafana_alloy_log_level: "info" # default: info [debug, info, warn, error]
+# dc_grafana_alloy_port: 9080
+
+## ? Environment variables if used in standalone mode (external alloy)
+dc_alloy_standalone: false
+
+## ? Environment variables for socketproxy
+dc_alloy_socketproxy_env_log_level: "info"  # debug, info, notice, warning, err, crit, alert and emerg
+
+# * Not always needed - Can expose some information that your service does not need
+dc_alloy_socketproxy_env_containers: "1"
+dc_alloy_socketproxy_env_networks: "1"
+dc_alloy_socketproxy_env_nodes: "1"
+dc_alloy_socketproxy_env_services: "1"
+dc_alloy_socketproxy_env_tasks: "1"
+
+# * ---------------->>> InfluxDB Configuration <<<---------------- * #
+# * >>> Container variables
+dc_grafana_influxdb_create_with_userns: true
+dc_grafana_influxdb_image_version: "2"
+dc_grafana_influxdb_admin_pw: ""  # Empty for generated password ; superuser name --> postgres
+dc_grafana_influxdb_user_bucket_name: "grafana"
+dc_grafana_influxdb_user_name: "grafana"
+dc_grafana_influxdb_user_pw: ""  # Empty for generated password
+
+# * ---------------->>> Elasticsearch Configuration <<<---------------- * #
+# * >>> Container variables
+dc_grafana_elasticsearch_create_with_userns: true
+dc_grafana_elasticsearch_image_version: "latest"
+dc_grafana_elasticsearch_admin_user_name: "elastic"
+dc_grafana_elasticsearch_admin_user_pw: ""  # Empty for generated password
+
+# * ------------>>> Telegraf Configuration <<<------------ * #
+# * >>> Container variables
+dc_grafana_telegraf_create_with_userns: true
+dc_grafana_telegraf_image_version: "latest"
+dc_grafana_telegraf_log_level: "info" # default: info [debug, info, warn, error]
+dc_grafana_telegraf_port: 8125
+
+## ? Environment variables if used in standalone mode (external promtail)
+dc_telegraf_standalone: false
+dc_telegraf_insecure_skip_verify: "{{ dc_traefik_acme_staging_mode }}"
+dc_telegraf_basic_auth_user: "{{ auth_user }}" # traefik basic auth credentials
+dc_telegraf_basic_auth_password: "{{ auth_user_pw }}"  # traefik basic auth credentials
+
+## ? Environment variables for socketproxy
+dc_telegraf_socketproxy_env_log_level: "info"  # debug, info, notice, warning, err, crit, alert and emerg
+
+# * Not always needed - Can expose some information that your service does not need
+dc_telegraf_socketproxy_env_containers: "1"
+dc_telegraf_socketproxy_env_networks: "1"
+dc_telegraf_socketproxy_env_nodes: "1"
+dc_telegraf_socketproxy_env_services: "1"
+dc_telegraf_socketproxy_env_tasks: "1"
+
+# * ------------>>> Vector Configuration <<<------------ * #
+# * >>> Container variables
+dc_grafana_vector_create_with_userns: true
+dc_grafana_vector_image_version: "0.40.1-debian"
+dc_grafana_vector_log_level: "info" # default: info [debug, info, warn, error]
+
+dc_vector_port: 8686
+dc_vector_prometheus_exporter_port: 9598
+
+## ? Environment variables if used in standalone mode (external promtail)
+dc_vector_standalone: false
+dc_vector_insecure_skip_verify: "{{ dc_traefik_acme_staging_mode }}"
+dc_vector_basic_auth_user: "{{ auth_user }}" # traefik basic auth credentials
+dc_vector_basic_auth_password: "{{ auth_user_pw }}"  # traefik basic auth credentials
+
+# # ? Does not work correctly with the socketproxy.
+
+# ? -----------------------------------------------------------------------------
+# *                                dc_whoami                                    *
+# ? -----------------------------------------------------------------------------
+
+
+# ? -----------------------------------------------------------------------------
+# *                             dc_whats_up_docker                              *
+# ? -----------------------------------------------------------------------------
+# * ------------->>> Container Configuration <<<------------ * #
+# * >>> Container variables
+dc_wud_container_name: "whats-up-docker"
+dc_wud_create_with_userns: true
+dc_wud_image_version: "latest"
+dc_wud_log_level: "info"
+dc_wud_port: 3000
+
+## ? Environment variables if used in standalone mode (external wud)
+dc_wud_insecure_skip_verify: "{{ dc_traefik_acme_staging_mode }}"
+dc_wud_basic_auth_user: "{{ auth_user }}" # traefik basic auth credentials
+dc_wud_basic_auth_password: "{{ auth_user_pw }}"  # traefik basic auth credentials
+
+## ? Environment variables for socketproxy
+dc_wud_socketproxy_env_log_level: "info"  # debug, info, notice, warning, err, crit, alert and emerg
+dc_wud_socketproxy_env_ping: "1"
+
+# * Not always needed - Can expose some information that your service does not need
+dc_wud_socketproxy_env_containers: "1"
+dc_wud_socketproxy_env_networks: "1"
+dc_wud_socketproxy_env_nodes: "1"
+dc_wud_socketproxy_env_services: "1"
+dc_wud_socketproxy_env_tasks: "1"
+dc_wud_socketproxy_env_info: "1"
+dc_wud_socketproxy_env_volumes: "1"
+dc_wud_socketproxy_env_images: "1"  # 100% needed
+
+
+####################################################################################################################################################
+
+# Container defaults/main.yml Template
+# * ----------------- Container Configuration -------------------- * #
+## * Container variables
+
+## * Users configuration (like authelia users or such specific groups). Only if needed
+
+## * Network settings
+
+
+# * --------------------- DB Configuration ------------------------ * #
+## * Container variables
+
+## * Users configuration (like authelia users or such specific groups). Only if needed
+
+## * Network settings
+
+
+# * ------------------- Redis Configuration ---------------------- * #
+## * Container variables
+
+## * Users configuration (like authelia users or such specific groups). Only if needed
+
+## * Network settings
+
+
+# * ------------------- SocketProxy Configuration ---------------------- * #
+## * Container variables
+
+## * Users configuration (like authelia users or such specific groups). Only if needed
+
+## * Network settings

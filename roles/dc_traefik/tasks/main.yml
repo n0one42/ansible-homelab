@@ -36,6 +36,7 @@
           ansible.builtin.import_role:
             name: filesystem_manager
           vars:
+            filesystem_manager_restart_container_on_template_change: true
             filesystem_manager_appdata_directories_to_create:
               - path: "rules"
               - path: "letsencrypt"
@@ -58,15 +59,9 @@
               - var_name: "dc_traefik_cf_dns_api_token"
                 content: "{{ dc_traefik_cf_dns_api_token }}" # pass it from the ansible vault
                 mode: "0440"
-
-        - name: '[Required] filesystem_manager role'
-          ansible.builtin.import_role:
-            name: filesystem_manager
-          vars:
             filesystem_manager_appdata_templates_to_copy:
               - src: "traefik.yml.j2"
                 dest: "traefik.yml"
-          notify: Restart traefik
 
         - name: '[Required] filesystem_manager role'
           ansible.builtin.import_role:
@@ -205,8 +200,6 @@
                 #     - "{{ appdata_type_path }}/letsencrypt:/data"
                 #     - "{{ docker_secrets }}/certs_dumper:/certs_dumper"
 
-        - name: Flush handlers
-          ansible.builtin.meta: flush_handlers
 
 # ! Notes
 # something like the following line causes problems in traefik. Therefore I think, it would be better not to use this anymore this way despite the container.

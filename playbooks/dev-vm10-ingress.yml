@@ -1,6 +1,6 @@
 ---
-# - name: Create VM => demo-vm10-ingress
-#   hosts: pve-qotom_env_demo
+# - name: Create VM => dev-vm10-ingress
+#   hosts: pve-qotom_env_dev
 #   become: true
 #   gather_facts: false
 #   roles:
@@ -19,7 +19,7 @@
 
 
 - name: Docker Provisioning
-  hosts: demo-vm10-ingress
+  hosts: dev-vm10-ingress
   become: true
   gather_facts: false
   vars:

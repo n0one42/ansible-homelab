@@ -28,12 +28,7 @@ dc_traefik_local_ip_ranges: ""
 
 # ## * Network settings
 # # ? Recommended to add this to the group_vars/all/main.yml or better to the group_vars/all/network.yml
-# dc_traefik_net_name: "traefik_net"
-# dc_traefik_net_base: 192.168.90
-# dc_traefik_net_address: "{{ dc_traefik_net_base }}.0"
-# dc_traefik_net_prefix_length: 24
-# dc_traefik_net_cidr: "{{ dc_traefik_net_address }}/{{ dc_traefik_net_prefix_length }}"  # 192.168.90.0/24
-# dc_traefik_net_ip: "{{ dc_traefik_net_base }}.254"  # 192.168.90.254
+
 
 
 # * ------------------- SocketProxy Configuration ---------------------- * #
