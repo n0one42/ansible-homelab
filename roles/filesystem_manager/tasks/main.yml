@@ -56,7 +56,6 @@
         owner: "{{ user }}"
         group: "{{ group }}"
         mode: "{{ item.mode | default('0660') }}"  # 0550 for executable
-        access_time: preserve
       no_log: true  # could contain sensitive data like acme.json therefore no log
       loop: "{{ filesystem_manager_appdata_files_to_create | default([]) }}"
 
@@ -122,13 +121,12 @@
               loop: "{{ found_templates.results | map(attribute='files') | flatten(levels=1) }}"
               vars:
                 item_dest: "{{ filesystem_manager_appdata_templates_in_directory_to_copy | selectattr('src', 'equalto', item.path | dirname) | map(attribute='dest') | first }}/{{ item.path | basename }}"
-              register: template_copy_result
+              register: templates_in_directory_to_copy_result
 
         - name: Evaluate restarting container
-          when: 
+          when:
             - filesystem_manager_restart_container_on_template_change
-            - template_copy_result.results is defined
-            - template_copy_result.results | selectattr('changed', 'equalto', true) | list | length > 0
+            - template_copy_result.changed or templates_in_directory_to_copy_result.changed
           community.docker.docker_container_info:
             name: "{{ app_name }}"
           register: container_info

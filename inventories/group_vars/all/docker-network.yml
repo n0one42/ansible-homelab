@@ -1,6 +1,5 @@
 ---
 # yamllint disable rule:colons
-# yamllint disable rule:jinja[spacing]
 
 # ? ######################################################################################## #
 # !                                    Docker Networking                                     #
@@ -23,20 +22,20 @@ docker_env_cidr:                                      # ?  SubnetID   Subnet    
 
 # * ---------------------------------- >>> /24 <<< ---------------------------------- * #
 docker_net:
-  bip:        "{{ docker_env_cidr[env]  | ansible.utils.ipsubnet(24, 0)       | ansible.utils.ipaddr('net') | ansible.utils.ipaddr('1')  }}"  # 10.142.192.1/24 (prod)
-  # dns_server: "{{ docker_env_cidr[env]  | ansible.utils.ipsubnet(24, 0)       | ansible.utils.ipaddr('1')   | ansible.utils.ipaddr('address') }}" # 10.142.192.1 (prod)  # by default its the docker gw
+  bip:        "{{ docker_env_cidr[env] | ansible.utils.ipsubnet(24, 0) | ansible.utils.ipaddr('net') | ansible.utils.ipaddr('1') }}"  # 10.142.192.1/24 (prod)
+  # dns_server: "{{ docker_env_cidr[env] | ansible.utils.ipsubnet(24, 0) | ansible.utils.ipaddr('1') | ansible.utils.ipaddr('address') }}" # 10.142.192.1 (prod)  # by default its the docker gw
   default_address_pools:
-    - { base: "{{ docker_env_cidr[env]  | ansible.utils.ipsubnet(24, 1) }}", size: 28 } # 10.142.193.0/28 (prod)
-    # - { base: "{{ docker_env_cidr[env]  | ansible.utils.ipsubnet(24, 2) }}", size: 28 } # 10.142.194.0/28 (prod)
-    # - { base: "{{ docker_env_cidr[env]  | ansible.utils.ipsubnet(24, 3) }}", size: 28 } # 10.142.195.0/28 (prod)
+    - { base: "{{ docker_env_cidr[env] | ansible.utils.ipsubnet(24, 1) }}", size: 28 } # 10.142.193.0/28 (prod)
+    # - { base: "{{ docker_env_cidr[env] | ansible.utils.ipsubnet(24, 2) }}", size: 28 } # 10.142.194.0/28 (prod)
+    # - { base: "{{ docker_env_cidr[env] | ansible.utils.ipsubnet(24, 3) }}", size: 28 } # 10.142.195.0/28 (prod)
 # Placeholder for ansible.utils.ipsubnet(24, 2/4-7)
 dc_traefik_net:
   name: "traefik_net"
-  subnet:       "{{ docker_env_cidr[env]  | ansible.utils.ipsubnet(24, 8) }}" # 10.142.200.0/24 (prod)
-  adguard_ip:   "{{ docker_env_cidr[env]  | ansible.utils.ipsubnet(24, 8) | ansible.utils.ipaddr('2') | ansible.utils.ipaddr('address') }}" # 10.142.200.2 (prod)
-  traefik_ip:   "{{ docker_env_cidr[env]  | ansible.utils.ipsubnet(24, 8) | ansible.utils.ipaddr('3') | ansible.utils.ipaddr('address') }}" # 10.142.200.3 (prod)
-  crowdsec_ip:  "{{ docker_env_cidr[env]  | ansible.utils.ipsubnet(24, 8) | ansible.utils.ipaddr('4') | ansible.utils.ipaddr('address') }}" # 10.142.200.4 (prod)
-  authelia_ip:  "{{ docker_env_cidr[env]  | ansible.utils.ipsubnet(24, 8) | ansible.utils.ipaddr('5') | ansible.utils.ipaddr('address') }}" # 10.142.200.5 (prod)
+  subnet:       "{{ docker_env_cidr[env] | ansible.utils.ipsubnet(24, 8) }}" # 10.142.200.0/24 (prod)
+  adguard_ip:   "{{ docker_env_cidr[env] | ansible.utils.ipsubnet(24, 8) | ansible.utils.ipaddr('2') | ansible.utils.ipaddr('address') }}" # 10.142.200.2 (prod)
+  traefik_ip:   "{{ docker_env_cidr[env] | ansible.utils.ipsubnet(24, 8) | ansible.utils.ipaddr('3') | ansible.utils.ipaddr('address') }}" # 10.142.200.3 (prod)
+  crowdsec_ip:  "{{ docker_env_cidr[env] | ansible.utils.ipsubnet(24, 8) | ansible.utils.ipaddr('4') | ansible.utils.ipaddr('address') }}" # 10.142.200.4 (prod)
+  authelia_ip:  "{{ docker_env_cidr[env] | ansible.utils.ipsubnet(24, 8) | ansible.utils.ipaddr('5') | ansible.utils.ipaddr('address') }}" # 10.142.200.5 (prod)
 
 
 # ? ######################################################################################## #
@@ -65,7 +64,7 @@ dc_traefik_net:
 
 
 # # ? ######################################################################################## #
-# # !                                      Socket Proxyies                                     #
+# # !                                      Socket Proies                                     #
 # # ? ######################################################################################## #
 # # ? -----------------------------------------------------------------------------
 # # *                                   Traefik                                   *
@@ -349,6 +348,119 @@ dc_traefik_net:
 
 # /26
 # demo => 10.142.16.0 ; 10.142.16.64 ; 10.142.16.128 ; 10.142.16.192 ; 10.142.17.0 ; 10.142.17.64 ; ... ; 10.142.17.192 ; 10.142.23.192
+# dev => 10.142.80.0 ; 10.142.80.64 ; 10.142.80.128 ; 10.142.80.192 ; 10.142.81.0 ; 10.142.81.64 ; ... ; 10.142.81.192 ; 10.142.87.192
+# beta => 10.142.144.0 ; 10.142.144.64 ; 10.142.144.128 ; 10.142.144.192 ; 10.142.145.0 ; 10.142.145.64 ; ... ; 10.142.145.192 ; 10.142.151.192
+# prod => 10.142.208.0 ; 10.142.208.64 ; 10.142.208.128 ; 10.142.208.192 ; 10.142.209.0 ; 10.142.209.64 ; ... ; 10.142.209.192 ; 10.142.215.192
+
+# /28
+# demo => 10.142.24.0 ; 10.142.16.16 ; 10.142.16.32 ; ... ; 10.142.16.224 ; 10.142.16.240 ; 10.142.17.0 ; 10.142.17.16 ; ... ; 10.142.27.224 ; 10.142.27.240
+# dev => 10.142.88.0 ; 10.142.88.16 ; 10.142.88.32 ; ... ; 10.142.88.224 ; 10.142.88.240 ; 10.142.89.0 ; 10.142.89.16 ; ... ; 10.142.91.224 ; 10.142.91.240
+# beta => 10.142.152.0 ; 10.142.152.16 ; 10.142.152.32 ; ... ; 10.142.152.224 ; 10.142.152.240 ; 10.142.153.0 ; 10.142.153.16 ; ... ; 10.142.155.224 ; 10.142.155.240
+# prod => 10.142.216.0 ; 10.142.216.16 ; 10.142.216.32 ; ... ; 10.142.216.224 ; 10.142.216.240 ; 10.142.217.0 ; 10.142.217.16 ; ... ; 10.142.219.224 ; 10.142.219.240
+
+# /29
+# demo => 10.142.28.0 ; 10.142.28.8 ; 10.142.28.16 ; ... ; 10.142.28.240 ; 10.142.28.248 ; 10.142.29.0 ; 10.142.29.8 ; ... ; 10.142.31.240 ; 10.142.31.248
+# dev => 10.142.92.0 ; 10.142.92.8 ; 10.142.92.16 ; ... ; 10.142.92.240 ; 10.142.92.248 ; 10.142.93.0 ; 10.142.93.8 ; ... ; 10.142.95.240 ; 10.142.95.248
+# beta => 10.142.156.0 ; 10.142.156.8 ; 10.142.156.16 ; ... ; 10.142.156.240 ; 10.142.156.248 ; 10.142.157.0 ; 10.142.157.8 ; ... ; 10.142.159.240 ; 10.142.159.248
+# prod => 10.142.220.0 ; 10.142.220.8 ; 10.142.220.16 ; ... ; 10.142.220.240 ; 10.142.220.248 ; 10.142.221.0 ; 10.142.221.8 ; ... ; 10.142.223.240 ; 10.142.223.248
+
+
+# # vm 42 on demo
+# # first half of each env /24 cidr`s
+# dc_app1_net_cidr: 10.142.0.0/24 # => 10.142.0.1 - 10.142.0.254
+# dc_app2_net_cidr: 10.142.1.0/24 # => 10.142.1.1 - 10.142.1.254
+# # ...
+# dc_app15_net_cidr: 10.142.14.0/24 # => 10.142.14.1 - 10.142.14.254
+# dc_app16_net_cidr: 10.142.15.0/24 # => 10.142.15.1 - 10.142.15.254
+
+# # second half /28 cidr`s
+# dc_app17_net_cidr: 10.142.16.0/28 # => 10.142.16.1 - 10.142.16.14
+# dc_app18_net_cidr: 10.142.16.16/28 # => 10.142.16.17 - 10.142.16.30
+# # ...
+# dc_app271_net_cidr: 10.142.31.240/28 # => 10.142.31.241 - 10.142.31.254
+# dc_app272_net_cidr: 10.142.31.252/28 # => 10.142.31.253 - 10.142.31.254
+# I think, putting docker0 bridge + the first 2 subnets for the address pools would also be a good idea.
+
+# # vm 42 on prod
+# # first half /24 cidr`s
+# dc_app1_net_cidr: 10.142.192.0/24 # => 10.142.192.1 - 10.142.192.254
+# dc_app2_net_cidr: 10.142.193.0/24 # => 10.142.193.1 - 10.142.193.254
+# # ...
+# dc_app15_net_cidr: 10.142.206.0/24 # => 10.142.206.1 - 10.142.206.254
+# dc_app16_net_cidr: 10.142.207.0/24 # => 10.142.207.1 - 10.142.207.254
+
+# # second half /28 cidr`s
+# dc_app17_net_cidr: 10.142.208.0/28 # => 10.142.208.1 - 10.142.208.14
+# dc_app18_net_cidr: 10.142.208.16/28 # => 10.142.208.17 - 10.142.208.30
+# # ...
+# dc_app271_net_cidr: 10.142.223.240/28 # => 10.142.223.241 - 10.142.223.254
+# dc_app272_net_cidr: 10.142.223.252/28 # => 10.142.223.253 - 10.142.223.254
+# I think, putting docker0 bridge + the first 2 subnets for the address pools would also be a good idea.
+
+# # old
+# # Map environments to base third octet values
+# env_docker_base_octet_map:
+#   demo: 0
+#   placeholder1: 32
+#   dev: 64
+#   placeholder2: 96
+#   beta: 128
+#   placeholder3: 160
+#   prod: 192
+#   placeholder4: 224
+
+# env_24_docker_subnets_address2: "{{ [root_cidr | ansible.utils.ipsubnet(24, i) for i in range(env_docker_base_octet, env_docker_base_octet + 16)] }}"
+
+# # Get the base third octet for the environment
+# env_docker_base_octet: "{{ env_docker_base_octet_map[env] }}"
+
+# # Predefine /24 subnets => first IP is network address, second is gateway, last is broadcast address, therefore 254 usable IPs per subnet
+# # Total /24 subnets per environment: 16 (50% of all subnets)
+# env_24_docker_subnets_address: # Eg: demo: 10.142.0.0/24 => 10.142.0.1 - 10.142.0.254 ; prod 10.142.192.0/24 => 10.142.192.1 - 10.142.192.254
+#   - "10.{{ vm_number | int }}.{{ env_docker_base_octet | int + 0 }}.0" # ? default bridge docker0
+#   - "10.{{ vm_number | int }}.{{ env_docker_base_octet | int + 1 }}.0" # ? docker address pool 1
+#   - "10.{{ vm_number | int }}.{{ env_docker_base_octet | int + 2 }}.0" # ? docker address pool 2
+#   - "10.{{ vm_number | int }}.{{ env_docker_base_octet | int + 3 }}.0" # ? docker address pool 3
+#   - "10.{{ vm_number | int }}.{{ env_docker_base_octet | int + 4 }}.0" # ? traefik_net
+#   # ...
+#   - "10.{{ vm_number | int }}.{{ env_docker_base_octet | int + 14 }}.0"
+#   - "10.{{ vm_number | int }}.{{ env_docker_base_octet | int + 15 }}.0" # End of /24 subnets for this environment
+
+
+# # Predefine /26 subnets => first IP is network address, last is broadcast address, therefore 62 usable IPs per subnet
+# # Total /26 subnets per environment: 32 (50% of the remaining subnets after the first 50% of /24 subnets)
+# env_26_docker_subnets_address: # Eg: demo:
+#   - "10.{{ vm_number | int }}.{{ env_docker_base_octet | int + 16 }}.0"
+#   - "10.{{ vm_number | int }}.{{ env_docker_base_octet | int + 16 }}.64"
+#   - "10.{{ vm_number | int }}.{{ env_docker_base_octet | int + 16 }}.128"
+#   - "10.{{ vm_number | int }}.{{ env_docker_base_octet | int + 16 }}.192"
+#   - "10.{{ vm_number | int }}.{{ env_docker_base_octet | int + 17 }}.0"
+#   - "10.{{ vm_number | int }}.{{ env_docker_base_octet | int + 17 }}.64"
+#   - "10.{{ vm_number | int }}.{{ env_docker_base_octet | int + 17 }}.128"
+#   - "10.{{ vm_number | int }}.{{ env_docker_base_octet | int + 17 }}.192"
+#   # ...
+#   - "10.{{ vm_number | int }}.{{ env_docker_base_octet | int + 23 }}.192/26"   # End of /26 subnets for this environment
+
+# # Predefine /28 subnets => first IP is network address, last is broadcast address, therefore 14 usable IPs per subnet
+# # Total /28 subnets per environment: 64 (50% of the remaining subnets after the 50% of /26 subnets)
+# env_28_docker_subnets_address:
+#   - "10.{{ vm_number | int }}.{{ env_docker_base_octet | int + 24 }}.0"
+#   - "10.{{ vm_number | int }}.{{ env_docker_base_octet | int + 24 }}.16"
+#   - "10.{{ vm_number | int }}.{{ env_docker_base_octet | int + 24 }}.32"
+#   - "10.{{ vm_number | int }}.{{ env_docker_base_octet | int + 24 }}.48"
+#   - "10.{{ vm_number | int }}.{{ env_docker_base_octet | int + 24 }}.64"
+#   # ...
+#   - "10.{{ vm_number | int }}.{{ env_docker_base_octet | int + 27 }}.240"   # End of /28 subnets for this environment
+
+# # Predefine /29 subnets => first IP is network address, last is broadcast address, therefore 6 usable IPs per subnet
+# # Total /29 subnets per environment: 128 /(last 50% of subnets remaining after the 50% of /28 subnets)
+# env_29_docker_subnets_address: # Eg: demo: 10.142.224.0/29 => 10.142.224.1 - 10.142.224.6
+#   - "10.{{ vm_number | int }}.{{ env_docker_base_octet | int + 28 }}.0/29" # .0 # traefik socketproxy
+#   - "10.{{ vm_number | int }}.{{ env_docker_base_octet | int + 28 }}.8/29" # .8
+#   - "10.{{ vm_number | int }}.{{ env_docker_base_octet | int + 28 }}" # .16
+#   - "10.{{ vm_number | int }}.{{ env_docker_base_octet | int + 28 }}" # .24
+#   # ...
+#   - "10.{{ vm_number | int }}.{{ env_docker_base_octet | int + 31 }}" # .248  # End of /29 subnets for this environment
 # dev => 10.142.80.0 ; 10.142.80.64 ; 10.142.80.128 ; 10.142.80.192 ; 10.142.81.0 ; 10.142.81.64 ; ... ; 10.142.81.192 ; 10.142.87.192
 # beta => 10.142.144.0 ; 10.142.144.64 ; 10.142.144.128 ; 10.142.144.192 ; 10.142.145.0 ; 10.142.145.64 ; ... ; 10.142.145.192 ; 10.142.151.192
 # prod => 10.142.208.0 ; 10.142.208.64 ; 10.142.208.128 ; 10.142.208.192 ; 10.142.209.0 ; 10.142.209.64 ; ... ; 10.142.209.192 ; 10.142.215.192

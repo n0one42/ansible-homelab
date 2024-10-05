@@ -40,12 +40,12 @@
             filesystem_manager_appdata_directories_to_create:
               - path: "config"
               - path: "data"
+            filesystem_manager_restart_container_on_template_change: true
             filesystem_manager_appdata_templates_to_copy:
               - src: "AdGuardHome.yaml.j2"
                 dest: "config/AdGuardHome.yaml"
                 mode: "0666"
                 force: "{{ dc_adguard_override_config_file }}"
-          notify: Restart container
 
         - name: Install docker compose adguard with inline definition
           community.docker.docker_compose_v2:
@@ -76,7 +76,8 @@
                   cap_drop:
                     - "ALL"
                   networks:
-                    traefik_net: "{{ {'ipv4_address': dc_traefik_net.adguard_ip} if dc_traefik_net.adguard_ip is defined and dc_traefik_net.adguard_ip | length > 0 else {} }}"
+                    traefik_net: # "{{ {'ipv4_address': dc_traefik_net.adguard_ip} if dc_traefik_net.adguard_ip is defined and dc_traefik_net.adguard_ip | length > 0 else {} }}"
+                      ipv4_address: "{{ dc_traefik_net.adguard_ip }}"
                   ports:
                     # DNS Ports
                     - "53:53/tcp"
@@ -98,7 +99,7 @@
                     - "1543:443/udp"
                     # # Dashboard
                     # - "3000:3000/tcp"
-                    # - "80:80/tcp"
+                    # - "{{ dc_adguard_port }}:80/tcp"
                   volumes:
                     - "{{ appdata_type_path }}/data:/opt/adguardhome/work/data"
                     - "{{ appdata_type_path }}/config:/opt/adguardhome/conf"
