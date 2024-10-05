@@ -12,6 +12,7 @@
 # *                                     Global Variables                                     #
 # ? ######################################################################################## #
 
+env: "{{ group_names | select('match', '^(prod|placeh1|beta|placeh2|dev|placeh3|demo|placeh4)$') | first }}"
 timezone: "America/New_York"
 system_locale: "en_US.UTF-8"
 system_language: "en_US.UTF-8"
