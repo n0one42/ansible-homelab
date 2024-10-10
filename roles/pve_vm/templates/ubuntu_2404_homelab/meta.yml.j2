@@ -1,6 +1,6 @@
 #cloud-config
-# instance-id: iid-{{ pve_vm_id }}
-local-hostname: {{ pve_vm_hostname }}
+# instance-id: iid-{{ pve_vm_obj.pve_id }}
+local-hostname: {{ pve_vm_obj.hostname }}
 
 # instance-id: i-1234567890abcdef0
 # local-hostname: my-instance

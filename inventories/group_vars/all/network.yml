@@ -27,58 +27,58 @@ mgmt_net:
   prod:
     vlan_id:      1005
     bridge_name:  "vmbr1005"
-    subnet:       "10.10.05.0/24"
-    gateway:      "10.10.05.3"
-    dns_server:   "10.10.05.3"
+    subnet:       "10.10.5.0/24"
+    gateway:      "10.10.5.3"
+    dns_server:   "10.10.5.3"
     search_domain: "mgmt.{{ domain_1 }}"
   placeh1:
     vlan_id:      1105
     bridge_name:  "vmbr1105"
-    subnet:       "10.11.05.0/24"
-    gateway:      "10.11.05.3"
-    dns_server:   "10.11.05.3"
+    subnet:       "10.11.5.0/24"
+    gateway:      "10.11.5.3"
+    dns_server:   "10.11.5.3"
     search_domain: "placeh1-mgmt.{{ domain_1 }}"
   beta:
     vlan_id:      1205
     bridge_name:  "vmbr1205"
-    subnet:       "10.12.05.0/24"
-    gateway:      "10.12.05.3"
-    dns_server:   "10.12.05.3"
+    subnet:       "10.12.5.0/24"
+    gateway:      "10.12.5.3"
+    dns_server:   "10.12.5.3"
     search_domain: "beta-mgmt.{{ domain_1 }}"
   placeh2:
     vlan_id:      1305
     bridge_name:  "vmbr1305"
-    subnet:       "10.13.05.0/24"
-    gateway:      "10.13.05.3"
-    dns_server:   "10.13.05.3"
+    subnet:       "10.13.5.0/24"
+    gateway:      "10.13.5.3"
+    dns_server:   "10.13.5.3"
     search_domain: "placeh2-mgmt.{{ domain_1 }}"
   dev:
     vlan_id:      1405
     bridge_name:  "vmbr1405"
-    subnet:       "10.14.05.0/24"
-    gateway:      "10.14.05.3"
-    dns_server:   "10.14.05.3"
+    subnet:       "10.14.5.0/24"
+    gateway:      "10.14.5.3"
+    dns_server:   "10.14.5.3"
     search_domain: "dev-mgmt.{{ domain_1 }}"
   placeh3:
     vlan_id:      1505
     bridge_name:  "vmbr1505"
-    subnet:       "10.15.05.0/24"
-    gateway:      "10.15.05.3"
-    dns_server:   "10.15.05.3"
+    subnet:       "10.15.5.0/24"
+    gateway:      "10.15.5.3"
+    dns_server:   "10.15.5.3"
     search_domain: "placeh3-mgmt.{{ domain_1 }}"
   demo:
     vlan_id:      1605
     bridge_name:  "vmbr1605"
-    subnet:       "10.16.05.0/24"
-    gateway:      "10.16.05.3"
-    dns_server:   "10.16.05.3"
+    subnet:       "10.16.5.0/24"
+    gateway:      "10.16.5.3"
+    dns_server:   "10.16.5.3"
     search_domain: "demo-mgmt.{{ domain_1 }}"
   placeh4:
     vlan_id:      1705
     bridge_name:  "vmbr1705"
-    subnet:       "10.17.05.0/24"
-    gateway:      "10.17.05.3"
-    dns_server:   "10.17.05.3"
+    subnet:       "10.17.5.0/24"
+    gateway:      "10.17.5.3"
+    dns_server:   "10.17.5.3"
     search_domain: "placeh4-mgmt.{{ domain_1 }}"
 
 vms_net:
@@ -149,60 +149,90 @@ pve_base_id:
   demo: 1600
   placeh4: 1700
 
+# ? All vms will inherit this object. Overrides them here to set the defaults or by vm specific vars
+# ? Inherit happens inside the role: pve_vm/tasks/main.yml
+ubuntu_2404_vm_base_obj:
+  pve_id: 92404 # Default template ID
+  template_to_use: ubuntu_2404_homelab # Has to match the folder name inside templates of this role
+  image_url: "https://cloud-images.ubuntu.com/releases/24.04/release/ubuntu-24.04-server-cloudimg-amd64.img"
+  image_destination: "/var/lib/vz/template/iso"
+  hostname: "ubuntu-2404-template"
+  prefer_fqdn_over_hostname: false
+  sockets: 1
+  cores: 2
+  memory: 2048
+  # balloon: 1024  # uncomment if you want a balloon
+  disk_size: "16G"
+  uefi_enabled: true
+  bridge_0_name: "{{ vms_net[env].bridge_name }}" # ! Note: The network is hardcoded in templates/network.yml.j2 since net intended to be changed
+  # bridge_0_mac_address: ""
+
 vm09_aio:
-  pve_id: "{{ pve_base_id[env] + 9 }}"
+  pve_id: "{{ pve_base_id[env] + 9 }}"  # Overrides the base object
   hostname: "{{ env }}-vm09-aio"
-  ip: "{{ vms_net[env].subnet | ansible.utils.ipaddr('9') }}" # 10.10.90.9 (prod) / 10.11.90.9 (placeh1) / 10.12.90.9 (beta) / ...
+  ip: "{{ vms_net[env].subnet | ansible.utils.ipaddr('9') | ansible.utils.ipaddr('address') }}" # 10.10.90.9 (prod) / 10.11.90.9 (placeh1) / 10.12.90.9 (beta) / ...
 
 vm10_ingress:
   pve_id: "{{ pve_base_id[env] + 10 }}"
   hostname: "{{ env }}-vm10-ingress"
-  ip: "{{ vms_net[env].subnet | ansible.utils.ipaddr('10') }}" # 10.10.90.10 (prod) / 10.11.90.10 (placeh1) / 10.12.90.10 (beta) / ...
+  ip: "{{ vms_net[env].subnet | ansible.utils.ipaddr('10') | ansible.utils.ipaddr('address') }}" # 10.10.90.10 (prod) / 10.11.90.10 (placeh1) / 10.12.90.10 (beta) / ...
 
 vm20_metrics:
   pve_id: "{{ pve_base_id[env] + 20 }}"
   hostname: "{{ env }}-vm20-metrics"
-  ip: "{{ vms_net[env].subnet | ansible.utils.ipaddr('20') }}" # 10.10.90.20 (prod) / 10.11.90.20 (placeh1) / 10.12.90.20 (beta) / ...
+  ip: "{{ vms_net[env].subnet | ansible.utils.ipaddr('20') | ansible.utils.ipaddr('address') }}" # 10.10.90.20 (prod) / 10.11.90.20 (placeh1) / 10.12.90.20 (beta) / ...
 
 vm31_application_1:
   pve_id: "{{ pve_base_id[env] + 31 }}"
   hostname: "{{ env }}-vm31-application-1"
-  ip: "{{ vms_net[env].subnet | ansible.utils.ipaddr('31') }}" # 10.10.90.31 (prod) / 10.11.90.31 (placeh1) / 10.12.90.31 (beta) / ...
+  ip: "{{ vms_net[env].subnet | ansible.utils.ipaddr('31') | ansible.utils.ipaddr('address') }}" # 10.10.90.31 (prod) / 10.11.90.31 (placeh1) / 10.12.90.31 (beta) / ...
+
+vm32_application_2:
+  pve_id: "{{ pve_base_id[env] + 32 }}"
+  hostname: "{{ env }}-vm32-application-2"
+  ip: "{{ vms_net[env].subnet | ansible.utils.ipaddr('32') | ansible.utils.ipaddr('address') }}" # 10.10.90.32 (prod) / 10.11.90.32 (placeh1) / 10.12.90.32 (beta) / ...
 
 vm41_multimedia_1:
   pve_id: "{{ pve_base_id[env] + 41 }}"
   hostname: "{{ env }}-vm41-multimedia-1"
-  ip: "{{ vms_net[env].subnet | ansible.utils.ipaddr('41') }}" # 10.10.90.41 (prod) / 10.11.90.41 (placeh1) / 10.12.90.41 (beta) / ...
+  ip: "{{ vms_net[env].subnet | ansible.utils.ipaddr('41') | ansible.utils.ipaddr('address') }}" # 10.10.90.41 (prod) / 10.11.90.41 (placeh1) / 10.12.90.41 (beta) / ...
+
+vm42_multimedia_2:
+  pve_id: "{{ pve_base_id[env] + 42 }}"
+  hostname: "{{ env }}-vm42-multimedia-2"
+  ip: "{{ vms_net[env].subnet | ansible.utils.ipaddr('42') | ansible.utils.ipaddr('address') }}" # 10.10.90.42 (prod) / 10.11.90.42 (placeh1) / 10.12.90.42 (beta) / ...
 
 vm99_testing:
   pve_id: "{{ pve_base_id[env] + 99 }}"
   hostname: "{{ env }}-vm99-testing"
-  ip: "{{ vms_net[env].subnet | ansible.utils.ipaddr('99') }}" # 10.10.90.99 (prod) / 10.11.90.99 (placeh1) / 10.12.90.99 (beta) / ...
+  ip: "{{ vms_net[env].subnet | ansible.utils.ipaddr('99') | ansible.utils.ipaddr('address') }}" # 10.10.90.99 (prod) / 10.11.90.99 (placeh1) / 10.12.90.99 (beta) / ...
 
 
 # ! --------------------------- Notes --------------------------- ! #
+# ? The VMs are by default only in the vms network. The MGMT is more intended for real servers like pve to put on. However
+# ? in case you want to put your vms also in the mgmt network, here is a overview on which IPs you shouldnt use for other purposes in your network if you want consistency
 # Environment,VM ID,Type,Name,Proxmox ID,VLAN mgmt,VLAN vms,VLAN mgmt IP,VLAN vms IP
-# prod,10,ingress,prod-vm10-ingress,1010,1005,1090,10.10.05.10/24,10.10.90.10/24
-# prod,20,metrics,prod-vm20-metrics,1020,1005,1090,10.10.05.20/24,10.10.90.20/24
-# prod,31,application1,prod-vm31-application1,1031,1005,1090,10.10.05.31/24,10.10.90.31/24
-# placeh1,10,ingress,placeh1-vm10-ingress,1110,1105,1190,10.11.05.10/24,10.11.90.10/24
-# placeh1,20,metrics,placeh1-vm20-metrics,1120,1105,1190,10.11.05.20/24,10.11.90.20/24
-# placeh1,31,application1,placeh1-vm31-application1,1131,1105,1190,10.11.05.31/24,10.11.90.31/24
-# beta,10,ingress,beta-vm10-ingress,1210,1205,1290,10.12.05.10/24,10.12.90.10/24
-# beta,20,metrics,beta-vm20-metrics,1220,1205,1290,10.12.05.20/24,10.12.90.20/24
-# beta,31,application1,beta-vm31-application1,1231,1205,1290,10.12.05.31/24,10.12.90.31/24
-# placeh2,10,ingress,placeh2-vm10-ingress,1310,1305,1390,10.13.05.10/24,10.13.90.10/24
-# placeh2,20,metrics,placeh2-vm20-metrics,1320,1305,1390,10.13.05.20/24,10.13.90.20/24
-# placeh2,31,application1,placeh2-vm31-application1,1331,1305,1390,10.13.05.31/24,10.13.90.31/24
-# dev,10,ingress,dev-vm10-ingress,1410,1405,1490,10.14.05.10/24,10.14.90.10/24
-# dev,20,metrics,dev-vm20-metrics,1420,1405,1490,10.14.05.20/24,10.14.90.20/24
-# dev,31,application1,dev-vm31-application1,1431,1405,1490,10.14.05.31/24,10.14.90.31/24
-# placeh3,10,ingress,placeh3-vm10-ingress,1510,1505,1590,10.15.05.10/24,10.15.90.10/24
-# placeh3,20,metrics,placeh3-vm20-metrics,1520,1505,1590,10.15.05.20/24,10.15.90.20/24
-# placeh3,31,application1,placeh3-vm31-application1,1531,1505,1590,10.15.05.31/24,10.15.90.31/24
-# demo,10,ingress,demo-vm10-ingress,1610,1605,1690,10.16.05.10/24,10.16.90.10/24
-# demo,20,metrics,demo-vm20-metrics,1620,1605,1690,10.16.05.20/24,10.16.90.20/24
-# demo,31,application1,demo-vm31-application1,1631,1605,1690,10.16.05.31/24,10.16.90.31/24
-# placeh4,10,ingress,placeh4-vm10-ingress,1710,1705,1790,10.17.05.10/24,10.17.90.10/24
-# placeh4,20,metrics,placeh4-vm20-metrics,1720,1705,1790,10.17.05.20/24,10.17.90.20/24
-# placeh4,31,application1,placeh4-vm31-application1,1731,1705,1790,10.17.05.31/24,10.17.90.31/24
+# prod,10,ingress,prod-vm10-ingress,1010,1005,1090,10.10.5.10/24,10.10.90.10/24
+# prod,20,metrics,prod-vm20-metrics,1020,1005,1090,10.10.5.20/24,10.10.90.20/24
+# prod,31,application1,prod-vm31-application1,1031,1005,1090,10.10.5.31/24,10.10.90.31/24
+# placeh1,10,ingress,placeh1-vm10-ingress,1110,1105,1190,10.11.5.10/24,10.11.90.10/24
+# placeh1,20,metrics,placeh1-vm20-metrics,1120,1105,1190,10.11.5.20/24,10.11.90.20/24
+# placeh1,31,application1,placeh1-vm31-application1,1131,1105,1190,10.11.5.31/24,10.11.90.31/24
+# beta,10,ingress,beta-vm10-ingress,1210,1205,1290,10.12.5.10/24,10.12.90.10/24
+# beta,20,metrics,beta-vm20-metrics,1220,1205,1290,10.12.5.20/24,10.12.90.20/24
+# beta,31,application1,beta-vm31-application1,1231,1205,1290,10.12.5.31/24,10.12.90.31/24
+# placeh2,10,ingress,placeh2-vm10-ingress,1310,1305,1390,10.13.5.10/24,10.13.90.10/24
+# placeh2,20,metrics,placeh2-vm20-metrics,1320,1305,1390,10.13.5.20/24,10.13.90.20/24
+# placeh2,31,application1,placeh2-vm31-application1,1331,1305,1390,10.13.5.31/24,10.13.90.31/24
+# dev,10,ingress,dev-vm10-ingress,1410,1405,1490,10.14.5.10/24,10.14.90.10/24
+# dev,20,metrics,dev-vm20-metrics,1420,1405,1490,10.14.5.20/24,10.14.90.20/24
+# dev,31,application1,dev-vm31-application1,1431,1405,1490,10.14.5.31/24,10.14.90.31/24
+# placeh3,10,ingress,placeh3-vm10-ingress,1510,1505,1590,10.15.5.10/24,10.15.90.10/24
+# placeh3,20,metrics,placeh3-vm20-metrics,1520,1505,1590,10.15.5.20/24,10.15.90.20/24
+# placeh3,31,application1,placeh3-vm31-application1,1531,1505,1590,10.15.5.31/24,10.15.90.31/24
+# demo,10,ingress,demo-vm10-ingress,1610,1605,1690,10.16.5.10/24,10.16.90.10/24
+# demo,20,metrics,demo-vm20-metrics,1620,1605,1690,10.16.5.20/24,10.16.90.20/24
+# demo,31,application1,demo-vm31-application1,1631,1605,1690,10.16.5.31/24,10.16.90.31/24
+# placeh4,10,ingress,placeh4-vm10-ingress,1710,1705,1790,10.17.5.10/24,10.17.90.10/24
+# placeh4,20,metrics,placeh4-vm20-metrics,1720,1705,1790,10.17.5.20/24,10.17.90.20/24
+# placeh4,31,application1,placeh4-vm31-application1,1731,1705,1790,10.17.5.31/24,10.17.90.31/24

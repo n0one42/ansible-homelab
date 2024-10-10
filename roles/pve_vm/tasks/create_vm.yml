@@ -2,41 +2,41 @@
 - name: Create VM Task
   when: "pve_vm_prune or 'does not exist' in vm_template_check.stderr"
   vars:
-    pve_vm_meta_data: "meta=local:snippets/{{ pve_vm_id }}-meta.yml"
-    pve_vm_user_data: "user=local:snippets/{{ pve_vm_id }}-user.yml"
-    pve_vm_network_data: "network=local:snippets/{{ pve_vm_id }}-network.yml"
-    pve_vm_vendor_data: "vendor=local:snippets/{{ pve_vm_id }}-vendor.yml"
+    pve_vm_meta_data: "meta=local:snippets/{{ pve_vm_obj.pve_id }}-meta.yml"
+    pve_vm_user_data: "user=local:snippets/{{ pve_vm_obj.pve_id }}-user.yml"
+    pve_vm_network_data: "network=local:snippets/{{ pve_vm_obj.pve_id }}-network.yml"
+    pve_vm_vendor_data: "vendor=local:snippets/{{ pve_vm_obj.pve_id }}-vendor.yml"
     pve_vm_cicustom: "{{ pve_vm_meta_data }},{{ pve_vm_user_data }},{{ pve_vm_network_data }},{{ pve_vm_vendor_data }}"
   block:
       # ! cloudinit ide2 seems to be needed. The other parameters will be overridden by the cloudinit custom config
-    - name: Create VM {{ pve_vm_name }}
+    - name: Create VM {{ pve_vm_obj.hostname }}
       ansible.builtin.shell: |
-        qm create {{ pve_vm_id }} --name {{ pve_vm_name }} --ostype l26
-        qm set {{ pve_vm_id }} --bios=seabios --agent=1 --machine=q35
-        qm set {{ pve_vm_id }} --sockets {{ pve_vm_sockets }} --cores {{ pve_vm_cores }} --cpu host,flags=+aes
-        qm set {{ pve_vm_id }} --memory {{ pve_vm_memory | default(2048) }} {{'--balloon' + pve_vm_balloon if pve_vm_balloon is defined else '--balloon 0' }}
-        qm set {{ pve_vm_id }} --scsihw virtio-scsi-single
-        qm set {{ pve_vm_id }} --scsi0 {{ pve_storage }}:0,import-from="{{ pve_vm_image_destination }}/{{ pve_vm_image_url | basename }}",cache=writeback,ssd=1,discard=on,iothread=1
-        qm set {{ pve_vm_id }} --scsi1 {{ pve_storage }}:cloudinit
-        qm set {{ pve_vm_id }} --boot c --bootdisk scsi0
-        qm set {{ pve_vm_id }} --net0 virtio,bridge={{ pve_vm_bridge_0_name }}{{ ',macaddr=' + pve_vm_mac_address_0 if pve_vm_mac_address_0 is defined }},firewall=1
-        qm set {{ pve_vm_id }} --serial0 socket --vga serial0
-        qm disk resize {{ pve_vm_id }} scsi0 {{ pve_vm_disk_size }}
-        qm set {{ pve_vm_id }} --agent enabled=1,fstrim_cloned_disks=1
+        qm create {{ pve_vm_obj.pve_id }} --name {{ pve_vm_obj.hostname }} --ostype l26
+        qm set {{ pve_vm_obj.pve_id }} --bios=seabios --agent=1 --machine=q35
+        qm set {{ pve_vm_obj.pve_id }} --sockets {{ pve_vm_obj.sockets }} --cores {{ pve_vm_obj.cores }} --cpu host,flags=+aes
+        qm set {{ pve_vm_obj.pve_id }} --memory {{ pve_vm_obj.memory }} {{'--balloon' + pve_vm_obj.balloon if pve_vm_obj.balloon is defined else '--balloon 0' }}
+        qm set {{ pve_vm_obj.pve_id }} --scsihw virtio-scsi-single
+        qm set {{ pve_vm_obj.pve_id }} --scsi0 {{ pve_storage }}:0,import-from="{{ pve_vm_obj.image_destination }}/{{ pve_vm_obj.image_url | basename }}",cache=writeback,ssd=1,discard=on,iothread=1
+        qm set {{ pve_vm_obj.pve_id }} --scsi1 {{ pve_storage }}:cloudinit
+        qm set {{ pve_vm_obj.pve_id }} --boot c --bootdisk scsi0
+        qm set {{ pve_vm_obj.pve_id }} --net0 virtio,bridge={{ pve_vm_obj.bridge_0_name }}{{ ',macaddr=' + pve_vm_obj.mac_address_0 if pve_vm_obj.mac_address_0 is defined }},firewall=1
+        qm set {{ pve_vm_obj.pve_id }} --serial0 socket --vga serial0
+        qm disk resize {{ pve_vm_obj.pve_id }} scsi0 {{ pve_vm_obj.disk_size }}
+        qm set {{ pve_vm_obj.pve_id }} --agent enabled=1,fstrim_cloned_disks=1
       args:
         executable: /bin/bash
       register: pve_vm_create_output
       changed_when: true
 
     - name: Enable UEFI
-      when: pve_vm_enable_uefi | default(true)
+      when: pve_vm_obj.uefi_enabled
       ansible.builtin.shell: |
-        qm set {{ pve_vm_id }} --bios=ovmf
-        qm set {{ pve_vm_id }} --efidisk0 {{ pve_storage }}:1,format=raw,efitype=4m,pre-enrolled-keys=0
+        qm set {{ pve_vm_obj.pve_id }} --bios=ovmf
+        qm set {{ pve_vm_obj.pve_id }} --efidisk0 {{ pve_storage }}:1,format=raw,efitype=4m,pre-enrolled-keys=0
       changed_when: true
 
     - name: Use templates to set cloud-init (user-data, meta-data, network-data)
-      when: pve_vm_role_template_to_use is defined
+      when: pve_vm_obj.template_to_use is defined
       block:
         - name: Copy template files
           ansible.builtin.template:
@@ -45,14 +45,14 @@
             mode: "0644"
           become: true
           loop:
-            - src: "{{ pve_vm_role_template_to_use }}/meta.yml.j2"
-              dest: "{{ pve_vm_id }}-meta.yml"
-            - src: "{{ pve_vm_role_template_to_use }}/user.yml.j2"
-              dest: "{{ pve_vm_id }}-user.yml"
-            - src: "{{ pve_vm_role_template_to_use }}/network.yml.j2"
-              dest: "{{ pve_vm_id }}-network.yml"
-            - src: "{{ pve_vm_role_template_to_use }}/vendor.yml.j2"
-              dest: "{{ pve_vm_id }}-vendor.yml"
+            - src: "{{ pve_vm_obj.template_to_use }}/meta.yml.j2"
+              dest: "{{ pve_vm_obj.pve_id }}-meta.yml"
+            - src: "{{ pve_vm_obj.template_to_use }}/user.yml.j2"
+              dest: "{{ pve_vm_obj.pve_id }}-user.yml"
+            - src: "{{ pve_vm_obj.template_to_use }}/network.yml.j2"
+              dest: "{{ pve_vm_obj.pve_id }}-network.yml"
+            - src: "{{ pve_vm_obj.template_to_use }}/vendor.yml.j2"
+              dest: "{{ pve_vm_obj.pve_id }}-vendor.yml"
 
         # - name: Debug
         #   ansible.builtin.debug:
@@ -60,13 +60,13 @@
 
         - name: Associate cloud-init user-data with VM
           ansible.builtin.command:
-            cmd: qm set {{ pve_vm_id }} --cicustom {{ pve_vm_cicustom }}
+            cmd: qm set {{ pve_vm_obj.pve_id }} --cicustom {{ pve_vm_cicustom }}
           become: true
           changed_when: false
 
         - name: Start VM
           when: pve_vm_start_after_create
-          ansible.builtin.command: qm start {{ pve_vm_id }}
+          ansible.builtin.command: qm start {{ pve_vm_obj.pve_id }}
           changed_when: false
   always:
     - name: Display create vm output stderr_lines if fails

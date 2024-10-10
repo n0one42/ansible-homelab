@@ -7,12 +7,12 @@ network:
         name: "en*"
       # set-name: eth0
       dhcp4: no
-      gateway4: {{ vms_net_gateway }}
+      gateway4: {{ vms_net[env].gateway }}
       addresses:
-       - "{{ pve_vm_ipv4_address_0 }}/{{ pve_vm_net_prefix_length_0 }}"
+       - "{{ pve_vm_obj.ip }}/{{ vms_net[env].subnet | ansible.utils.ipaddr('prefix') }}"
       nameservers:
-        addresses: [{{ vms_net_dns_server if vms_net_dns_server is defined else vms_net_gateway }}]
-        search: [{{ pve_vm_search_domain if pve_vm_search_domain is defined else domain_1 }}]
+        addresses: [{{ vms_net[env].dns_server if vms_net[env].dns_server is defined else vms_net[env].gateway }}]
+        search: [{{ vms_net[env].search_domain if vms_net[env].search_domain is defined else '' }}]
       # routes:
       #   - to: 192.168.99.0/24
       #     via: 192.168.99.1

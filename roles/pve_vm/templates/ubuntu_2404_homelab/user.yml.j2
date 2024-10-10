@@ -1,7 +1,7 @@
 #cloud-config
-hostname: {{ pve_vm_hostname }}
-fqdn: {{ pve_vm_fqdn }}
-prefer_fqdn_over_hostname: {{ prefer_fqdn_over_hostname | default(false) }}
+hostname: {{ pve_vm_obj.hostname }}
+fqdn: "{{ pve_vm_obj.hostname }}.{{ vms_net[env].search_domain }}"
+prefer_fqdn_over_hostname: {{ pve_vm_obj.prefer_fqdn_over_hostname }}
 manage_etc_hosts: true
 locale: {{ system_locale }}
 timezone: {{ timezone }}

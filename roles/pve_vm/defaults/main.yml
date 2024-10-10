@@ -20,23 +20,3 @@
 
 pve_vm_start_after_create: true
 pve_vm_prune: false # ! This will completely remove the VM! Mostly for testing purposes
-pve_vm_enable_uefi: true  # Set to true if you want UEFI enabled by default
-# pve_vm_automation_files_dir: /opt/pve_automation
-pve_vm_base_image_to_use: ubuntu_2404
-
-# Ubuntu 2404 template
-pve_vm_role_template_to_use: ubuntu_2404_homelab # Has to match the folder name inside templates of this role
-pve_vm_image_url: "https://cloud-images.ubuntu.com/releases/24.04/release/ubuntu-24.04-server-cloudimg-amd64.img"
-pve_vm_image_destination: "/var/lib/vz/template/iso"
-pve_vm_id: 92404  # Default template ID, adjust as needed
-pve_vm_name: "ubuntu-2404-template"
-pve_vm_memory: 2048
-# pve_vm_balloon: 1024  # uncomment if you want a balloon
-pve_vm_sockets: 1
-pve_vm_cores: 2
-pve_vm_disk_size: "16G"
-# pve_vm_j2templates_dir: "{{ pve_vm_automation_files_dir }}/templates"
-pve_vm_hostname: "ubuntu-2404-template"
-# pve_vm_fqdn: "{{ pve_vm_hostname }}.{{ vms_net_search_domain }}"
-# pve_vm_mac_address_0: ""
-pve_vm_bridge_0_name: "{{ vms_net_bridge_name }}"

@@ -1,36 +1,45 @@
 ---
 # tasks file for roles/pve_vm
-- name: "Check if the VM already exists --> VM ID: {{ pve_vm_id }}"
-  ansible.builtin.command:
-    cmd: "qm status {{ pve_vm_id }}"
-  register: vm_template_check
-  changed_when: false
-  failed_when: false
 
-# ! ##############################################################################
-# ! Testing only!!! Don't use in production
-- name: Remove VM {{ pve_vm_id }}
-  when: "pve_vm_prune and 'does not exist' not in vm_template_check.stderr"
-  ansible.builtin.shell: |
-    qm stop {{ pve_vm_id }}
-    qm destroy {{ pve_vm_id }} -skiplock -purge
-    rm -r /var/lib/vz/snippets/{{ pve_vm_id }}*
-  args:
-    executable: /bin/bash
-  changed_when: true
-  failed_when: false
-# ! ##############################################################################
-
-- name: Create VM if not exists
-  when: "pve_vm_prune or 'does not exist' in vm_template_check.stderr"
+- name: Main
+  vars:
+    pve_vm_obj: "{{ ubuntu_2404_vm_base_obj | combine(pve_vm_obj_to_use) }}"  # Eg: loads the ubuntu_2404_vm_base_obj vars and overrides it with like vm09_aio
   block:
-    - name: Download ISO
-      ansible.builtin.import_tasks: download_iso.yml
+    - name: Debug pve_vm_obj
+      ansible.builtin.debug:
+        var: pve_vm_obj
 
-    - name: Create VM
-      ansible.builtin.import_tasks: create_vm.yml
+    - name: "Check if the VM already exists --> VM ID: {{ pve_vm_obj.pve_id }}"
+      ansible.builtin.command:
+        cmd: "qm status {{ pve_vm_obj.pve_id }}"
+      register: vm_template_check
+      changed_when: false
+      failed_when: false
 
-- name: Wait for VM to finish provisioning
-  ansible.builtin.debug:
-    msg: "VM was created and needs to finish provisioning. Wait some mins and restart playbook."
-  when: "pve_vm_prune or 'does not exist' in vm_template_check.stderr"
+    # ! ##############################################################################
+    # ! Testing only!!! Don't use in production
+    - name: Remove VM {{ pve_vm_obj.pve_id }}
+      when: "pve_vm_prune and 'does not exist' not in vm_template_check.stderr"
+      ansible.builtin.shell: |
+        qm stop {{ pve_vm_obj.pve_id }}
+        qm destroy {{ pve_vm_obj.pve_id }} -skiplock -purge
+        rm -r /var/lib/vz/snippets/{{ pve_vm_obj.pve_id }}*
+      args:
+        executable: /bin/bash
+      changed_when: true
+      failed_when: false
+    # ! ##############################################################################
+
+    - name: Create VM if not exists
+      when: "pve_vm_prune or 'does not exist' in vm_template_check.stderr"
+      block:
+        - name: Download ISO
+          ansible.builtin.import_tasks: download_iso.yml
+
+        - name: Create VM
+          ansible.builtin.import_tasks: create_vm.yml
+
+    - name: Wait for VM to finish provisioning
+      ansible.builtin.debug:
+        msg: "VM was created and needs to finish provisioning. Wait some mins and restart playbook."
+      when: "pve_vm_prune or 'does not exist' in vm_template_check.stderr"

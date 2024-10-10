@@ -1,13 +1,13 @@
 ---
 - name: Ensure destination directory exists
   ansible.builtin.file:
-    path: "{{ pve_vm_image_destination }}"
+    path: "{{ pve_vm_obj.image_destination }}"
     state: directory
     mode: '0755'
 
 - name: Check if the ISO already exists
   ansible.builtin.stat:
-    path: "{{ pve_vm_image_destination }}/{{ pve_vm_image_url | basename }}"
+    path: "{{ pve_vm_obj.image_destination }}/{{ pve_vm_obj.image_url | basename }}"
   register: pve_vm_image_file
 
 - name: Download the ISO if it does not exist
@@ -17,7 +17,7 @@
 
 - name: Download the cloud image if it does not exist
   ansible.builtin.get_url:
-    url: "{{ pve_vm_image_url }}"
-    dest: "{{ pve_vm_image_destination }}/{{ pve_vm_image_url | basename }}"
+    url: "{{ pve_vm_obj.image_url }}"
+    dest: "{{ pve_vm_obj.image_destination }}/{{ pve_vm_obj.image_url | basename }}"
     mode: '0644'
   when: not pve_vm_image_file.stat.exists
