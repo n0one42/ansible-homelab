@@ -12,7 +12,7 @@
           internal: true
           ipam:
             config:
-              - subnet: "{{ dc_socketproxy_net_cidr }}"
+              - subnet: "{{ dc_socketproxy_net_subnet }}"
 
       # * ---------------------------- App ------------------------------ * #
       services:
@@ -26,7 +26,8 @@
           userns_mode: "{{ 'host' if dc_socketproxy_create_with_userns | bool == false else 'remap' }}"
           read_only: true
           networks:
-            app_socketproxy_net: "{{ {'ipv4_address': dc_socketproxy_net_ip} if dc_socketproxy_net_ip is defined and dc_socketproxy_net_ip | length > 0 else {} }}"
+            app_socketproxy_net: # "{{ {'ipv4_address': dc_socketproxy_net_ip} if dc_socketproxy_net_ip is defined and dc_socketproxy_net_ip | length > 0 else {} }}"
+              ipv4_address: "{{ dc_socketproxy_net_ip }}"
           volumes:
             - /var/run/docker.sock:/var/run/docker.sock:ro
           tmpfs:

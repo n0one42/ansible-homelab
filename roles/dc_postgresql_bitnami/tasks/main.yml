@@ -26,12 +26,12 @@
             content: "{{ db_user_pw | default('') }}"
             type: postgres_password
             set_facts: true  # optional - needed for the app
-            # overide_existing: true  # optional
+            # override_existing: true  # optional
           - var_name: db_superuser_pw
             content: "{{ dc_postgresql_bitnami_db_superuser_pw | default('') }}"
             type: postgres_password
             # set_facts: false  # optional
-            # overide_existing: false  # optional
+            # override_existing: false  # optional
 
     - name: Install docker compose postgresql bitnami with inline definition
       community.docker.docker_compose_v2:
@@ -61,9 +61,8 @@
                 retries: 5
                 timeout: 5s
               networks:
-                app_net: "{{ {'ipv4_address': dc_postgresql_bitnami_net_ip} if dc_postgresql_bitnami_net_ip is defined and dc_postgresql_bitnami_net_ip | length > 0 else {} }}"
-                # app_net:  # Example: authelia_net
-                #   ipv4_address: "{{ dc_postgresql_bitnami_net_ip }}"  # eg: 10.100.0.6
+                app_net: # "{{ {'ipv4_address': dc_postgresql_bitnami_net_ip} if dc_postgresql_bitnami_net_ip is defined and dc_postgresql_bitnami_net_ip | length > 0 else {} }}"
+                  ipv4_address: "{{ dc_postgresql_bitnami_net_ip }}"
               # ports:
               #     - "{{ dc_postgresql_bitnami_db_port }}:{{ dc_postgresql_bitnami_db_port }}"
               volumes:

@@ -28,19 +28,19 @@
             content: "{{ dc_influxdb_bitnami_user_pw | default('') }}"
             type: postgres_password
             set_facts: true  # optional - needed for the app
-            # overide_existing: true  # optional
+            # override_existing: true  # optional
           - var_name: dc_influxdb_bitnami_admin_pw
             content: "Temp#1234" # ! Testing
             # content: "{{ dc_influxdb_bitnami_admin_pw | default('') }}"
             type: postgres_password
             # set_facts: false  # optional
-            # overide_existing: false  # optional
+            # override_existing: false  # optional
           - var_name: dc_influxdb_bitnami_admin_token
             content: "Pur#-rM#0idy@2V4@.nCZ2Ys3QcWhZJWGf@yLactoM30f6x^hpl5wb9%bD#0xEFT" # ! Testing
             # content: "{{ dc_influxdb_bitnami_admin_token | default('') }}"
             type: jwt_secret
             # set_facts: false  # optional
-            # overide_existing: false  # optional
+            # override_existing: false  # optional
 
     - name: Install docker compose influxdb bitnami with inline definition
       community.docker.docker_compose_v2:
@@ -52,7 +52,7 @@
               name: "{{ app_name }}_net"  # eg: authelia_net
               external: true  # indicating that it's a pre-existing network not managed by this Docker Compose file.
             traefik_net:
-              name: "{{ dc_traefik_net_name }}"
+              name: "{{ dc_traefik_net.name }}"
               external: true  # indicating that it's a pre-existing network not managed by this Docker Compose file.
 
           # * ---------------------------- App ------------------------------ * #

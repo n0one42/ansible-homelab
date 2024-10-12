@@ -125,7 +125,7 @@
 
         - name: Evaluate restarting container
           when:
-            - filesystem_manager_restart_container_on_template_change
+            - filesystem_manager_restart_container_on_template_change | default(false)
             - template_copy_result.changed or templates_in_directory_to_copy_result.changed
           community.docker.docker_container_info:
             name: "{{ app_name }}"
@@ -252,8 +252,8 @@
       loop: "{{ filesystem_manager_secret_files_to_create }}"
       when: >
         not password_file_stats.results | selectattr("item.var_name", "equalto", item.var_name) | map(attribute="stat.exists") | first | bool
-        or (item.overide_existing is defined and item.overide_existing | bool)
-        or (item.overide_existing is not defined and item.content | default('') | trim != '')
+        or (item.override_existing is defined and item.override_existing | bool)
+        or (item.override_existing is not defined and item.content | default('') | trim != '')
       no_log: true
 
     - name: Read remote file contents

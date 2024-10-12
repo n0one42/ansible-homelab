@@ -25,7 +25,7 @@
           # ! --------------------------- Networks --------------------------- ! #
           networks:
             traefik_net:
-              name: "{{ dc_traefik_net_name }}"  # eg: traefik_net
+              name: "{{ dc_traefik_net.name }}"  # eg: traefik_net
               external: true  # indicating that it's a pre-existing network not managed by this Docker Compose file.
             gluetun_net:
               name: "{{ dc_gluetun_container_name }}_net"

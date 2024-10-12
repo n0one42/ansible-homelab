@@ -31,7 +31,7 @@
           # ! --------------------------- Networks --------------------------- ! #
           # networks:
           #   traefik_net:
-          #     name: "{{ dc_traefik_net_name }}"  # eg: traefik_net
+          #     name: "{{ dc_traefik_net.name }}"  # eg: traefik_net
           #     external: true
 
           # * ---------------------------- App ------------------------------ * #

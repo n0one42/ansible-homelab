@@ -167,42 +167,54 @@ ubuntu_2404_vm_base_obj:
   bridge_0_name: "{{ vms_net[env].bridge_name }}" # ! Note: The network is hardcoded in templates/network.yml.j2 since net intended to be changed
   # bridge_0_mac_address: ""
 
+# ? Docker network will use 10.x.0.0/16
+# ? x will be 100 + vm_id eg = 109 => 10.109.0.0/16 which will be splitted also into 8 subnets for each cidr
+# ? Therefore it is planned to use the ranges of 10.100.0.0/16 - 10.199.0.0/16 which equals to 100 vms.
+# ? Therefore also those vms will all have unique docker subnets
 vm09_aio:
+  vm_id: 9 # Is used for like the docker subnets. Therefore use only 0-99
   pve_id: "{{ pve_base_id[env] + 9 }}"  # Overrides the base object
   hostname: "{{ env }}-vm09-aio"
   ip: "{{ vms_net[env].subnet | ansible.utils.ipaddr('9') | ansible.utils.ipaddr('address') }}" # 10.10.90.9 (prod) / 10.11.90.9 (placeh1) / 10.12.90.9 (beta) / ...
 
 vm10_ingress:
+  vm_id: 10
   pve_id: "{{ pve_base_id[env] + 10 }}"
   hostname: "{{ env }}-vm10-ingress"
   ip: "{{ vms_net[env].subnet | ansible.utils.ipaddr('10') | ansible.utils.ipaddr('address') }}" # 10.10.90.10 (prod) / 10.11.90.10 (placeh1) / 10.12.90.10 (beta) / ...
 
 vm20_metrics:
+  vm_id: 20
   pve_id: "{{ pve_base_id[env] + 20 }}"
   hostname: "{{ env }}-vm20-metrics"
   ip: "{{ vms_net[env].subnet | ansible.utils.ipaddr('20') | ansible.utils.ipaddr('address') }}" # 10.10.90.20 (prod) / 10.11.90.20 (placeh1) / 10.12.90.20 (beta) / ...
 
 vm31_application_1:
+  vm_id: 31
   pve_id: "{{ pve_base_id[env] + 31 }}"
   hostname: "{{ env }}-vm31-application-1"
   ip: "{{ vms_net[env].subnet | ansible.utils.ipaddr('31') | ansible.utils.ipaddr('address') }}" # 10.10.90.31 (prod) / 10.11.90.31 (placeh1) / 10.12.90.31 (beta) / ...
 
 vm32_application_2:
+  vm_id: 32
   pve_id: "{{ pve_base_id[env] + 32 }}"
   hostname: "{{ env }}-vm32-application-2"
   ip: "{{ vms_net[env].subnet | ansible.utils.ipaddr('32') | ansible.utils.ipaddr('address') }}" # 10.10.90.32 (prod) / 10.11.90.32 (placeh1) / 10.12.90.32 (beta) / ...
 
 vm41_multimedia_1:
+  vm_id: 41
   pve_id: "{{ pve_base_id[env] + 41 }}"
   hostname: "{{ env }}-vm41-multimedia-1"
   ip: "{{ vms_net[env].subnet | ansible.utils.ipaddr('41') | ansible.utils.ipaddr('address') }}" # 10.10.90.41 (prod) / 10.11.90.41 (placeh1) / 10.12.90.41 (beta) / ...
 
 vm42_multimedia_2:
+  vm_id: 42
   pve_id: "{{ pve_base_id[env] + 42 }}"
   hostname: "{{ env }}-vm42-multimedia-2"
   ip: "{{ vms_net[env].subnet | ansible.utils.ipaddr('42') | ansible.utils.ipaddr('address') }}" # 10.10.90.42 (prod) / 10.11.90.42 (placeh1) / 10.12.90.42 (beta) / ...
 
 vm99_testing:
+  vm_id: 99
   pve_id: "{{ pve_base_id[env] + 99 }}"
   hostname: "{{ env }}-vm99-testing"
   ip: "{{ vms_net[env].subnet | ansible.utils.ipaddr('99') | ansible.utils.ipaddr('address') }}" # 10.10.90.99 (prod) / 10.11.90.99 (placeh1) / 10.12.90.99 (beta) / ...

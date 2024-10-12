@@ -34,7 +34,7 @@
                 content: "{{ traefik_crowdsec_bouncer_key | default('') }}"
                 type: crowdsec_bouncer_key
                 set_facts: true  # optional - needed for the app
-                # overide_existing: true  # optional
+                # override_existing: true  # optional
           when: dc_traefik_crowdsec_enabled is defined and dc_traefik_crowdsec_enabled | bool
 
         - name: Gather only the hostname fact
@@ -48,14 +48,14 @@
               # ! --------------------------- Networks --------------------------- ! #
               networks:
                 app_net:
-                  name: "{{ app_name }}_net"
+                  name: "{{ dc_crowdsec_net.name }}"
                   driver: bridge
                   internal: true # true for a private network without internet access
                   ipam:
                     config:
-                      - subnet: "{{ dc_crowdsec_net_cidr }}"
+                      - subnet: "{{ dc_crowdsec_net.subnet }}"
                 traefik_net:
-                  name: "{{ dc_traefik_net_name }}"  # eg: traefik_net
+                  name: "{{ dc_traefik_net.name }}"  # eg: traefik_net
                   external: true  # indicating that it's a pre-existing network not managed by this Docker Compose file.
 
 
@@ -71,8 +71,10 @@
                   userns_mode: "{{ 'host' if dc_crowdsec_create_with_userns | bool == false else 'remap' }}"
                   user: "{{ dc_crowdsec_u_g_id }}:{{ dc_crowdsec_u_g_id }}"
                   networks:
-                    app_net: "{{ {'ipv4_address': dc_crowdsec_net_app_ip} if dc_crowdsec_net_app_ip is defined and dc_crowdsec_net_app_ip | length > 0 else {} }}"
-                    traefik_net: "{{ {'ipv4_address': dc_traefik_net_crowdsec_ip} if dc_traefik_net_crowdsec_ip is defined and dc_traefik_net_crowdsec_ip | length > 0 else {} }}"
+                    app_net: # "{{ {'ipv4_address': dc_crowdsec_net.crowdsec_ip} if dc_crowdsec_net.crowdsec_ip is defined and dc_crowdsec_net.crowdsec_ip | length > 0 else {} }}"
+                      ipv4_address: "{{ dc_crowdsec_net.crowdsec_ip }}"
+                    traefik_net: # "{{ {'ipv4_address': dc_traefik_net.crowdsec_ip} if dc_traefik_net.crowdsec_ip is defined and dc_traefik_net.crowdsec_ip | length > 0 else {} }}"
+                      ipv4_address: "{{ dc_traefik_net.crowdsec_ip }}"
                   # ports:
                   #   - "{{ dc_crowdsec_port }}:8080"
                   volumes:
@@ -85,7 +87,7 @@
                     COLLECTIONS: "crowdsecurity/traefik crowdsecurity/http-cve crowdsecurity/whitelist-good-actors crowdsecurity/iptables crowdsecurity/linux fulljackz/proxmox"
                     CUSTOM_HOSTNAME: "{{ ansible_hostname }}"
                     BOUNCER_KEY_TRAEFIK: "{{ traefik_crowdsec_bouncer_key | default(omit) }}"
-                    LOCAL_API_URL: "http://{{ dc_crowdsec_net_app_ip }}:{{ dc_crowdsec_port }}"
+                    LOCAL_API_URL: "http://{{ dc_crowdsec_net.crowdsec_ip }}:{{ dc_crowdsec_port }}"
                     # # DISABLE_LOCAL_API: "true" # Only after successfully registering and validating remote agent below.
                     # # For the following, check local_api_credentials.yaml after cscli lapi register (secondary machine) and cscli machine validate (on primary machine)
                     # AGENT_USERNAME: $CROWDSEC_AGENT_USERNAME

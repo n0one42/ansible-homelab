@@ -11,12 +11,12 @@ http:
     webmin-metrics-svc:
       loadBalancer:
         servers:
-          - url: "https://{{ vms_net_vm20_metrics_ip }}:10000"
+          - url: "https://{{ vm20_metrics.ip }}:10000"
 
     grafana-metrics-svc:
       loadBalancer:
         servers:
-          - url: "https://{{ vms_net_vm20_metrics_ip }}"
+          - url: "https://{{ vm20_metrics.ip }}"
         passHostHeader: true
         serversTransport: "grafana-transport"
 

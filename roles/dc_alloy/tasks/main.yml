@@ -53,7 +53,7 @@
               {{
                 {
                   "traefik_net": {
-                    "name": dc_traefik_net_name,
+                    "name": dc_traefik_net.name,
                     "external": true
                   },
                 }

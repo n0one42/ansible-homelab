@@ -22,8 +22,8 @@
       vars:
         dc_socketproxy_env_log_level: "{{ dc_traefik_socketproxy_env_log_level }}"
         dc_socketproxy_env_containers: "{{ dc_traefik_socketproxy_env_containers }}"
-        dc_socketproxy_net_cidr: "{{ dc_traefik_socketproxy_net_cidr }}"
-        dc_socketproxy_net_ip: "{{ dc_traefik_socketproxy_net_ip }}"
+        dc_socketproxy_net_subnet: "{{ dc_traefik_socketproxy_net.subnet }}"
+        dc_socketproxy_net_ip: "{{ dc_traefik_socketproxy_net.socketproxy_ip }}"
 
   # * ----------------------- Traefik App ------------------------- * #
     - name: Create app
@@ -71,7 +71,7 @@
               - var_name: "traefik_crowdsec_bouncer_key"
                 content: "{{ traefik_crowdsec_bouncer_key | default('') }}"
                 set_facts: true  # optional - needed for the app
-                # overide_existing: true  # optional
+                # override_existing: true  # optional
           when: dc_traefik_crowdsec_enabled | bool
 
         - name: Install docker compose traefik with inline definition
@@ -80,7 +80,7 @@
               {{
                 {
                   "traefik_net": {
-                    "name": dc_traefik_net_name,
+                    "name": dc_traefik_net.name,
                     "external": true
                   },
                   "socketproxy_net": {
@@ -91,7 +91,7 @@
                 | combine(
                   {
                     "crowdsec_net": {
-                      "name": "crowdsec_net",
+                      "name": dc_crowdsec_net.name,
                       "external": true
                     }
                   }
@@ -122,15 +122,18 @@
                   command: # CLI arguments # ? decided to use traefik.yml instead
                     - --configFile=/etc/traefik/traefik.yml
                   extra_hosts:
-                    - "authelia.{{ domain_1 }}:{{ vms_net_vm10_ingress_ip }}"
-                    - "authentik.{{ domain_1 }}:{{ vms_net_vm10_ingress_ip }}"
+                    - "authelia.{{ domain_1 }}:{{ vm10_ingress.ip }}"
+                    - "authentik.{{ domain_1 }}:{{ vm10_ingress.ip }}"
                     # # Just rly needed if using both traefiks together
-                    # - "traefik-ingress.{{ domain_1 }}:{{ vms_net_vm10_ingress_ip }}"  # Yes, this is correct!
-                    # - "traefik-metrics.{{ domain_1 }}:{{ vms_net_vm20_metrics_ip }}"  # Yes, this is correct!
+                    # - "traefik-ingress.{{ domain_1 }}:{{ vm10_ingress.ip }}"  # Yes, this is correct!
+                    # - "traefik-metrics.{{ domain_1 }}:{{ vm20_metrics.ip }}"  # Yes, this is correct!
                   networks:
-                    traefik_net: "{{ {'ipv4_address': dc_traefik_net_ip} if dc_traefik_net_ip is defined and dc_traefik_net_ip | length > 0 else {} }}"
-                    socketproxy_net: "{{ {'ipv4_address': dc_traefik_socketproxy_net_app_ip} if dc_traefik_socketproxy_net_app_ip is defined and dc_traefik_socketproxy_net_app_ip | length > 0 else {} }}"
-                    crowdsec_net: "{{ {'ipv4_address': dc_crowdsec_net_traefik_ip} if dc_crowdsec_net_traefik_ip is defined and dc_crowdsec_net_traefik_ip | length > 0 and dc_traefik_crowdsec_enabled | default(false) | bool else omit }}"
+                    traefik_net: # "{{ {'ipv4_address': dc_traefik_net.traefik_ip} if dc_traefik_net.traefik_ip is defined and dc_traefik_net.traefik_ip | length > 0 else {} }}"
+                      ipv4_address: "{{ dc_traefik_net.traefik_ip }}"
+                    socketproxy_net: # "{{ {'ipv4_address': dc_traefik_socketproxy_net.traefik_ip} if dc_traefik_socketproxy_net.socketproxy_ip is defined and dc_traefik_socketproxy_net.traefik_ip | length > 0 else {} }}"
+                      ipv4_address: "{{ dc_traefik_socketproxy_net.traefik_ip }}"
+                    crowdsec_net: # "{{ {'ipv4_address': dc_crowdsec_net.traefik_ip} if dc_crowdsec_net.traefik_ip is defined and dc_crowdsec_net.traefik_ip | length > 0 and dc_traefik_crowdsec_enabled | default(false) | bool else omit }}"
+                      ipv4_address: "{{ dc_crowdsec_net.traefik_ip }}"
                   ports:
                     - target: 80
                       published: 80
@@ -165,7 +168,7 @@
                     # - "traefik.http.routers.ping.service=ping@internal"
                     # * HTTP Routers
                     traefik.http.routers.traefik-rtr.entrypoints: "websecure"
-                    traefik.http.routers.traefik-rtr.rule: "Host(`{{ app_name }}-{{ dc_traefik_type }}.{{ domain_1 }}`)"
+                    traefik.http.routers.traefik-rtr.rule: "Host(`{{ app_name }}-{{ dc_traefik_type }}{{ '' if env == 'prod' else '.' + env }}.{{ domain_1 }}`)"
                     # * Services - API
                     traefik.http.routers.traefik-rtr.service: "api@internal"
                     # * Middlewares

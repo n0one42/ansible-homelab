@@ -57,7 +57,8 @@
                 retries: 5
                 timeout: 3s
               networks:
-                app_net: "{{ {'ipv4_address': dc_redis_bitnami_net_ip} if dc_redis_bitnami_net_ip is defined and dc_redis_bitnami_net_ip | length > 0 else {} }}"
+                app_net: # "{{ {'ipv4_address': dc_redis_bitnami_net_ip} if dc_redis_bitnami_net_ip is defined and dc_redis_bitnami_net_ip | length > 0 else {} }}"
+                  ipv4_address: "{{ dc_redis_bitnami_net_ip }}"
               # ports:
               #   - "6379:6379"
               volumes:

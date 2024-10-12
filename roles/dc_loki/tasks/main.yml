@@ -32,7 +32,7 @@
           {{
             {
               "traefik_net": {
-                "name": dc_traefik_net_name,
+                "name": dc_traefik_net.name,
                 "external": true
               }
             }
@@ -82,8 +82,8 @@
                 traefik.http.routers.loki-rtr-noauth.rule: >-
                   Host(`loki-{{ dc_traefik_type }}.{{ domain_1 }}`) &&
                   (
-                  ClientIP(`{{ vms_net_vm10_ingress_ip }}/32`) ||
-                  ClientIP(`{{ vms_net_vm31_application_1_ip }}/32`) ||
+                  ClientIP(`{{ vm10_ingress.ip }}/32`) ||
+                  ClientIP(`{{ vm31_application_1.ip }}/32`) ||
                   ClientIP(`{{ vms_net_vm41_multimedia_1_ip }}/32`)
                   )
                 traefik.http.routers.loki-rtr-noauth.middlewares: "chain-no-auth@file"

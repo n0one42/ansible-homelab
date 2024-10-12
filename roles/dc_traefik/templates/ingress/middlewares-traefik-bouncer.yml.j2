@@ -7,7 +7,7 @@ http:
           enabled: "{{ dc_traefik_crowdsec_enabled | bool }}"
           logLevel: "{{ dc_traefik_crowdsec_log_level | default('INFO') }}"
           crowdsecMode: live
-          crowdsecLapiHost: "{{ dc_crowdsec_net_app_ip }}:{{ dc_crowdsec_port }}"
+          crowdsecLapiHost: "{{ dc_crowdsec_net.crowdsec_ip }}:{{ dc_crowdsec_port }}"
           crowdsecLapiKeyFile: "/run/secrets/traefik_crowdsec_bouncer_key"
 
 

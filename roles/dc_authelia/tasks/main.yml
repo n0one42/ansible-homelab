@@ -13,11 +13,11 @@
   # ! --------------------------- Networks --------------------------- ! #
     - name: Create network for --> {{ app_name }}
       community.docker.docker_network:
-        name: "{{ app_name }}_net"
+        name: "{{ dc_authelia_net.name }}"
         driver: bridge
         internal: true
         ipam_config:
-          - subnet: "{{ dc_authelia_net_cidr }}"
+          - subnet: "{{ dc_authelia_net.subnet }}"
       when: not dc_authelia_use_sqlite
 
   # * ------------------------ Authelia DB ------------------------ * #
@@ -31,7 +31,7 @@
         dc_postgresql_bitnami_db_name: "{{ dc_authelia_db_name }}"
         dc_postgresql_bitnami_db_user_name: "{{ dc_authelia_db_user_name }}"
         dc_postgresql_bitnami_db_port: "{{ dc_authelia_db_port }}"
-        dc_postgresql_bitnami_net_ip: "{{ dc_authelia_net_db_ip }}"
+        dc_postgresql_bitnami_net_ip: "{{ dc_authelia_net.db_ip }}"
       when: not dc_authelia_use_sqlite
 
 
@@ -43,7 +43,7 @@
         dc_redis_bitnami_create_with_userns: "{{ dc_authelia_redis_create_with_userns }}"
         dc_redis_bitnami_image_version: "{{ dc_authelia_db_image_version }}"
         dc_redis_bitnami_redis_port: "{{ dc_authelia_redis_port }}"
-        dc_redis_bitnami_net_ip: "{{ dc_authelia_net_redis_ip }}"
+        dc_redis_bitnami_net_ip: "{{ dc_authelia_net.redis_ip }}"
       when: not dc_authelia_use_sqlite
 
   # * ----------------------- Authelia App ------------------------- *
@@ -57,6 +57,7 @@
           ansible.builtin.import_role:
             name: filesystem_manager
           vars:
+            filesystem_manager_restart_container_on_template_change: true
             filesystem_manager_appdata_directories_to_create:
               - path: "config"
             # filesystem_manager_log_files_to_touch:
@@ -78,8 +79,6 @@
               - var_name: authelia_session_secret
                 content: "{{ dc_authelia_session_secret }}"
                 type: session_secret
-          notify:
-            - Restart authelia
 
         - name: '[Required] filesystem_manager role'
           ansible.builtin.import_role:
@@ -98,14 +97,14 @@
               {{
                 {
                   "traefik_net": {
-                    "name": dc_traefik_net_name,
+                    "name": dc_traefik_net.name,
                     "external": true
                   },
                 }
                 | combine(
                   {
                     "app_net": {
-                      "name": app_name ~ "_net",
+                      "name": dc_authelia_net.name,
                       "external": true
                     }
                   } if not dc_authelia_use_sqlite else {}
@@ -116,13 +115,13 @@
               {{
                 {
                   "traefik_net": {
-                    "ipv4_address": dc_traefik_net_authelia_ip if dc_traefik_net_authelia_ip is defined and dc_traefik_net_authelia_ip | length > 0 else {}
+                    "ipv4_address": dc_traefik_net.authelia_ip
                   }
                 }
                 | combine(
                   {
                     "app_net": {
-                      "ipv4_address": dc_authelia_net_app_ip if dc_authelia_net_app_ip is defined and dc_authelia_net_app_ip | length > 0 else {}
+                      "ipv4_address": dc_authelia_net.authelia_ip
                     }
                   } if not dc_authelia_use_sqlite else {}
                 )
@@ -179,9 +178,6 @@
                     traefik.http.routers.authelia-rtr.service: "authelia-svc"
                     traefik.http.services.authelia-svc.loadbalancer.server.port: "{{ dc_authelia_port }}"
 
-
-        - name: Flush handlers
-          ansible.builtin.meta: flush_handlers
 
 # ! --------------------------- Notes --------------------------- ! #
 # https://www.smarthomebeginner.com/authelia-docker-compose-guide-2024-v2/
