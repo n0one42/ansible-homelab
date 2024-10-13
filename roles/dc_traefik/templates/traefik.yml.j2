@@ -60,7 +60,7 @@ accessLog:
 
 providers:
   docker:
-    endpoint: "tcp://{{ app_name }}-socketproxy:2375"  # Enable for Socket Proxy. Disable otherwise.
+    endpoint: "tcp://{{ dc_traefik_container_name }}-socketproxy:2375"  # Enable for Socket Proxy. Disable otherwise.
     exposedByDefault: false
     network: "{{ dc_traefik_net.name }}"
     # Uncomment the following line for Traefik v2 Swarm mode

@@ -3,15 +3,11 @@
 - name: Create Authelia with PostgreSQL and Redis
   vars:
     app_name: "{{ dc_authelia_container_name }}" # "authelia"
-    db_name: "{{ dc_authelia_db_name }}" # "authelia"
-    db_user_name: "{{ dc_authelia_db_user_name }}" # "authelia"
     db_user_pw: "{{ dc_authelia_db_user_pw }}"  # ! MUST BE HERE BECAUSE SHARED !
-    db_port: "{{ dc_authelia_db_port }}" # "5432"
     redis_pw: "{{ dc_authelia_redis_pw }}"  # ! MUST BE HERE BECAUSE SHARED!
-    redis_port: "{{ dc_authelia_redis_port }}" # "6379"
   block:
   # ! --------------------------- Networks --------------------------- ! #
-    - name: Create network for --> {{ app_name }}
+    - name: Create network for --> {{ dc_authelia_container_name }}
       community.docker.docker_network:
         name: "{{ dc_authelia_net.name }}"
         driver: bridge
@@ -20,34 +16,36 @@
           - subnet: "{{ dc_authelia_net.subnet }}"
       when: not dc_authelia_use_sqlite
 
-  # * ------------------------ Authelia DB ------------------------ * #
-    - name: Include postgresql role
-      ansible.builtin.import_role:
-        name: dc_postgresql_bitnami
-      vars:
-        dc_postgresql_bitnami_create_with_userns: "{{ dc_authelia_db_create_with_userns }}"
-        dc_postgresql_bitnami_image_version: "{{ dc_authelia_db_image_version }}"
-        dc_postgresql_bitnami_db_superuser_pw: "{{ dc_authelia_db_superuser_pw }}"
-        dc_postgresql_bitnami_db_name: "{{ dc_authelia_db_name }}"
-        dc_postgresql_bitnami_db_user_name: "{{ dc_authelia_db_user_name }}"
-        dc_postgresql_bitnami_db_port: "{{ dc_authelia_db_port }}"
-        dc_postgresql_bitnami_net_ip: "{{ dc_authelia_net.db_ip }}"
-      when: not dc_authelia_use_sqlite
+  # # * ------------------------ Authelia DB ------------------------ * #
+  #   - name: Include postgresql role
+  #     ansible.builtin.import_role:
+  #       name: dc_postgresql_bitnami
+  #     vars:
+  #       dc_postgresql_bitnami_parent_app_name: "{{ dc_authelia_container_name }}"
+  #       dc_postgresql_bitnami_create_with_userns: "{{ dc_authelia_db_create_with_userns }}"
+  #       dc_postgresql_bitnami_image_version: "{{ dc_authelia_db_image_version }}"
+  #       dc_postgresql_bitnami_db_superuser_pw: "{{ dc_authelia_db_superuser_pw }}"
+  #       dc_postgresql_bitnami_db_name: "{{ dc_authelia_db_name }}"
+  #       dc_postgresql_bitnami_db_user_name: "{{ dc_authelia_db_user_name }}"
+  #       dc_postgresql_bitnami_db_port: "{{ dc_authelia_db_port }}"
+  #       dc_postgresql_bitnami_net_ip: "{{ dc_authelia_net.db_ip }}"
+  #     when: not dc_authelia_use_sqlite
 
 
-  # * ------------------------ Authelia Redis ------------------------ * #
-    - name: Include redis role
-      ansible.builtin.import_role:
-        name: dc_redis_bitnami
-      vars:
-        dc_redis_bitnami_create_with_userns: "{{ dc_authelia_redis_create_with_userns }}"
-        dc_redis_bitnami_image_version: "{{ dc_authelia_db_image_version }}"
-        dc_redis_bitnami_redis_port: "{{ dc_authelia_redis_port }}"
-        dc_redis_bitnami_net_ip: "{{ dc_authelia_net.redis_ip }}"
-      when: not dc_authelia_use_sqlite
+  # # * ------------------------ Authelia Redis ------------------------ * #
+  #   - name: Include redis role
+  #     ansible.builtin.import_role:
+  #       name: dc_redis_bitnami
+  #     vars:
+  #       dc_redis_bitnami_parent_app_name: "{{ dc_authelia_container_name }}"
+  #       dc_redis_bitnami_create_with_userns: "{{ dc_authelia_redis_create_with_userns }}"
+  #       dc_redis_bitnami_image_version: "{{ dc_authelia_db_image_version }}"
+  #       dc_redis_bitnami_redis_port: "{{ dc_authelia_redis_port }}"
+  #       dc_redis_bitnami_net_ip: "{{ dc_authelia_net.redis_ip }}"
+  #     when: not dc_authelia_use_sqlite
 
   # * ----------------------- Authelia App ------------------------- *
-    - name: Create app --> {{ app_name }}
+    - name: Create app --> {{ dc_authelia_container_name }}
       vars:
         container_type: "app" # => app, db, redis
         user: "{{ (dc_authelia_create_with_userns | bool) | ternary(dc_authelia_u_g_id + 100000, dc_authelia_u_g_id) }}"
@@ -57,18 +55,12 @@
           ansible.builtin.import_role:
             name: filesystem_manager
           vars:
+            filesystem_manager_app_name: "{{ dc_authelia_container_name }}"
             filesystem_manager_restart_container_on_template_change: true
             filesystem_manager_appdata_directories_to_create:
               - path: "config"
             # filesystem_manager_log_files_to_touch:
             #   - filename: "authelia.log"
-            filesystem_manager_appdata_templates_to_copy:
-              - src: "configuration.yml.j2"
-                dest: "config/configuration.yml"
-                mode: "0400"
-              - src: "users.yml.j2"
-                dest: "config/users.yml"
-                mode: "0400"
             filesystem_manager_secret_files_to_create:
               - var_name: "authelia_jwt_secret"
                 content: "{{ dc_authelia_jwt_secret }}"
@@ -79,6 +71,13 @@
               - var_name: authelia_session_secret
                 content: "{{ dc_authelia_session_secret }}"
                 type: session_secret
+            filesystem_manager_appdata_templates_to_copy:
+              - src: "configuration.yml.j2"
+                dest: "config/configuration.yml"
+                mode: "0400"
+              - src: "users.yml.j2"
+                dest: "config/users.yml"
+                mode: "0400"
 
         - name: '[Required] filesystem_manager role'
           ansible.builtin.import_role:
@@ -128,7 +127,7 @@
               }}
 
           community.docker.docker_compose_v2:
-            project_name: "{{ app_name }}"  # eg: authelia
+            project_name: "{{ dc_authelia_container_name }}"  # eg: authelia
             definition:
               # ! --------------------------- Networks --------------------------- ! #
               networks: "{{ compose_networks }}"
@@ -137,7 +136,7 @@
               services:
                 authelia:
                   image: authelia/authelia:{{ dc_authelia_image_version }}
-                  container_name: "{{ app_name }}"  # eg: authelia
+                  container_name: "{{ dc_authelia_container_name }}"  # eg: authelia
                   restart: always
                   security_opt:
                     - no-new-privileges:true
@@ -171,7 +170,7 @@
                     traefik.enable: "true"
                     ## HTTP Routers
                     traefik.http.routers.authelia-rtr.entrypoints: "websecure"
-                    traefik.http.routers.authelia-rtr.rule: "Host(`{{ app_name }}.{{ domain_1 }}`)"
+                    traefik.http.routers.authelia-rtr.rule: "Host(`{{ dc_authelia_container_name }}{{ '' if env == 'prod' else '-' + env }}.{{ domain_1 }}`)"
                     ## Middlewares
                     traefik.http.routers.authelia-rtr.middlewares: "chain-no-auth@file" # Has to be chain-no-auth
                     ## HTTP Services

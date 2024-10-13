@@ -1,4 +1,5 @@
 ---
+# tasks file for roles/dc_traefik
 - name: Create Traefik & Socket Proxy
   vars:
     app_name: "{{ dc_traefik_container_name }}" # "traefik"
@@ -36,6 +37,7 @@
           ansible.builtin.import_role:
             name: filesystem_manager
           vars:
+            filesystem_manager_app_name: "{{ dc_traefik_container_name }}"
             filesystem_manager_restart_container_on_template_change: true
             filesystem_manager_appdata_directories_to_create:
               - path: "rules"
@@ -84,7 +86,7 @@
                     "external": true
                   },
                   "socketproxy_net": {
-                    "name": app_name ~ "_socketproxy_net",
+                    "name": dc_traefik_container_name ~ "_socketproxy_net",
                     "external": true
                   }
                 }
@@ -100,7 +102,7 @@
               }}
 
           community.docker.docker_compose_v2:
-            project_name: "{{ app_name }}"
+            project_name: "{{ dc_traefik_container_name }}"
             definition:
               # ! --------------------------- Networks --------------------------- ! #
               networks: "{{ docker_networks }}"
@@ -109,7 +111,7 @@
               # * ---------------------------- App ------------------------------ * #
               services:
                 traefik:
-                  container_name: "{{ app_name }}"  # eg: traefik
+                  container_name: "{{ dc_traefik_container_name }}"  # eg: traefik
                   image: traefik:{{ dc_traefik_image_version }}
                   # profiles: ["core", "all"] # ! seams not to work here
                   restart: always
@@ -168,7 +170,7 @@
                     # - "traefik.http.routers.ping.service=ping@internal"
                     # * HTTP Routers
                     traefik.http.routers.traefik-rtr.entrypoints: "websecure"
-                    traefik.http.routers.traefik-rtr.rule: "Host(`{{ app_name }}-{{ dc_traefik_type }}{{ '' if env == 'prod' else '.' + env }}.{{ domain_1 }}`)"
+                    traefik.http.routers.traefik-rtr.rule: "Host(`{{ dc_traefik_container_name }}-{{ dc_traefik_type }}{{ '' if env == 'prod' else '-' + env }}.{{ domain_1 }}`)"
                     # * Services - API
                     traefik.http.routers.traefik-rtr.service: "api@internal"
                     # * Middlewares
@@ -181,7 +183,7 @@
 
 
                 # traefik-certs-dumper:
-                #   container_name: "{{ app_name }}-certs-dumper"
+                #   container_name: "{{ dc_traefik_container_name }}-certs-dumper"
                 #   image: ldez/traefik-certs-dumper:v2.8.3
                 #   restart: unless-stopped
                 #   # read_only: true # needs to rewrite the acme and such

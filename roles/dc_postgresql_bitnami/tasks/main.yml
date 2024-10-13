@@ -2,14 +2,14 @@
 # TODO: Variables which has to be passed through the playbook or on import of this task file
 # ! Mandatory variables
   # vars:
-  #   app_name: => traefik, portainer, authelia, netbox
+  #   dc_postgresql_bitnami_parent_app_name: => traefik, portainer, authelia, netbox
   #   db_user_pw: => "" # Empty for generated password
   #   db_superuser_pw: => "" # Empty for generated password
 # ? Optional variables
 
 
   # * --------------------------- App --------------------------- *
-- name: Create postgresql db for --> {{ app_name }}
+- name: Create postgresql db for --> {{ dc_postgresql_bitnami_parent_app_name }}
   vars:
     container_type: "db" # => app, db, redis
     user: "{{ (dc_postgresql_bitnami_create_with_userns | bool) | ternary(1001 + 100000, 1001) }}"  # do not change for this container!
@@ -35,19 +35,19 @@
 
     - name: Install docker compose postgresql bitnami with inline definition
       community.docker.docker_compose_v2:
-        project_name: "{{ app_name }}-postgresql" # eg: authelia-postgresql
+        project_name: "{{ dc_postgresql_bitnami_parent_app_name }}-postgresql" # eg: authelia-postgresql
         definition:
           # ! --------------------------- Networks --------------------------- ! #
           networks:
             app_net:
-              name: "{{ app_name }}_net"  # eg: authelia_net
+              name: "{{ dc_postgresql_bitnami_parent_app_name }}_net"  # eg: authelia_net
               external: true  # indicating that it's a pre-existing network not managed by this Docker Compose file.
 
           # * ---------------------------- App ------------------------------ * #
           services:
             db:
               image: bitnami/postgresql:{{ dc_postgresql_bitnami_image_version }}
-              container_name: "{{ app_name }}-postgresql"  # eg: authelia-postgresql
+              container_name: "{{ dc_postgresql_bitnami_parent_app_name }}-postgresql"  # eg: authelia-postgresql
               restart: always
               security_opt:
                 - no-new-privileges:true
@@ -102,6 +102,6 @@
 
 # ? Test if login works
 # # For the database user
-# sudo docker exec -it {{ app_name }}-postgresql psql -d {{ dc_postgresql_bitnami_db_name }} -U {{ dc_postgresql_bitnami_db_user_name }} -W
+# sudo docker exec -it {{ dc_postgresql_bitnami_parent_app_name }}-postgresql psql -d {{ dc_postgresql_bitnami_db_name }} -U {{ dc_postgresql_bitnami_db_user_name }} -W
 # # For the superuser called postgres if password set in POSTGRESQL_POSTGRES_PASSWORD_FILE
-# sudo docker exec -it {{ app_name }}-postgresql psql -d {{ dc_postgresql_bitnami_db_name }} -U postgres -W
+# sudo docker exec -it {{ dc_postgresql_bitnami_parent_app_name }}-postgresql psql -d {{ dc_postgresql_bitnami_db_name }} -U postgres -W

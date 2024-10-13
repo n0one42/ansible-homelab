@@ -27,7 +27,7 @@
       ansible.builtin.meta: flush_handlers
 
   # * ----------------------- App ------------------------- * #
-    - name: Create app --> {{ app_name }}
+    - name: Create app --> {{ dc_adguard_container_name }}
       vars:
         container_type: "app" # => app, db, redis
         user: "{{ (dc_adguard_create_with_userns | bool) | ternary(dc_adguard_u_g_id + 100000, dc_adguard_u_g_id) }}"
@@ -37,6 +37,7 @@
           ansible.builtin.import_role:
             name: filesystem_manager
           vars:
+            filesystem_manager_app_name: "{{ dc_adguard_container_name }}"
             filesystem_manager_appdata_directories_to_create:
               - path: "config"
               - path: "data"
@@ -49,7 +50,7 @@
 
         - name: Install docker compose adguard with inline definition
           community.docker.docker_compose_v2:
-            project_name: "{{ app_name }}"  # eg: adguard
+            project_name: "{{ dc_adguard_container_name }}"  # eg: adguard
             definition:
               # ! --------------------------- Networks --------------------------- ! #
               networks:
@@ -62,7 +63,7 @@
               services:
                 adguard:
                   image: adguard/adguardhome:{{ dc_adguard_image_version }}
-                  container_name: "{{ app_name }}"
+                  container_name: "{{ dc_adguard_container_name }}"
                   restart: unless-stopped
                   security_opt:
                     - no-new-privileges:true
@@ -112,7 +113,7 @@
                     traefik.enable: "true"
                     ## HTTP Routers
                     traefik.http.routers.adguard-rtr.entrypoints: "websecure"
-                    traefik.http.routers.adguard-rtr.rule: "Host(`{{ app_name }}.{{ domain_1 }}`)"
+                    traefik.http.routers.adguard-rtr.rule: "Host(`{{ dc_adguard_container_name }}{{ '' if env == 'prod' else '-' + env }}.{{ domain_1 }}`)"
                     ## Middlewares
                     traefik.http.routers.adguard-rtr.middlewares: "chain-authelia@file" # For Authelia Authentication
                     ## HTTP Services

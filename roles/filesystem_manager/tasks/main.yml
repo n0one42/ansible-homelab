@@ -1,7 +1,5 @@
 ---
 # tasks file for roles/filesystem_manager
-# New and combined version for all file management parts but is W.I.P. for now
-
 # ? ######################################################################################## #
 # *                                        AppDataDir                                        #
 # ? ######################################################################################## #
@@ -11,7 +9,7 @@
         filesystem_manager_appdata_templates_to_copy | default([]) | length > 0 or
         filesystem_manager_appdata_templates_in_directory_to_copy | default([]) | length > 0
   block:
-    - name: Create appdata base directory --> {{ app_name }}
+    - name: Create appdata base directory --> {{ filesystem_manager_app_name }}
       ansible.builtin.file:
         path: "{{ appdata_base_path }}"
         state: directory
@@ -19,7 +17,7 @@
         group: root
         mode: '0555'  # dr-xr-xr-x
 
-    - name: Create appdata container_type sub-directory --> {{ app_name + '/' + container_type }}
+    - name: Create appdata container_type sub-directory --> {{ filesystem_manager_app_name + '/' + container_type }}
       ansible.builtin.file:
         path: "{{ appdata_type_path }}"
         state: directory
@@ -27,7 +25,7 @@
         group: "{{ group }}" # 22025 # with userns --> 122025
         mode: '0550'  # dr-xr-x---
 
-    - name: Create appdata container_type specific directories with correct permissions --> {{ app_name + '/' + container_type }}
+    - name: Create appdata container_type specific directories with correct permissions --> {{ filesystem_manager_app_name + '/' + container_type }}
       ansible.builtin.file:
         path: "{{ appdata_type_path }}/{{ item.path }}"
         state: directory
@@ -128,12 +126,13 @@
             - filesystem_manager_restart_container_on_template_change | default(false)
             - template_copy_result.changed or templates_in_directory_to_copy_result.changed
           community.docker.docker_container_info:
-            name: "{{ app_name }}"
+            name: "{{ filesystem_manager_app_name }}"
           register: container_info
           notify: "restart_container" # ? This will triggers the handler from the specific role eg promtail. Check promtail handler for infos
           changed_when: container_info.exists
 
-    - name: Set sub-directory default ACL --> {{ app_name + '/' + container_type }}
+
+    - name: Set sub-directory default ACL --> {{ filesystem_manager_app_name + '/' + container_type }}
       ansible.posix.acl:
         path: "{{ appdata_type_path }}"
         entity: "{{ primary_user_name }}"  # My real user
@@ -144,7 +143,7 @@
         default: true
         recalculate_mask: no_mask
 
-    - name: Set sub-directory ACL for existing files in --> {{ app_name + '/' + container_type }}
+    - name: Set sub-directory ACL for existing files in --> {{ filesystem_manager_app_name + '/' + container_type }}
       ansible.posix.acl:
         path: "{{ appdata_type_path }}"
         entity: "{{ primary_user_name }}"  # My real user
@@ -161,7 +160,7 @@
 - name: Logs
   when: filesystem_manager_log_files_to_touch | default([]) | length > 0
   block:
-    - name: Create logs base directory --> {{ app_name }}
+    - name: Create logs base directory --> {{ filesystem_manager_app_name }}
       ansible.builtin.file:
         path: "{{ logs_base_path }}"
         state: directory
@@ -169,7 +168,7 @@
         group: root
         mode: '0555'  # dr-xr-xr-x
 
-    - name: Create logs container_type sub-directory --> {{ app_name + '/' + container_type }}
+    - name: Create logs container_type sub-directory --> {{ filesystem_manager_app_name + '/' + container_type }}
       ansible.builtin.file:
         path: "{{ logs_type_path }}"
         state: directory
@@ -196,7 +195,7 @@
 - name: Secrets
   when: filesystem_manager_secret_files_to_create | default([]) | length > 0
   block:
-    - name: Create secrets base directory --> {{ app_name }}
+    - name: Create secrets base directory --> {{ filesystem_manager_app_name }}
       ansible.builtin.file:
         path: "{{ secrets_base_path }}"
         state: directory
@@ -204,7 +203,7 @@
         group: root
         mode: '0555'  # dr-xr-xr-x
 
-    - name: Create secrets container_type sub-directory --> {{ app_name + '/' + container_type }}
+    - name: Create secrets container_type sub-directory --> {{ filesystem_manager_app_name + '/' + container_type }}
       ansible.builtin.file:
         path: "{{ secrets_type_path }}"
         state: directory

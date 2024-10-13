@@ -10,7 +10,7 @@
         name: dn_traefik_net
 
   # * ----------------------- App ------------------------- * #
-    - name: Create app --> {{ app_name }}
+    - name: Create app --> {{ dc_crowdsec_container_name }}
       vars:
         container_type: "app" # => app, db, redis
         # ! to many problems... odd container... therefore host mode and root
@@ -29,6 +29,7 @@
           ansible.builtin.import_role:
             name: filesystem_manager
           vars:
+            filesystem_manager_app_name: "{{ dc_crowdsec_container_name }}"
             filesystem_manager_secret_files_to_create:
               - var_name: traefik_crowdsec_bouncer_key
                 content: "{{ traefik_crowdsec_bouncer_key | default('') }}"
@@ -43,7 +44,7 @@
 
         - name: Install docker compose crowdsec with inline definition
           community.docker.docker_compose_v2:
-            project_name: "{{ app_name }}"  # eg: crowdsec
+            project_name: "{{ dc_crowdsec_container_name }}"  # eg: crowdsec
             definition:
               # ! --------------------------- Networks --------------------------- ! #
               networks:
@@ -63,7 +64,7 @@
               services:
                 crowdsec:
                   image: crowdsecurity/crowdsec:{{ dc_crowdsec_image_version }}
-                  container_name: "{{ app_name }}"  # eg: crowdsec
+                  container_name: "{{ dc_crowdsec_container_name }}"  # eg: crowdsec
                   restart: unless-stopped
                   security_opt:
                     - no-new-privileges:true
@@ -98,7 +99,7 @@
                 # # CrowdSec Bouncer - Traefik
                 # traefik-bouncer:
                 #   image: fbonalair/traefik-crowdsec-bouncer:{{ dc_crowdsec_bouncer_image_version }}
-                #   container_name: "{{ app_name }}-traefik-bouncer"
+                #   container_name: "{{ dc_crowdsec_container_name }}-traefik-bouncer"
                 #   restart: unless-stopped
                 #   security_opt:
                 #     - no-new-privileges:true
@@ -113,12 +114,12 @@
                 #   environment:
                 #     # GIN_MODE: release # default is debug (more logs)
                 #     CROWDSEC_BOUNCER_API_KEY: "nqq8WvZqLMBuQkmuCcDVGi1/xQlH1428BR1kc8ZqJZk" # CROWDSEC_BOUNCER_TRAEFIK_API_KEY
-                #     CROWDSEC_AGENT_HOST: "{{ app_name }}:{{ dc_crowdsec_port }}" # CROWDSEC_LAPI_HOST:CROWDSEC_LAPI_PORT # CrowdSec host and port
+                #     CROWDSEC_AGENT_HOST: "{{ dc_crowdsec_container_name }}:{{ dc_crowdsec_port }}" # CROWDSEC_LAPI_HOST:CROWDSEC_LAPI_PORT # CrowdSec host and port
 
 # ! --------------------------- Notes --------------------------- ! #
 # https://hub.docker.com/r/crowdsecurity/crowdsec
 # ! Notes:
-# sudo docker exec {{ app_name }} cscli bouncers add {{ app_name }}-traefik-bouncer
+# sudo docker exec {{ dc_crowdsec_container_name }} cscli bouncers add {{ dc_crowdsec_container_name }}-traefik-bouncer
 # sudo docker exec crowdsec cscli bouncers add crowdsec-traefik-bouncer
 # sudo docker exec crowdsec cscli bouncers list
 # sudo docker logs -f crowdsec

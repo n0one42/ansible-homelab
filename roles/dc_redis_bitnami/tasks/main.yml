@@ -2,13 +2,13 @@
 # TODO: Variables which has to be passed through the playbook or on import of this task file
 # ! Mandatory variables
   # vars:
-  #   app_name: => traefik, portainer, authelia, netbox
+  #   dc_redis_bitnami_parent_app_name: => traefik, portainer, authelia, netbox
   #   redis_pw: => "" # Empty for generated password
 # ? Optional variables
 
 
 # * ----------------------- App ------------------------- *
-- name: Create redis for --> {{ app_name }}
+- name: Create redis for --> {{ dc_redis_bitnami_parent_app_name }}
   vars:
     container_type: "redis" # => app, db, redis
     user: "{{ (dc_redis_bitnami_create_with_userns | bool) | ternary(1001 + 100000, 1001) }}"  # do not change for this container!
@@ -21,7 +21,7 @@
         filesystem_manager_appdata_directories_to_create:
           - path: "data"
         filesystem_manager_appdata_templates_to_copy:
-          - src: "{{ app_name }}/redis.conf.j2"
+          - src: "{{ dc_redis_bitnami_parent_app_name }}/redis.conf.j2"
             dest: "overrides.conf"
         filesystem_manager_secret_files_to_create:
           - var_name: redis_pw
@@ -31,19 +31,19 @@
 
     - name: Install docker compose redis bitnami with inline definition
       community.docker.docker_compose_v2:
-        project_name: "{{ app_name }}-redis"  # eg: authelia-redis
+        project_name: "{{ dc_redis_bitnami_parent_app_name }}-redis"  # eg: authelia-redis
         definition:
           # ! --------------------------- Networks --------------------------- ! #
           networks:
             app_net:
-              name: "{{ app_name }}_net"  # eg: authelia_net
+              name: "{{ dc_redis_bitnami_parent_app_name }}_net"  # eg: authelia_net
               external: true  # indicating that it's a pre-existing network not managed by this Docker Compose file.
 
           # * ---------------------------- App ------------------------------ * #
           services:
             redis:
               image: bitnami/redis:{{ dc_redis_bitnami_image_version }}
-              container_name: "{{ app_name }}-redis"  # eg: authelia-redis
+              container_name: "{{ dc_redis_bitnami_parent_app_name }}-redis"  # eg: authelia-redis
               restart: always
               security_opt:
                 - no-new-privileges:true
@@ -86,7 +86,7 @@
 # [redis-cluster](https://github.com/bitnami/containers/tree/main/bitnami/redis-cluster)
 
 # ? Test if login works
-# sudo docker exec -it {{ app_name }}-redis redis-cli -a {{ redis_pw }} ping
+# sudo docker exec -it {{ dc_redis_bitnami_parent_app_name }}-redis redis-cli -a {{ redis_pw }} ping
 # Or the safe way
-# sudo docker exec -it {{ app_name }}-redis redis-cli
+# sudo docker exec -it {{ dc_redis_bitnami_parent_app_name }}-redis redis-cli
 # auth {{ redis_pw }}
