@@ -38,6 +38,17 @@
           ansible.builtin.import_role:
             name: filesystem_manager
           vars:
+            filesystem_manager_secret_files_to_create:
+              - var_name: "traefik_crowdsec_bouncer_key"
+                content: "{{ traefik_crowdsec_bouncer_key | default('') }}"
+                set_facts: true  # optional - needed for the app
+                # override_existing: true  # optional
+          when: dc_traefik_crowdsec_enabled | bool
+
+        - name: '[Required] filesystem_manager role'
+          ansible.builtin.import_role:
+            name: filesystem_manager
+          vars:
             filesystem_manager_app_name: "{{ dc_traefik_container_name }}"
             filesystem_manager_restart_container_on_template_change: true
             filesystem_manager_appdata_directories_to_create:
@@ -47,6 +58,9 @@
             filesystem_manager_appdata_files_to_touch:
               - filename: "letsencrypt/acme.json"
                 mode: "0600"
+            filesystem_manager_appdata_templates_to_copy:
+              - src: "traefik.yml.j2"
+                dest: "traefik.yml"
             filesystem_manager_log_files_to_touch:
               - filename: "traefik.log"
               - filename: "access.log"
@@ -62,20 +76,6 @@
               - var_name: "dc_traefik_cf_dns_api_token"
                 content: "{{ dc_traefik_cf_dns_api_token }}" # pass it from the ansible vault
                 mode: "0440"
-            filesystem_manager_appdata_templates_to_copy:
-              - src: "traefik.yml.j2"
-                dest: "traefik.yml"
-
-        - name: '[Required] filesystem_manager role'
-          ansible.builtin.import_role:
-            name: filesystem_manager
-          vars:
-            filesystem_manager_secret_files_to_create:
-              - var_name: "traefik_crowdsec_bouncer_key"
-                content: "{{ traefik_crowdsec_bouncer_key | default('') }}"
-                set_facts: true  # optional - needed for the app
-                # override_existing: true  # optional
-          when: dc_traefik_crowdsec_enabled | bool
 
         - name: Install docker compose traefik with inline definition
           vars:
