@@ -1,10 +1,10 @@
 ---
 # defaults file for roles/docker_provisioning
 
-# docker_provisioning_timezone: "{{ timezone | default('America/New_York') }}"
+docker_provisioning_timezone: "{{ timezone | default('America/New_York') }}"
 
-# docker_provisioning_primary_user_name: "{{ primary_user_name | default('wasd') }}"
+docker_provisioning_primary_user_name: "{{ primary_user_name | default('wasd') }}"
 
-# docker_provisioning_dockerino_user_name: "{{ docker_user_name | default('dockerino') }}"
-# docker_provisioning_dockerino_user_uid: "{{ docker_user_uid | default(1200) }}"
-# docker_provisioning_dockerino_user_gid: "{{ docker_user_gid | default(1200) }}"
+docker_provisioning_dockerino_user_name: "{{ docker_user_name | default('dockerino') }}"
+docker_provisioning_dockerino_user_uid: "{{ docker_user_uid | default(1200) }}"
+docker_provisioning_dockerino_user_gid: "{{ docker_user_gid | default(1200) }}"

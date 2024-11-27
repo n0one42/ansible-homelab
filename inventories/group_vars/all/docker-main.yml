@@ -5,6 +5,10 @@
 # *                                  Docker Container Variables                              #
 # ? ######################################################################################## #
 
+docker_user_name: "dockerino"
+docker_user_uid: 1200
+docker_user_gid: 1200
+
 docker_home: "/opt/docker"
 # Subdirectories for specific types of Docker-related files
 docker_appdata: "{{ docker_home }}/appdata"  # Application data
@@ -58,7 +62,7 @@ dc_gluetun_u_g_id: 22099 # with userns --> 122099 # ! Note: Container will run a
 # * >>> Container variables
 dc_adguard_container_name: "adguard"
 dc_adguard_create_with_userns: true
-dc_adguard_image_version: "latest"
+dc_adguard_image: "adguard/adguardhome:v0.108.0-b.60"
 dc_adguard_log_level: ""
 # ? Note: AdGuard also changes on restart some settings which will cause to allways be a "changed" status. Its not a bug in filesystem_manager
 dc_adguard_override_config_file: false  # ! Overrides the config file with the template one if true therefore settings made in the web ui will be overwritten
@@ -73,7 +77,7 @@ dc_adguard_port: 80
 # * >>> Container variables
 dc_authelia_container_name: "authelia"
 dc_authelia_create_with_userns: true
-dc_authelia_image_version: "latest"
+dc_authelia_image: "authelia/authelia:4.38"
 dc_authelia_log_level: "info" # 'trace', 'debug', 'info', 'warn', or 'error' (case sensitive!)
 dc_authelia_jwt_secret: ""  # Empty for generated password
 dc_authelia_storage_encryption_key: ""  # Empty for generated password
@@ -424,7 +428,7 @@ dc_firefox_jlesage_open_url: "https://www.perplexity.ai/" # The URL to open when
 # * >>> Container variables
 dc_traefik_container_name: "traefik"
 dc_traefik_create_with_userns: true
-dc_traefik_image_version: "3.1"
+dc_traefik_image: "traefik:3.2"
 dc_traefik_log_level: "INFO" # (Default: error) TRACE, DEBUG, INFO, WARN, ERROR, FATAL, PANIC # Needs at least info for crowdsec
 
 dc_traefik_acme_staging_mode: true  # true = LetsEncrypt Staging Server - false = LetsEncrypt Production Server
@@ -446,6 +450,7 @@ dc_traefik_local_ip_ranges: "{{ vms_net_vm09_aio_ip }}/32, {{ vm10_ingress.ip }}
 # * >>> Container variables
 
 ## ? Environment variables for socketproxy
+dc_traefik_socketproxy_image: "linuxserver/socket-proxy:1.26.2"
 dc_traefik_socketproxy_env_log_level: "info"  # debug, info, notice, warning, err, crit, alert and emerg
 
 # * Not always needed - Can expose some information that your service does not need

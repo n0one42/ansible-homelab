@@ -135,7 +135,7 @@
               # * ---------------------------- App ------------------------------ * #
               services:
                 authelia:
-                  image: authelia/authelia:{{ dc_authelia_image_version }}
+                  image: "{{ dc_authelia_image }}"
                   container_name: "{{ dc_authelia_container_name }}"  # eg: authelia
                   restart: always
                   security_opt:

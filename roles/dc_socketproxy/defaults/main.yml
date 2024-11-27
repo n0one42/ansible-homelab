@@ -3,7 +3,7 @@
 ## * Container variables
 # app_name: "my_container"  # !Dependency! eg: traefik which means at the end traefik-socketproxy
 dc_socketproxy_create_with_userns: false
-dc_socketproxy_image_version: "latest"
+# dc_socketproxy_image_version: "linuxserver/socket-proxy:1.26.2"
 
 ## ? Environment variables for socketproxy
 dc_socketproxy_env_log_level: "info"  # debug, info, notice, warning, err, crit, alert and emerg

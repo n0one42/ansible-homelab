@@ -1,21 +1,14 @@
 ---
-- name: Create VM => dev-vm10-ingress
-  hosts: pve-qotom_env_dev
-  become: true
-  gather_facts: false
-  roles:
-    - role: pve_vm
-      vars:
-        # pve_vm_prune: true  # testing purposes
-        # pve_vm_start_after_create: false
-        pve_vm_id: "{{ vms_net_vm10_ingress_pve_id }}"
-        pve_vm_name: "{{ vms_net_vm10_ingress_hostname }}"
-        pve_vm_hostname: "{{ vms_net_vm10_ingress_hostname }}"
-        pve_vm_fqdn: "{{ vms_net_vm10_ingress_hostname }}.{{ vms_net_search_domain }}"
-        pve_vm_search_domain: "{{ vms_net_search_domain }}"
-        pve_vm_ipv4_address_0: "{{ vms_net_vm10_ingress_ip }}"
-        pve_vm_bridge_0_name: "{{ vms_net_bridge_name }}"
-        pve_vm_net_prefix_length_0: "{{ vms_net_prefix_length }}"
+# - name: Create VM => dev-vm10-ingress
+#   hosts: pve-qotom_env_dev
+#   become: true
+#   gather_facts: false
+#   roles:
+#     - role: pve_vm
+#       vars:
+#         # pve_vm_prune: true  # testing purposes
+#         # pve_vm_start_after_create: false
+#         pve_vm_obj_to_use: "{{ vm10_ingress }}"  # Has to be the object
 
 
 - name: Docker Provisioning
@@ -25,7 +18,7 @@
   vars:
     dc_traefik_type: "ingress"  # "This is very important to use either: ingress, metrics, ..." This will match many variables and rules for like traefik! Otherwise change it everywhere!
     # dc_traefik_crowdsec_enabled: false
-    host_identifier: "{{ vms_net_vm10_ingress_host_identifier }}"
+    vm_id: "{{ vm10_ingress.vm_id }}"
   pre_tasks:
     - name: Gather only the hostname fact
       ansible.builtin.setup:
@@ -36,25 +29,37 @@
         name: systemd-timesyncd.service
         state: restarted
       changed_when: false
+
+    # - name: Debug networks
+    #   ansible.builtin.debug:
+    #     msg:
+    #       - "{{ dc_traefik_net.subnet }}"
+    #       - "{{ dc_traefik_net.traefik_ip }}"
+    #       - "{{ dc_traefik_net.adguard_ip }}"
+    #       - "{{ dc_traefik_net.crowdsec_ip }}"
+    #       - "{{ dc_traefik_socketproxy_net.subnet }}"
+    #       - "{{ dc_traefik_socketproxy_net.socketproxy_ip }}"
+    #       - "{{ dc_traefik_socketproxy_net.traefik_ip }}"
+    #       - "{{ dc_authelia_net.subnet }}"
+    #       - "{{ dc_authelia_net.authelia_ip }}"
+    #       - "{{ dc_authelia_net.traefik_ip }}"
   roles:
-    - role: app_webmin
-    - role: docker_provisioning
-#     - role: dc_adguard  # ! must be first if used for correct dns
-#     - role: dc_traefik
-#     # # - role: dc_authentik  # Works perfectly but is overkill for what I need. (extensively tested)
-#     - role: dc_authelia # Decided to use authelia. Its lighter and easier to configure than authentik while offering most what I need. (also extensively tested)
-#     - role: dc_vector
-#       vars:
-#         app_name: "standalone" # noqa: var-naming
-#         dc_vector_standalone: true
-#         dc_vector_create_with_userns: "{{ dc_grafana_vector_create_with_userns }}"
-#         dc_vector_image_version: "{{ dc_grafana_vector_image_version }}"
-#     - role: dc_cadvisor
-#       vars:
-#         app_name: "standalone" # noqa: var-naming
-#         dc_cadvisor_standalone: true
-#         dc_cadvisor_create_with_userns: "{{ dc_grafana_cadvisor_create_with_userns }}"
-#         dc_cadvisor_image_version: "{{ dc_grafana_cadvisor_image_version }}"
-#     # - role: dc_whoami
-#     # - role: dc_portainer
-#     # - role: dc_nginx
+    # - role: app_webmin
+    # - role: docker_provisioning
+    # - role: dc_adguard  # ! must be first if used for correct dns
+    # - role: dc_traefik
+    # # - role: dc_authentik  # Works perfectly but is overkill for what I need. (extensively tested)
+    # - role: dc_authelia # Decided to use authelia. Its lighter and easier to configure than authentik while offering most what I need. (also extensively tested)
+    - role: dc_vector
+      vars:
+        app_name: "standalone" # noqa: var-naming
+        dc_vector_standalone: true
+        dc_vector_create_with_userns: "{{ dc_grafana_vector_create_with_userns }}"
+        dc_vector_image_version: "{{ dc_grafana_vector_image_version }}"
+    - role: dc_cadvisor
+      vars:
+        app_name: "standalone" # noqa: var-naming
+        dc_cadvisor_standalone: true
+        dc_cadvisor_create_with_userns: "{{ dc_grafana_cadvisor_create_with_userns }}"
+        dc_cadvisor_image_version: "{{ dc_grafana_cadvisor_image_version }}"
+    # - role: dc_whoami

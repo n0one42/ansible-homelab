@@ -17,7 +17,7 @@
       # * ---------------------------- App ------------------------------ * #
       services:
         socketproxy:
-          image: lscr.io/linuxserver/socket-proxy:{{ dc_socketproxy_image_version }}
+          image: "{{ dc_socketproxy_image }}"
           container_name: "{{ dc_socketproxy_container_name | default(app_name) }}-socketproxy"  # eg: traefik-socketproxy
           restart: always
           security_opt:

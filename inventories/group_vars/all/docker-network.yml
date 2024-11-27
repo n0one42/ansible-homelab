@@ -334,7 +334,6 @@ dc_traefik_socketproxy_net:
 # Docker uses the first ip for the gateway. Therefore first ip is not usable.
 # Eg. usable ips starts at 10.140.x.2 instead of 10.140.x.1
 
-# host_identifier has to be set by the playbook
 
 # Maybe to test later on:
 # foo_postgresql_grafana_password_encoded: |-
@@ -344,130 +343,6 @@ dc_traefik_socketproxy_net:
 #   {{- foo_postgresql_grafana_password | b64encode -}}
 #   {%- endif -%}
 
-
-# ? Sadly this does not help much... Therefore only for history purposes here
-# docker_env_24_subnets:  # Use max first 16 subnets
-#   demo: "{{ docker_env_cidr['demo'] | ansible.utils.ipsubnet(24, 0) }}"
-#   placeholder1: "{{ docker_env_cidr['placeholder1'] | ansible.utils.ipsubnet(24, 0) }}"
-#   dev: "{{ docker_env_cidr['dev'] | ansible.utils.ipsubnet(24, 0) }}"
-#   placeholder2: "{{ docker_env_cidr['placeholder2'] | ansible.utils.ipsubnet(24, 0) }}"
-#   beta: "{{ docker_env_cidr['beta'] | ansible.utils.ipsubnet(24, 0) }}"
-#   placeholder3: "{{ docker_env_cidr['placeholder3'] | ansible.utils.ipsubnet(24, 0) }}"
-#   prod: "{{ docker_env_cidr['prod'] | ansible.utils.ipsubnet(24, 0) }}"
-#   placeholder4: "{{ docker_env_cidr['placeholder4'] | ansible.utils.ipsubnet(24, 0) }}"
-
-# docker_env_26_subnets:
-#   demo: "{{ docker_env_24_subnets['demo'] | ansible.utils.ipsubnet(26, 0) }}"
-#   placeholder1: "{{ docker_env_24_subnets['placeholder1'] | ansible.utils.ipsubnet(26, 0) }}"
-#   dev: "{{ docker_env_24_subnets['dev'] | ansible.utils.ipsubnet(26, 0) }}"
-#   placeholder2: "{{ docker_env_24_subnets['placeholder2'] | ansible.utils.ipsubnet(26, 0) }}"
-#   beta: "{{ docker_env_24_subnets['beta'] | ansible.utils.ipsubnet(26, 0) }}"
-#   placeholder3: "{{ docker_env_24_subnets['placeholder3'] | ansible.utils.ipsubnet(26, 0) }}"
-#   prod: "{{ docker_env_24_subnets['prod'] | ansible.utils.ipsubnet(26, 0) }}"
-#   placeholder4: "{{ docker_env_24_subnets['placeholder4'] | ansible.utils.ipsubnet(26, 0) }}"
-
-# docker_env_28_subnets:
-#   demo: "{{ docker_env_26_subnets['demo'] | ansible.utils.ipsubnet(28, 0) }}"
-#   placeholder1: "{{ docker_env_26_subnets['placeholder1'] | ansible.utils.ipsubnet(28, 0) }}"
-#   dev: "{{ docker_env_26_subnets['dev'] | ansible.utils.ipsubnet(28, 0) }}"
-#   placeholder2: "{{ docker_env_26_subnets['placeholder2'] | ansible.utils.ipsubnet(28, 0) }}"
-#   beta: "{{ docker_env_26_subnets['beta'] | ansible.utils.ipsubnet(28, 0) }}"
-#   placeholder3: "{{ docker_env_26_subnets['placeholder3'] | ansible.utils.ipsubnet(28, 0) }}"
-#   prod: "{{ docker_env_26_subnets['prod'] | ansible.utils.ipsubnet(28, 0) }}"
-#   placeholder4: "{{ docker_env_26_subnets['placeholder4'] | ansible.utils.ipsubnet(28, 0) }}"
-
-# docker_env_29_subnets:
-#   demo: "{{ docker_env_28_subnets['demo'] | ansible.utils.ipsubnet(29, 0) }}"
-#   placeholder1: "{{ docker_env_28_subnets['placeholder1'] | ansible.utils.ipsubnet(29, 0) }}"
-#   dev: "{{ docker_env_28_subnets['dev'] | ansible.utils.ipsubnet(29, 0) }}"
-#   placeholder2: "{{ docker_env_28_subnets['placeholder2'] | ansible.utils.ipsubnet(29, 0) }}"
-#   beta: "{{ docker_env_28_subnets['beta'] | ansible.utils.ipsubnet(29, 0) }}"
-#   placeholder3: "{{ docker_env_28_subnets['placeholder3'] | ansible.utils.ipsubnet(29, 0) }}"
-#   prod: "{{ docker_env_28_subnets['prod'] | ansible.utils.ipsubnet(29, 0) }}"
-#   placeholder4: "{{ docker_env_28_subnets['placeholder4'] | ansible.utils.ipsubnet(29, 0) }}"
-
-
-# vm42
-# /24
-# demo => 10.142.0.0 ; 10.142.1.0 ; 10.142.2.0 ; ... ; 10.142.14.0 ; 10.142.15.0
-# dev =>  10.142.64.0 ; 10.142.65.0 ; 10.142.66.0 ; ... ; 10.142.78.0 ; 10.142.79.0
-# beta => 10.142.128.0 ; 10.142.129.0 ; 10.142.130.0 ; ... ; 10.142.142.0 ; 10.142.143.0
-# prod => 10.142.192.0 ; 10.142.193.0 ; 10.142.194.0 ; ... ; 10.142.206.0 ; 10.142.207.0
-
-# subnets:
-# demo => 16 + 8 + 4 eg: 10.142.0 + 16 = 10.142.16 + 8 = 10.142.24 + 4 = 10.142.28
-# dev => 16 + 8 + 4 eg: 10.142.64 + 16 = 10.142.80 + 8 = 10.142.88 + 4 = 10.142.92
-# beta => 16 + 8 + 4 eg: 10.142.128 + 16 = 10.142.144 + 8 = 10.142.152 + 4 = 10.142.156
-# prod => 16 + 8 + 4 eg: 10.142.192 + 16 = 10.142.208 + 8 = 10.142.216 + 4 = 10.142.220
-
-
-# /26
-# demo => 10.142.16.0 ; 10.142.16.64 ; 10.142.16.128 ; 10.142.16.192 ; 10.142.17.0 ; 10.142.17.64 ; ... ; 10.142.17.192 ; 10.142.23.192
-# dev => 10.142.80.0 ; 10.142.80.64 ; 10.142.80.128 ; 10.142.80.192 ; 10.142.81.0 ; 10.142.81.64 ; ... ; 10.142.81.192 ; 10.142.87.192
-# beta => 10.142.144.0 ; 10.142.144.64 ; 10.142.144.128 ; 10.142.144.192 ; 10.142.145.0 ; 10.142.145.64 ; ... ; 10.142.145.192 ; 10.142.151.192
-# prod => 10.142.208.0 ; 10.142.208.64 ; 10.142.208.128 ; 10.142.208.192 ; 10.142.209.0 ; 10.142.209.64 ; ... ; 10.142.209.192 ; 10.142.215.192
-
-# /28
-# demo => 10.142.24.0 ; 10.142.16.16 ; 10.142.16.32 ; ... ; 10.142.16.224 ; 10.142.16.240 ; 10.142.17.0 ; 10.142.17.16 ; ... ; 10.142.27.224 ; 10.142.27.240
-# dev => 10.142.88.0 ; 10.142.88.16 ; 10.142.88.32 ; ... ; 10.142.88.224 ; 10.142.88.240 ; 10.142.89.0 ; 10.142.89.16 ; ... ; 10.142.91.224 ; 10.142.91.240
-# beta => 10.142.152.0 ; 10.142.152.16 ; 10.142.152.32 ; ... ; 10.142.152.224 ; 10.142.152.240 ; 10.142.153.0 ; 10.142.153.16 ; ... ; 10.142.155.224 ; 10.142.155.240
-# prod => 10.142.216.0 ; 10.142.216.16 ; 10.142.216.32 ; ... ; 10.142.216.224 ; 10.142.216.240 ; 10.142.217.0 ; 10.142.217.16 ; ... ; 10.142.219.224 ; 10.142.219.240
-
-# /29
-# demo => 10.142.28.0 ; 10.142.28.8 ; 10.142.28.16 ; ... ; 10.142.28.240 ; 10.142.28.248 ; 10.142.29.0 ; 10.142.29.8 ; ... ; 10.142.31.240 ; 10.142.31.248
-# dev => 10.142.92.0 ; 10.142.92.8 ; 10.142.92.16 ; ... ; 10.142.92.240 ; 10.142.92.248 ; 10.142.93.0 ; 10.142.93.8 ; ... ; 10.142.95.240 ; 10.142.95.248
-# beta => 10.142.156.0 ; 10.142.156.8 ; 10.142.156.16 ; ... ; 10.142.156.240 ; 10.142.156.248 ; 10.142.157.0 ; 10.142.157.8 ; ... ; 10.142.159.240 ; 10.142.159.248
-# prod => 10.142.220.0 ; 10.142.220.8 ; 10.142.220.16 ; ... ; 10.142.220.240 ; 10.142.220.248 ; 10.142.221.0 ; 10.142.221.8 ; ... ; 10.142.223.240 ; 10.142.223.248
-
-
-# # vm 42 on demo
-# # first half of each env /24 cidr`s
-# dc_app1_net_cidr: 10.142.0.0/24 # => 10.142.0.1 - 10.142.0.254
-# dc_app2_net_cidr: 10.142.1.0/24 # => 10.142.1.1 - 10.142.1.254
-# # ...
-# dc_app15_net_cidr: 10.142.14.0/24 # => 10.142.14.1 - 10.142.14.254
-# dc_app16_net_cidr: 10.142.15.0/24 # => 10.142.15.1 - 10.142.15.254
-
-# # second half /28 cidr`s
-# dc_app17_net_cidr: 10.142.16.0/28 # => 10.142.16.1 - 10.142.16.14
-# dc_app18_net_cidr: 10.142.16.16/28 # => 10.142.16.17 - 10.142.16.30
-# # ...
-# dc_app271_net_cidr: 10.142.31.240/28 # => 10.142.31.241 - 10.142.31.254
-# dc_app272_net_cidr: 10.142.31.252/28 # => 10.142.31.253 - 10.142.31.254
-# I think, putting docker0 bridge + the first 2 subnets for the address pools would also be a good idea.
-
-# # vm 42 on prod
-# # first half /24 cidr`s
-# dc_app1_net_cidr: 10.142.192.0/24 # => 10.142.192.1 - 10.142.192.254
-# dc_app2_net_cidr: 10.142.193.0/24 # => 10.142.193.1 - 10.142.193.254
-# # ...
-# dc_app15_net_cidr: 10.142.206.0/24 # => 10.142.206.1 - 10.142.206.254
-# dc_app16_net_cidr: 10.142.207.0/24 # => 10.142.207.1 - 10.142.207.254
-
-# # second half /28 cidr`s
-# dc_app17_net_cidr: 10.142.208.0/28 # => 10.142.208.1 - 10.142.208.14
-# dc_app18_net_cidr: 10.142.208.16/28 # => 10.142.208.17 - 10.142.208.30
-# # ...
-# dc_app271_net_cidr: 10.142.223.240/28 # => 10.142.223.241 - 10.142.223.254
-# dc_app272_net_cidr: 10.142.223.252/28 # => 10.142.223.253 - 10.142.223.254
-# I think, putting docker0 bridge + the first 2 subnets for the address pools would also be a good idea.
-
-# # old
-# # Map environments to base third octet values
-# env_docker_base_octet_map:
-#   demo: 0
-#   placeholder1: 32
-#   dev: 64
-#   placeholder2: 96
-#   beta: 128
-#   placeholder3: 160
-#   prod: 192
-#   placeholder4: 224
-
-# env_24_docker_subnets_address2: "{{ [root_cidr | ansible.utils.ipsubnet(24, i) for i in range(env_docker_base_octet, env_docker_base_octet + 16)] }}"
-
-# # Get the base third octet for the environment
-# env_docker_base_octet: "{{ env_docker_base_octet_map[env] }}"
 
 # # Predefine /24 subnets => first IP is network address, second is gateway, last is broadcast address, therefore 254 usable IPs per subnet
 # # Total /24 subnets per environment: 16 (50% of all subnets)

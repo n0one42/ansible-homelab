@@ -62,7 +62,7 @@
               # * ---------------------------- App ------------------------------ * #
               services:
                 adguard:
-                  image: adguard/adguardhome:{{ dc_adguard_image_version }}
+                  image: "{{ dc_adguard_image }}"
                   container_name: "{{ dc_adguard_container_name }}"
                   restart: unless-stopped
                   security_opt:
