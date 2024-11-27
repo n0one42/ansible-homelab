@@ -63,7 +63,7 @@
               # * ---------------------------- App ------------------------------ * #
               services:
                 crowdsec:
-                  image: crowdsecurity/crowdsec:{{ dc_crowdsec_image_version }}
+                  image: "{{ dc_crowdsec_image }}"
                   container_name: "{{ dc_crowdsec_container_name }}"  # eg: crowdsec
                   restart: unless-stopped
                   security_opt:

@@ -11,7 +11,7 @@
 # List of users
 users:
 {% for user, details in dc_authelia_users.items() %}
-  {{ user }}:
+  {{ details.username }}:
     disabled: {{ details.disabled | lower }}
     displayname: '{{ details.displayname }}'
     password: '{{ details.password }}'
