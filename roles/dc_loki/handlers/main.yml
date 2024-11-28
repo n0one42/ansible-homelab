@@ -1,8 +1,2 @@
 ---
 # handlers file for roles/dc_loki
-- name: Restart loki
-  community.docker.docker_container:
-    name: "{{ dc_grafana_container_name if not dc_loki_standalone else 'standalone' }}-loki"
-    state: started
-    restart: true
-  when: dc_loki_restart_container_on_template_change | default(true)

@@ -3,7 +3,7 @@
 # TODO: Variables which has to be passed through the playbook or on import of this task file
 # ! Mandatory variables
   # vars:
-  #   app_name: => traefik, portainer, grafana, netbox
+  #   dc_vector_parent_app_name: => traefik, portainer, grafana, netbox
 # ? Optional variables
 
 - name: Create Vector & Socket Proxy
@@ -11,7 +11,7 @@
   # ? Does not work correctly with the socketproxy.
 
   # * --------------------------- App --------------------------- *
-    - name: Create vector for --> {{ app_name }}
+    - name: Create vector for --> {{ dc_vector_parent_app_name }}
       vars:
         container_type: "vector" # => app, db, redis, loki, vector
         user: "{{ (dc_vector_create_with_userns | bool) | ternary(dc_vector_u_g_id + 100000, dc_vector_u_g_id) }}"
@@ -21,6 +21,8 @@
           ansible.builtin.import_role:
             name: filesystem_manager
           vars:
+            filesystem_manager_app_name: "{{ dc_vector_parent_app_name }}"
+            filesystem_manager_restart_container_on_template_change: true
             filesystem_manager_appdata_directories_to_create:
               - path: "config"
             filesystem_manager_appdata_templates_in_directory_to_copy:
@@ -41,8 +43,6 @@
             #     dest: "config/sinks.yml"
               # - src: "vector.yml.j2"
               #   dest: "config/vector.yml"
-          notify:
-            - Restart vector
 
         - name: Install docker compose vector with inline definition
           vars:
@@ -57,15 +57,31 @@
                 | combine(
                   {
                     "app_net": {
-                      "name": app_name ~ "_net",
+                      "name": dc_vector_parent_app_name ~ "_net",
                       "external": true
                     }
                   } if not dc_vector_standalone else {}
                 )
               }}
 
+            container_networks: >-
+              {{
+                {
+                  "traefik_net": {
+                    "ipv4_address": dc_traefik_net.vector_ip
+                  }
+                }
+                | combine(
+                  {
+                    "app_net": {
+                      "ipv4_address": dc_vector_net_ip
+                    }
+                  } if not dc_vector_standalone else {}
+                )
+              }}
+
           community.docker.docker_compose_v2:
-            project_name: "{{ app_name }}-vector" # eg: grafana-vector
+            project_name: "{{ dc_vector_parent_app_name }}-vector" # eg: grafana-vector
             definition:
               # ! --------------------------- Networks --------------------------- ! #
               networks: "{{ docker_networks }}"
@@ -74,8 +90,8 @@
               # * ---------------------------- App ------------------------------ * #
               services:
                 vector:
-                  image: timberio/vector:{{ dc_vector_image_version }}
-                  container_name: "{{ app_name }}-vector"  # eg: grafana-vector
+                  image: "{{ dc_vector_image }}"
+                  container_name: "{{ dc_vector_parent_app_name }}-vector"  # eg: grafana-vector
                   restart: unless-stopped
                   security_opt:
                     - no-new-privileges:true
@@ -92,10 +108,8 @@
                   extra_hosts:
                     # - "traefik-ingress.{{ domain_1 }}:{{ dc_traefik_net_ip }}"  # Yes, this is correct!
                     # - "traefik-metrics.{{ domain_1 }}:{{ dc_traefik_net_ip }}"  # Yes, this is correct!
-                    - "loki-metrics.{{ domain_1 }}:{{ vm20_metrics.ip if (dc_vector_standalone | default(false) | bool) else dc_grafana_net_loki_ip }}"
-                  networks:
-                    app_net: "{{ {'ipv4_address': dc_vector_net_ip} if dc_vector_net_ip is defined and dc_vector_net_ip | length > 0 and not dc_vector_standalone | default(false) | bool else omit }}"
-                    traefik_net: "{{ {'ipv4_address': dc_traefik_net_vector_ip} if dc_traefik_net_vector_ip is defined and dc_traefik_net_vector_ip | length > 0 else {} }}"
+                    - "loki-metrics.{{ domain_1 }}:{{ vm20_metrics.ip if (dc_vector_standalone | default(false) | bool) else dc_vector_net_ip }}"
+                  networks: "{{ container_networks }}"
                   # ports:
                   #   - "{{ dc_vector_port }}:8686"
                   #   - 9598:9598 # Prometheus Exporter default port
@@ -145,10 +159,6 @@
 
                     # * HTTP Service for Vector Prometheus Metrics (port 9598)
                     traefik.http.services.vector-metrics-svc.loadbalancer.server.port: "{{ dc_vector_prometheus_exporter_port }}" # default: "9598"
-
-
-        - name: Flush handlers
-          ansible.builtin.meta: flush_handlers
 
 
 # ! --------------------------- Notes --------------------------- ! #

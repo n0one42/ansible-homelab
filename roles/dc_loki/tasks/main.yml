@@ -3,11 +3,11 @@
 # TODO: Variables which has to be passed through the playbook or on import of this task file
 # ! Mandatory variables
   # vars:
-  #   app_name: => traefik, portainer, grafana, netbox
+  #   dc_postgresql_bitnami_parent_app_name: => traefik, portainer, grafana, netbox
 # ? Optional variables
 
   # * --------------------------- App --------------------------- *
-- name: Create loki for --> {{ app_name }}
+- name: Create loki for --> {{ dc_loki_parent_app_name }}
   vars:
     container_type: "loki" # => app, loki, redis
     user: "{{ (dc_loki_create_with_userns | bool) | ternary(dc_loki_u_g_id + 100000, dc_loki_u_g_id) }}"
@@ -17,14 +17,14 @@
       ansible.builtin.import_role:
         name: filesystem_manager
       vars:
+        filesystem_manager_app_name: "{{ dc_loki_parent_app_name }}-loki"
+        filesystem_manager_restart_container_on_template_change: true
         filesystem_manager_appdata_directories_to_create:
           - path: "data"
         filesystem_manager_appdata_templates_to_copy:
-          - src: "{{ ansible_hostname }}/loki-docker-config.yml.j2"
+          - src: "loki-docker-config.yml.j2" # "{{ ansible_hostname }}/loki-docker-config.yml.j2"
             dest: "loki-docker-config.yml"
             mode: '0660'
-      notify:
-        - Restart loki
 
     - name: Install docker compose loki with inline definition
       vars:
@@ -39,25 +39,41 @@
             | combine(
               {
                 "app_net": {
-                  "name": app_name ~ "_net",
+                  "name": dc_loki_parent_app_name ~ "_net",
                   "external": true
                 }
               } if not dc_loki_standalone else {}
             )
           }}
 
+        container_networks: >-
+          {{
+            {
+              "traefik_net": {
+                "ipv4_address": dc_traefik_net.loki_ip
+              }
+            }
+            | combine(
+              {
+                "app_net": {
+                  "ipv4_address": dc_loki_net_ip
+                }
+              } if not dc_loki_standalone else {}
+            )
+          }}
+
+
       community.docker.docker_compose_v2:
-        project_name: "{{ app_name }}-loki" # eg: grafana-loki
+        project_name: "{{ dc_loki_parent_app_name }}-loki" # eg: grafana-loki
         definition:
           # ! --------------------------- Networks --------------------------- ! #
           networks: "{{ docker_networks }}"
 
-
           # * ---------------------------- App ------------------------------ * #
           services:
             loki:
-              image: grafana/loki:{{ dc_loki_image_version }}
-              container_name: "{{ app_name }}-loki"  # eg: grafana-loki
+              image: "{{ dc_loki_image }}"
+              container_name: "{{ dc_loki_parent_app_name }}-loki"  # eg: grafana-loki, standalone-loki
               restart: unless-stopped
               security_opt:
                 - no-new-privileges:true
@@ -66,9 +82,7 @@
               user: "{{ dc_loki_u_g_id }}:{{ dc_loki_u_g_id }}"
               command: -config.file=/etc/loki/local-config.yaml
               # command: -config.file=/etc/loki/local-config.yaml -log-config-reverse-order <-- if you want to output the entire config to logs
-              networks:
-                app_net: "{{ {'ipv4_address': dc_loki_net_ip} if dc_loki_net_ip is defined and dc_loki_net_ip | length > 0 and not dc_loki_standalone | default(false) | bool else {} }}"
-                traefik_net: "{{ {'ipv4_address': dc_traefik_net_loki_ip} if dc_traefik_net_loki_ip is defined and dc_traefik_net_loki_ip | length > 0 else {} }}"
+              networks: "{{ container_networks }}"
               # ports:
               #   - "{{ dc_loki_port }}:3100"
               volumes:
@@ -82,9 +96,10 @@
                 traefik.http.routers.loki-rtr-noauth.rule: >-
                   Host(`loki-{{ dc_traefik_type }}.{{ domain_1 }}`) &&
                   (
+                  ClientIP(`{{ vm09_aio.ip }}/32`) ||
                   ClientIP(`{{ vm10_ingress.ip }}/32`) ||
                   ClientIP(`{{ vm31_application_1.ip }}/32`) ||
-                  ClientIP(`{{ vms_net_vm41_multimedia_1_ip }}/32`)
+                  ClientIP(`{{ vm41_multimedia_1.ip }}/32`)
                   )
                 traefik.http.routers.loki-rtr-noauth.middlewares: "chain-no-auth@file"
                 traefik.http.routers.loki-rtr-noauth.service: "loki-svc"
@@ -97,10 +112,6 @@
 
                 # * HTTP Service for Loki (port 3100)
                 traefik.http.services.loki-svc.loadbalancer.server.port: "{{ dc_loki_port }}"
-
-
-    - name: Flush handlers
-      ansible.builtin.meta: flush_handlers
 
 
 # ! --------------------------- Notes --------------------------- ! #

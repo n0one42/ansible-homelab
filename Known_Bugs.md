@@ -1,0 +1,1 @@
+filesystem_manager_app_name: "{{ dc_vector_parent_app_name }}" for child apps like loki, vector, etc. causes that the parent will be restarted instead of the child. But changhing this to be "{{ dc_vector_parent_app_name }}-vector" would cause that the files are put inside the wrong directory. Therefore I need a fix for this.

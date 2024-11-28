@@ -3,13 +3,13 @@
 # TODO: Variables which has to be passed through the playbook or on import of this task file
 # ! Mandatory variables
   # vars:
-  #   app_name: => traefik, portainer, grafana, netbox
+  #   dc_cadvisor_parent_app_name: => traefik, portainer, grafana, netbox
 # ? Optional variables
 
 - name: Create cAdvisor & Socket Proxy
   block:
   # * --------------------------- App --------------------------- *
-    - name: Create cAdvisor for --> {{ app_name }}
+    - name: Create cAdvisor for --> {{ dc_cadvisor_parent_app_name }}
       vars:
         container_type: "cadvisor" # => app, db, redis, loki, promtail, cadvisor
         user: "{{ (dc_cadvisor_create_with_userns | bool) | ternary(dc_cadvisor_u_g_id + 100000, dc_cadvisor_u_g_id) }}"
@@ -28,15 +28,31 @@
                 | combine(
                   {
                     "app_net": {
-                      "name": app_name ~ "_net",
+                      "name": dc_cadvisor_parent_app_name ~ "_net",
                       "external": true
                     }
                   } if not dc_cadvisor_standalone else {}
                 )
               }}
 
+            container_networks: >-
+              {{
+                {
+                  "traefik_net": {
+                    "ipv4_address": dc_traefik_net.cadvisor_ip
+                  }
+                }
+                | combine(
+                  {
+                    "app_net": {
+                      "ipv4_address": dc_cadvisor_net_ip
+                    }
+                  } if not dc_cadvisor_standalone else {}
+                )
+              }}
+
           community.docker.docker_compose_v2:
-            project_name: "{{ app_name }}-cadvisor" # eg: grafana-cadvisor
+            project_name: "{{ dc_cadvisor_parent_app_name }}-cadvisor" # eg: grafana-cadvisor
             definition:
               # ! --------------------------- Networks --------------------------- ! #
               networks: "{{ docker_networks }}"
@@ -44,8 +60,8 @@
               # * ---------------------------- App ------------------------------ * #
               services:
                 cadvisor:
-                  image: gcr.io/cadvisor/cadvisor:{{ dc_cadvisor_image_version }}
-                  container_name: "{{ app_name }}-cadvisor"  # eg: grafana-cadvisor
+                  image: "{{ dc_cadvisor_image }}"
+                  container_name: "{{ dc_cadvisor_parent_app_name }}-cadvisor"  # eg: grafana-cadvisor
                   restart: unless-stopped
                   security_opt:
                     - no-new-privileges:true
@@ -57,9 +73,7 @@
                     - --docker_only=true
                     # - --store_container_labels=false  # Aparently less cpu usage
                     # - --disable_metrics=accelerator,hugetlb # seams not to work https://github.com/google/cadvisor/issues/3372
-                  networks:
-                    app_net: "{{ {'ipv4_address': dc_cadvisor_net_ip} if dc_cadvisor_net_ip is defined and dc_cadvisor_net_ip | length > 0 and not dc_cadvisor_standalone | default(false) | bool else omit }}"
-                    traefik_net: "{{ {'ipv4_address': dc_traefik_net_cadvisor_ip} if dc_traefik_net_cadvisor_ip is defined and dc_traefik_net_cadvisor_ip | length > 0 else {} }}"
+                  networks: "{{ container_networks }}"
                   # ports:
                   #   - "{{ dc_cadvisor_port }}:8080"
                   volumes:

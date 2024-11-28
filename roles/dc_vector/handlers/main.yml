@@ -1,8 +1,2 @@
 ---
 # handlers file for roles/dc_vector
-- name: Restart vector
-  community.docker.docker_container:
-    name: "{{ app_name if not dc_vector_standalone else 'standalone' }}-vector"
-    state: started
-    restart: true
-  when: dc_vector_restart_container_on_template_change | default(true)

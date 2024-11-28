@@ -21,7 +21,7 @@ sinks:
     inputs:
       - vector_internal_logs
       # - host_logs
-    endpoint: "http://{{ dc_traefik_net_loki_ip }}:{{ dc_loki_port }}"
+    endpoint: "http://{{ dc_traefik_net.loki_ip }}:{{ dc_loki_port }}"
     encoding:
       codec: json # json
     labels:
@@ -29,7 +29,7 @@ sinks:
       job_type: "system_logs"
       parser: "vector_loki"
       service: "vector"
-      host: "{{ vms_net_vm20_metrics_hostname }}"  # eg: demo-vm20-metrics
+      host: "{{ vm20_metrics.hostname }}"  # eg: demo-vm20-metrics
       instance: "vector-{{ dc_traefik_type }}.{{ domain_1 }}"
 
 
@@ -37,7 +37,7 @@ sinks:
     type: loki
     inputs:
       - remove_label
-    endpoint: "http://{{ dc_traefik_net_loki_ip }}:{{ dc_loki_port }}"
+    endpoint: "http://{{ dc_traefik_net.loki_ip }}:{{ dc_loki_port }}"
     encoding:
       codec: json # json
     labels:
@@ -45,7 +45,7 @@ sinks:
       job_type: "docker_logs"
       parser: "vector_loki"
       service: "vector"
-      host: "{{ vms_net_vm20_metrics_hostname }}"  # eg: demo-vm20-metrics
+      host: "{{ vm20_metrics.hostname }}"  # eg: demo-vm20-metrics
       instance: "vector-{{ dc_traefik_type }}.{{ domain_1 }}"
       {% raw %}
       container: "{{ .container_name }}"
@@ -58,7 +58,7 @@ sinks:
     inputs:
       - traefik_access_log_parser
       - traefik_log_parser
-    endpoint: "http://{{ dc_traefik_net_loki_ip }}:{{ dc_loki_port }}"
+    endpoint: "http://{{ dc_traefik_net.loki_ip }}:{{ dc_loki_port }}"
     encoding:
       codec: json # json
     labels:
@@ -66,7 +66,7 @@ sinks:
       job_type: "docker_logs"
       parser: "vector_loki"
       service: "vector"
-      host: "{{ vms_net_vm20_metrics_hostname }}"  # eg: demo-vm20-metrics
+      host: "{{ vm20_metrics.hostname }}"  # eg: demo-vm20-metrics
       instance: "vector-{{ dc_traefik_type }}.{{ domain_1 }}"
       {% raw %}
       container: "{{ .container_name }}"
@@ -83,7 +83,7 @@ sinks:
   #     # - remove_label
   #     # - file_source # works
   #   endpoints: 
-  #     - "http://{{ app_name }}-elasticsearch:9200"
+  #     - "http://{{ dc_vector_parent_app_name }}-elasticsearch:9200"
   #   auth:
   #     strategy: basic
   #     user: elastic
@@ -98,9 +98,9 @@ sinks:
   #   type: influxdb_metrics
   #   inputs:
   #     - host_metrics
-  #   endpoint: "http://{{ app_name }}-influxdb:8086"
+  #   endpoint: "http://{{ dc_vector_parent_app_name }}-influxdb:8086"
   #   org: "{{ dc_influxdb_bitnami_user_org | default(dc_influxdb_bitnami_org_name | default('homelab')) }}"
   #   bucket: "grafana"
   #   token: "Pur#-rM#0idy@2V4@.nCZ2Ys3QcWhZJWGf@yLactoM30f6x^hpl5wb9%bD#0xEFT"
   #   tags:
-  #     host: "{{ vms_net_vm20_metrics_hostname }}"
+  #     host: "{{ vm20_metrics.hostname }}"

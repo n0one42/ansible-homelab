@@ -38,7 +38,7 @@ scrape_configs:
           job_type: "system_metrics"
           parser: "vector_prometheus"
           service: "vector"
-          host: "{{ vms_net_vm10_ingress_hostname }}"
+          host: "{{ vm10_ingress.hostname }}"
           instance: "vector-ingress.{{ domain_1 }}"
 
   - job_name: "cadvisor-ingress"  # represents job label
@@ -57,7 +57,7 @@ scrape_configs:
           job_type: "docker_metrics"
           parser: "cadvisor_prometheus"
           service: "cadvisor"
-          host: "{{ vms_net_vm10_ingress_hostname }}"
+          host: "{{ vm10_ingress.hostname }}"
           instance: "cadvisor-ingress.{{ domain_1 }}"
 
 
@@ -69,39 +69,39 @@ scrape_configs:
           job_type: "prometheus_metrics"
           parser: "prometheus_self"
           service: "prometheus"
-          host: "{{ vms_net_vm20_metrics_hostname }}"
+          host: "{{ vm20_metrics.hostname }}"
           instance: "prometheus-metrics.{{ domain_1 }}"
 
   # ? using vector instead of node exporter
   - job_name: "vector-metrics"  # represents job label
     static_configs:
-      - targets: ["{{ dc_grafana_net_vector_ip }}:{{ dc_vector_prometheus_exporter_port }}"]
+      - targets: ["{{ dc_grafana_net.vector_ip }}:{{ dc_vector_prometheus_exporter_port }}"]
         labels:
           job_type: "system_metrics"
           parser: "vector_prometheus"
           service: "vector"
-          host: "{{ vms_net_vm20_metrics_hostname }}"
+          host: "{{ vm20_metrics.hostname }}"
           instance: "vector-metrics.{{ domain_1 }}"
 
   - job_name: "cadvisor-metrics"  # represents job label
     static_configs:
-      - targets: ["{{ dc_grafana_net_cadvisor_ip }}:{{ dc_cadvisor_port }}"]
+      - targets: ["{{ dc_grafana_net.cadvisor_ip }}:{{ dc_cadvisor_port }}"]
         labels:
           job_type: "docker_metrics"
           parser: "cadvisor_prometheus"
           service: "cadvisor"
-          host: "{{ vms_net_vm20_metrics_hostname }}"
+          host: "{{ vm20_metrics.hostname }}"
           instance: "cadvisor-metrics.{{ domain_1 }}"
 
   # ? To much overhead and not rly needed
   # - job_name: "whats-up-docker-{{ dc_traefik_type }}" # represents job label
   #   static_configs:
-  #     - targets: ["{{ dc_traefik_net_wud_ip }}:{{ dc_wud_port }}"]
+  #     - targets: ["{{ dc_grafana_net.wud_ip }}:{{ dc_wud_port }}"]
 
   # ? using vector instead of promtail
   # - job_name: "promtail"
   #   static_configs:
-  #     - targets: ["{{ dc_grafana_net_promtail_ip }}:{{ dc_grafana_promtail_port }}"]
+  #     - targets: ["{{ dc_grafana_net.promtail_ip }}:{{ dc_grafana_promtail_port }}"]
 
 
 # ! ---- Scrape config for application-1 vm ---- ! #
@@ -122,7 +122,7 @@ scrape_configs:
           job_type: "system_metrics"
           parser: "vector_prometheus"
           service: "vector"
-          host: "{{ vms_net_vm31_application_1_hostname }}"
+          host: "{{ vm31_application_1.hostname }}"
           instance: "vector-application-1.{{ domain_1 }}"
 
   - job_name: "cadvisor-application-1"  # represents job label
@@ -141,7 +141,7 @@ scrape_configs:
           job_type: "docker_metrics"
           parser: "cadvisor_prometheus"
           service: "cadvisor"
-          host: "{{ vms_net_vm31_application_1_hostname }}"
+          host: "{{ vm31_application_1.hostname }}"
           instance: "cadvisor-application-1.{{ domain_1 }}"
 
 
@@ -163,7 +163,7 @@ scrape_configs:
           job_type: "system_metrics"
           parser: "vector_prometheus"
           service: "vector"
-          host: "{{ vms_net_vm41_multimedia_1_hostname }}"
+          host: "{{ vm41_multimedia_1.hostname }}"
           instance: "vector-multimedia-1.{{ domain_1 }}"
 
   - job_name: "cadvisor-multimedia-1"  # represents job label
@@ -182,9 +182,9 @@ scrape_configs:
           job_type: "docker_metrics"
           parser: "cadvisor_prometheus"
           service: "cadvisor"
-          host: "{{ vms_net_vm41_multimedia_1_hostname }}"
+          host: "{{ vm41_multimedia_1.hostname }}"
           instance: "cadvisor-multimedia-1.{{ domain_1 }}"
 
 # ! --------------------------- Notes --------------------------- ! #
-# ! Except for Prometheus itself which can use localhost, all other containers have to be defined by the IP of the internal network ips eg {{ dc_grafana_net_cadvisor_ip }} to work.
-# ! To verify if the setup is successful, check the Grafana GUI under Explore --> Metrics. The data source should be Prometheus and the Job should be cadvisor-{{ dc_traefik_type }}. If it's not present, it indicates a failure.
+# ! Except for Prometheus itself which can use localhost, all other containers have to be defined by the IP of the internal network ips eg { dc_grafana_net.cadvisor_ip } to work.
+# ! To verify if the setup is successful, check the Grafana GUI under Explore --> Metrics. The data source should be Prometheus and the Job should be cadvisor-{ dc_traefik_type }. If it's not present, it indicates a failure.

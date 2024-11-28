@@ -443,12 +443,31 @@ dc_traefik_crowdsec_bouncer_key: "" # Empty for generated key
 
 dc_traefik_basic_auth_user: "{{ auth_user }}"
 dc_traefik_basic_auth_password_hashed: "{{ auth_user_pw_htpasswd }}" # "404PasswordNotFound" # https://www.web2generators.com/apache-tools/htpasswd-generator
-dc_traefik_cloudflare_ip_ranges: >
-  173.245.48.0/20, 103.21.244.0/22, 103.22.200.0/22, 103.31.4.0/22, 141.101.64.0/18,
-  108.162.192.0/18, 190.93.240.0/20, 188.114.96.0/20, 197.234.240.0/22, 198.41.128.0/17,
-  162.158.0.0/15, 104.16.0.0/13, 104.24.0.0/14, 172.64.0.0/13, 131.0.72.0/22
-# ? dc_traefik_local_ip_ranges is needed if using authelia / authentik also for the services inside the other vms. The traefik`s must trust each other to forward the headers
-dc_traefik_local_ip_ranges: "{{ vms_net_vm09_aio_ip }}/32, {{ vm10_ingress.ip }}/32, {{ vm20_metrics.ip }}/32, {{ vm31_application_1.ip }}/32, {{ vms_net_vm41_multimedia_1_ip }}/32"
+dc_traefik_cloudflare_ip_ranges:
+  - 103.21.244.0/22
+  - 103.22.200.0/22
+  - 103.31.4.0/22
+  - 104.16.0.0/13
+  - 104.24.0.0/14
+  - 108.162.192.0/18
+  - 131.0.72.0/22
+  - 141.101.64.0/18
+  - 162.158.0.0/15
+  - 172.64.0.0/13
+  - 173.245.48.0/20
+  - 188.114.96.0/20
+  - 190.93.240.0/20
+  - 197.234.240.0/22
+  - 198.41.128.0/17
+
+# ? dc_traefik_local_ip_ranges is needed if using authelia / authentik also for the services inside the other VMs.
+# ? The traefiks must trust each other to forward the headers
+dc_traefik_local_ip_ranges:
+  - "{{ vm09_aio.ip }}/32"
+  - "{{ vm10_ingress.ip }}/32"
+  - "{{ vm20_metrics.ip }}/32"
+  - "{{ vm31_application_1.ip }}/32"
+  - "{{ vm41_multimedia_1.ip }}/32"
 
 # * ------------>>> SocketProxy Configuration <<<------------ * #
 # * >>> Container variables
@@ -470,7 +489,7 @@ dc_traefik_socketproxy_env_containers: "1"
 # * >>> Container variables
 dc_grafana_container_name: "grafana"
 dc_grafana_create_with_userns: true
-dc_grafana_image_version: "latest"
+dc_grafana_image: "grafana/grafana:11.3.1"
 dc_grafana_log_level: "INFO"
 dc_grafana_admin_user: "{{ auth_user }}"
 dc_grafana_admin_pw: "{{ auth_user_pw }}"  # Empty for generated password
@@ -485,7 +504,7 @@ dc_grafana_authentik_client_secret: ""
 # * ---------------->>> DB Configuration <<<---------------- * #
 # * >>> Container variables
 dc_grafana_db_create_with_userns: true
-dc_grafana_db_image_version: "latest"
+dc_grafana_db_image: "bitnami/postgresql:17"
 dc_grafana_db_superuser_pw: ""  # Empty for generated password ; superuser name --> postgres
 dc_grafana_db_name: "grafana"
 dc_grafana_db_user_name: "grafana"
@@ -495,7 +514,7 @@ dc_grafana_db_port: 5432
 # * ------------>>> Loki Configuration <<<------------ * #
 # * >>> Container variables
 dc_grafana_loki_create_with_userns: true
-dc_grafana_loki_image_version: "2.9.2"
+dc_grafana_loki_image: "grafana/loki:2.9.2"
 dc_grafana_loki_log_level: ""
 
 dc_loki_port: 3100
@@ -527,7 +546,7 @@ dc_promtail_socketproxy_env_tasks: "1"
 # * ------------>>> Prometheus Configuration <<<------------ * #
 # * >>> Container variables
 dc_grafana_prometheus_create_with_userns: true
-dc_grafana_prometheus_image_version: "latest"
+dc_grafana_prometheus_image: "prom/prometheus:v3.0.0"
 dc_grafana_prometheus_log_level: "debug" # default: info [debug, info, warn, error] # ? Best to let debug cuz hard to find when something not working
 
 dc_prometheus_port: 9090
@@ -548,7 +567,7 @@ dc_nodeexporter_standalone: false
 # * ------------>>> Cadvisor Configuration <<<------------ * #
 # * >>> Container variables
 dc_grafana_cadvisor_create_with_userns: false # ! Need this cuz of root sadly
-dc_grafana_cadvisor_image_version: "latest"
+dc_grafana_cadvisor_image: "gcr.io/cadvisor/cadvisor:v0.51.0"
 dc_grafana_cadvisor_log_level: "" # seams not to be any available
 dc_cadvisor_port: 8080
 
@@ -617,7 +636,7 @@ dc_telegraf_socketproxy_env_tasks: "1"
 # * ------------>>> Vector Configuration <<<------------ * #
 # * >>> Container variables
 dc_grafana_vector_create_with_userns: true
-dc_grafana_vector_image_version: "0.40.1-debian"
+dc_grafana_vector_image: "timberio/vector:0.42.X-debian"
 dc_grafana_vector_log_level: "info" # default: info [debug, info, warn, error]
 
 dc_vector_port: 8686

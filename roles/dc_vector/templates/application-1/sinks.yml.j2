@@ -35,7 +35,7 @@ sinks:
       job_type: "system_logs"
       parser: "vector_loki"
       service: "vector"
-      host: "{{ vms_net_vm31_application_1_hostname }}"  # eg: demo-vm31-application-1
+      host: "{{ vm31_application_1.hostname }}"  # eg: demo-vm31-application-1
       instance: "vector-{{ dc_traefik_type }}.{{ domain_1 }}"
 
 
@@ -57,7 +57,7 @@ sinks:
       job_type: "docker_logs"
       parser: vector_loki
       service: "vector"
-      host: "{{ vms_net_vm31_application_1_hostname }}"  # eg: demo-vm31-application-1
+      host: "{{ vm31_application_1.hostname }}"  # eg: demo-vm31-application-1
       instance: "vector-{{ dc_traefik_type }}.{{ domain_1 }}"
       {% raw %}
       container: "{{ .container_name }}"
@@ -84,7 +84,7 @@ sinks:
       job_type: "docker_logs"
       parser: vector_loki
       service: "vector"
-      host: "{{ vms_net_vm31_application_1_hostname }}"  # eg: demo-vm31-application-1
+      host: "{{ vm31_application_1.hostname }}"  # eg: demo-vm31-application-1
       instance: "vector-{{ dc_traefik_type }}.{{ domain_1 }}"
       {% raw %}
       container: "{{ .container_name }}"

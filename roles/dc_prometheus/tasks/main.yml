@@ -3,11 +3,11 @@
 # TODO: Variables which has to be passed through the playbook or on import of this task file
 # ! Mandatory variables
   # vars:
-  #   app_name: => traefik, portainer, grafana, netbox
+  #   dc_prometheus_parent_app_name: => traefik, portainer, grafana, netbox
 # ? Optional variables
 
   # * --------------------------- App --------------------------- *
-- name: Create prometheus for --> {{ app_name }}
+- name: Create prometheus for --> {{ dc_prometheus_parent_app_name }}
   vars:
     container_type: "prometheus" # => app, db, redis, loki, promtail
     user: "{{ (dc_prometheus_create_with_userns | bool) | ternary(dc_prometheus_u_g_id + 100000, dc_prometheus_u_g_id) }}"
@@ -17,14 +17,14 @@
       ansible.builtin.import_role:
         name: filesystem_manager
       vars:
+        filesystem_manager_restart_container_on_template_change: true
+        filesystem_manager_app_name: "{{ dc_prometheus_parent_app_name }}"
         filesystem_manager_appdata_directories_to_create:
           - path: "data"
         filesystem_manager_appdata_templates_to_copy:
-          - src: "{{ ansible_hostname }}/prometheus-docker-config.yml.j2"
+          - src: "prometheus-docker-config.yml.j2"
             dest: "prometheus-docker-config.yml"
             mode: '0660'
-      notify:
-        - Restart prometheus
 
     - name: Install docker compose prometheus with inline definition
       vars:
@@ -39,25 +39,40 @@
             | combine(
               {
                 "app_net": {
-                  "name": app_name ~ "_net",
+                  "name": dc_prometheus_parent_app_name ~ "_net",
                   "external": true
                 }
               } if not dc_prometheus_standalone else {}
             )
           }}
 
+        container_networks: >-
+          {{
+            {
+              "traefik_net": {
+                "ipv4_address": dc_traefik_net.prometheus_ip
+              }
+            }
+            | combine(
+              {
+                "app_net": {
+                  "ipv4_address": dc_prometheus_net_ip
+                }
+              } if not dc_prometheus_standalone else {}
+            )
+          }}
+
       community.docker.docker_compose_v2:
-        project_name: "{{ app_name }}-prometheus" # eg: grafana-prometheus
+        project_name: "{{ dc_prometheus_parent_app_name }}-prometheus" # eg: grafana-prometheus
         definition:
           # ! --------------------------- Networks --------------------------- ! #
           networks: "{{ docker_networks }}"
 
-
           # * ---------------------------- App ------------------------------ * #
           services:
             prometheus:
-              image: prom/prometheus:{{ dc_prometheus_image_version }}
-              container_name: "{{ app_name }}-prometheus"  # eg: grafana-prometheus
+              image: "{{ dc_prometheus_image }}"
+              container_name: "{{ dc_prometheus_parent_app_name }}-prometheus"  # eg: grafana-prometheus
               restart: unless-stopped
               security_opt:
                 - no-new-privileges:true
@@ -76,11 +91,7 @@
                 - "vector-ingress.{{ domain_1 }}:{{ vm10_ingress.ip }}"  # Has to be the internal ip of the traefik where the cadvisor are running
                 - "cadvisor-application-1.{{ domain_1 }}:{{ vm31_application_1.ip }}"  # Has to be the internal ip of the traefik where the cadvisor are running
                 - "vector-application-1.{{ domain_1 }}:{{ vm31_application_1.ip }}"  # Has to be the internal ip of the traefik where the cadvisor are running
-                - "cadvisor-multimedia-1.{{ domain_1 }}:{{ vms_net_vm41_multimedia_1_ip }}"  # Has to be the internal ip of the traefik where the cadvisor are running
-                - "vector-multimedia-1.{{ domain_1 }}:{{ vms_net_vm41_multimedia_1_ip }}"  # Has to be the internal ip of the traefik where the cadvisor are running
-              networks:
-                app_net: "{{ {'ipv4_address': dc_prometheus_net_ip} if dc_prometheus_net_ip is defined and dc_prometheus_net_ip | length > 0 and not dc_prometheus_standalone | default(false) | bool else omit }}"
-                traefik_net: "{{ {'ipv4_address': dc_traefik_net_prometheus_ip} if dc_traefik_net_prometheus_ip is defined and dc_traefik_net_prometheus_ip | length > 0 else {} }}"
+              networks: "{{ container_networks }}"
               # ports:
               #   - "{{ dc_prometheus_port }}:9090"
               volumes:
@@ -98,9 +109,6 @@
                 # * HTTP Services
                 traefik.http.routers.prometheus-rtr.service: "prometheus-svc"
                 traefik.http.services.prometheus-svc.loadbalancer.server.port: "{{ dc_prometheus_port }}"
-
-    - name: Flush handlers
-      ansible.builtin.meta: flush_handlers
 
 
 # ! --------------------------- Notes --------------------------- ! #

@@ -55,12 +55,30 @@
           ansible.builtin.import_role:
             name: filesystem_manager
           vars:
+            filesystem_manager_secret_files_to_create:
+              - var_name: redis_pw
+                content: "{{ redis_pw }}"
+              - var_name: db_user_pw
+                content: "{{ db_user_pw }}"
+          when: not dc_authelia_use_sqlite
+
+        - name: '[Required] filesystem_manager role'
+          ansible.builtin.import_role:
+            name: filesystem_manager
+          vars:
             filesystem_manager_app_name: "{{ dc_authelia_container_name }}"
             filesystem_manager_restart_container_on_template_change: true
             filesystem_manager_appdata_directories_to_create:
               - path: "config"
             # filesystem_manager_log_files_to_touch:
             #   - filename: "authelia.log"
+            filesystem_manager_appdata_templates_to_copy:
+              - src: "configuration.yml.j2"
+                dest: "config/configuration.yml"
+                mode: "0400"
+              - src: "users.yml.j2"
+                dest: "config/users.yml"
+                mode: "0400"
             filesystem_manager_secret_files_to_create:
               - var_name: "authelia_jwt_secret"
                 content: "{{ dc_authelia_jwt_secret }}"
@@ -71,24 +89,6 @@
               - var_name: authelia_session_secret
                 content: "{{ dc_authelia_session_secret }}"
                 type: session_secret
-            filesystem_manager_appdata_templates_to_copy:
-              - src: "configuration.yml.j2"
-                dest: "config/configuration.yml"
-                mode: "0400"
-              - src: "users.yml.j2"
-                dest: "config/users.yml"
-                mode: "0400"
-
-        - name: '[Required] filesystem_manager role'
-          ansible.builtin.import_role:
-            name: filesystem_manager
-          vars:
-            filesystem_manager_secret_files_to_create:
-              - var_name: redis_pw
-                content: "{{ redis_pw }}"
-              - var_name: db_user_pw
-                content: "{{ db_user_pw }}"
-          when: not dc_authelia_use_sqlite
 
         - name: Install docker compose authelia with inline definition
           vars:
