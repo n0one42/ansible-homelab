@@ -1,10 +1,10 @@
-http:
+tcp:
 # ! -------------------------- Services -------------------------- ! #
   services:
-    webmin-application-1-svc:
+    traefik-application-1-svc:
       loadBalancer:
         servers:
-          - url: "https://{{ vm31_application_1.ip }}:10000"
+          - address: "{{ vm31_application_1.ip }}:443"
 
 
 # ! -------------------------- Routers -------------------------- ! #
@@ -12,10 +12,33 @@ http:
     webmin-application-1-rtr:
       entryPoints:
         - websecure
-      rule: "Host(`webmin-application-1.{{ domain_1 }}`)"
-      middlewares:
-        - chain-authelia
-      service: webmin-application-1-svc
+      tls:
+        passthrough: true
+      rule: "HostSNI(`webmin-application-1.{{ domain_1 }}`)"
+      service: traefik-application-1-svc
 
+    vaultwarden-application-1-rtr:
+      entryPoints:
+        - websecure
+      tls:
+        passthrough: true
+      rule: "HostSNI(`vw.{{ domain_1 }}`)"
+      service: traefik-application-1-svc
+
+    it-tools-application-1-rtr:
+      entryPoints:
+        - websecure
+      tls:
+        passthrough: true
+      rule: "HostSNI(`{{ dc_it_tools_container_name }}.{{ domain_1 }}`)"
+      service: traefik-application-1-svc
+
+    adguard-application-1-rtr:
+      entryPoints:
+        - websecure
+      tls:
+        passthrough: true
+      rule: "HostSNI(`{{ dc_adguard_container_name }}{{ '' if env == 'prod' else '-' + env }}.{{ domain_1 }}`)"
+      service: traefik-application-1-svc
 
 # ! ------------------------ Middlewares ------------------------ ! #

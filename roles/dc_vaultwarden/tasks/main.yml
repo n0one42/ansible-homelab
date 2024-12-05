@@ -9,13 +9,13 @@
     db_port: "{{ dc_vaultwarden_db_port }}" # "5432"
   block:
   # ! --------------------------- Networks --------------------------- ! #
-    - name: Create network for --> {{ app_name }}
+    - name: Create network for --> {{ dc_vaultwarden_container_name }}
       community.docker.docker_network:
-        name: "{{ app_name }}_net"
+        name: "{{ dc_vaultwarden_net.name }}"
         driver: bridge
         internal: true
         ipam_config:
-          - subnet: "{{ dc_vaultwarden_net_cidr }}"
+          - subnet: "{{ dc_vaultwarden_net.subnet }}"
       when: not dc_vaultwarden_use_sqlite
 
 
@@ -24,17 +24,18 @@
       ansible.builtin.import_role:
         name: dc_postgresql_bitnami
       vars:
+        dc_postgresql_bitnami_parent_app_name: "{{ dc_vaultwarden_container_name }}"
         dc_postgresql_bitnami_create_with_userns: "{{ dc_vaultwarden_db_create_with_userns }}"
-        dc_postgresql_bitnami_image_version: "{{ dc_vaultwarden_db_image_version }}"
+        dc_postgresql_bitnami_image: "{{ dc_vaultwarden_db_image }}"
         dc_postgresql_bitnami_db_superuser_pw: "{{ dc_vaultwarden_db_superuser_pw }}"
         dc_postgresql_bitnami_db_name: "{{ dc_vaultwarden_db_name }}"
         dc_postgresql_bitnami_db_user_name: "{{ dc_vaultwarden_db_user_name }}"
         dc_postgresql_bitnami_db_port: "{{ dc_vaultwarden_db_port }}"
-        dc_postgresql_bitnami_net_ip: "{{ dc_vaultwarden_net_db_ip }}"
+        dc_postgresql_bitnami_net_ip: "{{ dc_vaultwarden_net.db_ip }}"
       when: not dc_vaultwarden_use_sqlite
 
   # * ----------------------- Vaultwarden App ------------------------- *
-    - name: Create app --> {{ app_name }}
+    - name: Create app --> {{ dc_vaultwarden_container_name }}
       vars:
         container_type: "app" # => app, db, redis
         user: "{{ (dc_vaultwarden_create_with_userns | bool) | ternary(dc_vaultwarden_u_g_id + 100000, dc_vaultwarden_u_g_id) }}"
@@ -44,6 +45,17 @@
           ansible.builtin.import_role:
             name: filesystem_manager
           vars:
+            filesystem_manager_secret_files_to_create:
+              - var_name: database_url
+                content: "postgresql://{{ db_user_name }}:{{ db_user_pw }}@{{ dc_vaultwarden_net_db_ip }}:{{ db_port }}/{{ db_name }}"
+          when: not dc_vaultwarden_use_sqlite
+
+        - name: '[Required] filesystem_manager role'
+          ansible.builtin.import_role:
+            name: filesystem_manager
+          vars:
+            filesystem_manager_app_name: "{{ dc_vaultwarden_container_name }}"
+            filesystem_manager_restart_container_on_template_change: true
             filesystem_manager_appdata_directories_to_create:
               - path: "data"
             filesystem_manager_secret_files_to_create:
@@ -53,17 +65,6 @@
             #   - src: "vaultwarden_environments.sh.j2"
             #     dest: "vaultwarden_environments.sh"
             #     mode: "0400"
-          notify:
-            - Restart vaultwarden
-
-        - name: '[Required] filesystem_manager role'
-          ansible.builtin.import_role:
-            name: filesystem_manager
-          vars:
-            filesystem_manager_secret_files_to_create:
-              - var_name: database_url
-                content: "postgresql://{{ db_user_name }}:{{ db_user_pw }}@{{ dc_vaultwarden_net_db_ip }}:{{ db_port }}/{{ db_name }}"
-          when: not dc_vaultwarden_use_sqlite
 
         - name: Install docker compose vaultwarden with inline definition
           vars:
@@ -78,7 +79,7 @@
                 | combine(
                   {
                     "app_net": {
-                      "name": app_name ~ "_net",
+                      "name": dc_vaultwarden_net.name,
                       "external": true
                     }
                   } if not dc_vaultwarden_use_sqlite else {}
@@ -89,13 +90,13 @@
               {{
                 {
                   "traefik_net": {
-                    "ipv4_address": dc_traefik_net_vaultwarden_ip if dc_traefik_net_vaultwarden_ip is defined and dc_traefik_net_vaultwarden_ip | length > 0 else {}
+                    "ipv4_address": dc_traefik_net.vaultwarden_ip
                   }
                 }
                 | combine(
                   {
                     "app_net": {
-                      "ipv4_address": dc_vaultwarden_net_app_ip if dc_vaultwarden_net_app_ip is defined and dc_vaultwarden_net_app_ip | length > 0 else {}
+                      "ipv4_address": dc_vaultwarden_net.vaultwarden_ip
                     }
                   } if not dc_vaultwarden_use_sqlite else {}
                 )
@@ -110,7 +111,7 @@
               # * ---------------------------- App ------------------------------ * #
               services:
                 vaultwarden:
-                  image: vaultwarden/server:{{ dc_vaultwarden_image_version }}
+                  image: "{{ dc_vaultwarden_image }}"
                   container_name: "{{ dc_vaultwarden_container_name }}"
                   restart: unless-stopped
                   security_opt:
@@ -137,7 +138,7 @@
                         "SIGNUPS_ALLOWED": true,
                         "INVITATIONS_ALLOWED": true,
                         "ROCKET_WORKERS": 10,
-                        "DOMAIN": "https://" + dc_vaultwarden_container_name + "." + domain_1
+                        "DOMAIN": "https://vw" + "." + domain_1
                       }
                       | combine(
                         {
@@ -150,7 +151,7 @@
                     traefik.enable: "true"
                     ## HTTP Routers
                     traefik.http.routers.vaultwarden-rtr.entrypoints: "websecure"
-                    traefik.http.routers.vaultwarden-rtr.rule: "Host(`{{ dc_vaultwarden_container_name }}.{{ domain_1 }}`)"
+                    traefik.http.routers.vaultwarden-rtr.rule: "Host(`vw{{ '' if env == 'prod' else '-' + env }}.{{ domain_1 }}`)"
                     ## Middlewares
                     # traefik.http.routers.vaultwarden-rtr.middlewares: "chain-vaultwarden@file"
                     traefik.http.routers.vaultwarden-rtr.middlewares: "chain-no-auth@file"
@@ -158,9 +159,6 @@
                     traefik.http.routers.vaultwarden-rtr.service: "vaultwarden-svc"
                     traefik.http.services.vaultwarden-svc.loadbalancer.server.port: "{{ dc_vaultwarden_port }}"
 
-
-        - name: Flush handlers
-          ansible.builtin.meta: flush_handlers
 
 # ! --------------------------- Notes --------------------------- ! #
 # https://github.com/dani-garcia/vaultwarden/wiki

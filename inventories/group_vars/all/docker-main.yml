@@ -104,7 +104,7 @@ dc_authelia_use_sqlite: true  # because not many users and db & redis = overhead
 # * ---------------->>> DB Configuration <<<---------------- * #
 # * >>> Container variables
 dc_authelia_db_create_with_userns: true
-dc_authelia_db_image_version: "latest"
+dc_authelia_db_image: "bitnami/postgresql:17"
 dc_authelia_db_log_level: ""
 dc_authelia_db_superuser_pw: ""  # Empty for generated password ; superuser name --> postgres
 dc_authelia_db_name: "authelia"
@@ -191,7 +191,7 @@ dc_crowdsec_port: 8080
 # * >>> Container variables
 dc_it_tools_container_name: "it-tools"
 dc_it_tools_create_with_userns: true
-dc_it_tools_image_version: "latest"
+dc_it_tools_image: "corentinth/it-tools:2024.10.22-7ca5933"
 dc_it_tools_log_level: ""
 
 # ? -----------------------------------------------------------------------------
@@ -201,7 +201,7 @@ dc_it_tools_log_level: ""
 # * >>> Container variables
 dc_homepage_container_name: "homepage"
 dc_homepage_create_with_userns: true
-dc_homepage_image_version: "latest"
+dc_homepage_image: "ghcr.io/gethomepage/homepage:v0.9.13"
 # dc_homepage_log_level: ""
 dc_homepage_port: 3000
 
@@ -214,7 +214,7 @@ dc_homepage_socketproxy_env_services: "1"
 dc_homepage_socketproxy_env_tasks: "1"
 
 # ? -----------------------------------------------------------------------------
-# *                                 dc_portainer                                 *
+# *                                 dc_portainer                                *
 # ? -----------------------------------------------------------------------------
 # * ------------->>> Container Configuration <<<------------ * #
 # * >>> Container variables
@@ -241,13 +241,13 @@ dc_portainer_socketproxy_env_tasks: "1"
 dc_portainer_socketproxy_env_volumes: "1"
 
 # ? -----------------------------------------------------------------------------
-# *                                  dc_vaultwarden                                 *
+# *                               dc_vaultwarden                               *
 # ? -----------------------------------------------------------------------------
 # * ------------->>> Container Configuration <<<------------ * #
 # * >>> Container variables
 dc_vaultwarden_container_name: "vaultwarden"
 dc_vaultwarden_create_with_userns: true
-dc_vaultwarden_image_version: "latest"
+dc_vaultwarden_image: "vaultwarden/server:1.32.5"
 dc_vaultwarden_log_level: "info"  # "trace", "debug", "info", "warn", "error" or "off"
 dc_vaultwarden_port: 80
 
@@ -265,7 +265,7 @@ dc_vaultwarden_use_sqlite: true # because not many users and data therefore post
 # * ---------------->>> DB Configuration <<<---------------- * #
 # * >>> Container variables
 dc_vaultwarden_db_create_with_userns: true
-dc_vaultwarden_db_image_version: "latest"
+dc_vaultwarden_db_image: "bitnami/postgresql:17"
 dc_vaultwarden_db_log_level: ""
 dc_vaultwarden_db_superuser_pw: ""  # Empty for generated password ; superuser name --> postgres
 dc_vaultwarden_db_name: "vaultwarden"

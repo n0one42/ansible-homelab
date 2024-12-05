@@ -29,17 +29,20 @@ docker_net:
     # - { base: "{{ docker_env_cidr[env] | ansible.utils.ipsubnet(24, 3) }}", size: 28 } # 10.142.3.0/28 (prod)
 # Placeholder for ansible.utils.ipsubnet(24, 2/4-7)
 dc_traefik_net:
-  name: "traefik_net"
-  subnet:       "{{ docker_env_cidr[env] | ansible.utils.ipsubnet(24, 8) }}" # 10.142.8.0/24 (prod)
-  adguard_ip:   "{{ docker_env_cidr[env] | ansible.utils.ipsubnet(24, 8) | ansible.utils.ipaddr('2') | ansible.utils.ipaddr('address') }}" # 10.142.8.2 (prod)
-  traefik_ip:   "{{ docker_env_cidr[env] | ansible.utils.ipsubnet(24, 8) | ansible.utils.ipaddr('3') | ansible.utils.ipaddr('address') }}" # 10.142.8.3 (prod)
-  crowdsec_ip:  "{{ docker_env_cidr[env] | ansible.utils.ipsubnet(24, 8) | ansible.utils.ipaddr('4') | ansible.utils.ipaddr('address') }}" # 10.142.8.4 (prod)
-  authelia_ip:  "{{ docker_env_cidr[env] | ansible.utils.ipsubnet(24, 8) | ansible.utils.ipaddr('5') | ansible.utils.ipaddr('address') }}" # 10.142.8.5 (prod)
-  loki_ip:      "{{ docker_env_cidr[env] | ansible.utils.ipsubnet(24, 8) | ansible.utils.ipaddr('6') | ansible.utils.ipaddr('address') }}" # 10.142.8.6 (prod)
-  grafana_ip:   "{{ docker_env_cidr[env] | ansible.utils.ipsubnet(24, 8) | ansible.utils.ipaddr('7') | ansible.utils.ipaddr('address') }}" # 10.142.8.7 (prod)
-  cadvisor_ip:  "{{ docker_env_cidr[env] | ansible.utils.ipsubnet(24, 8) | ansible.utils.ipaddr('8') | ansible.utils.ipaddr('address') }}" # 10.142.8.8 (prod)
-  prometheus_ip: "{{ docker_env_cidr[env] | ansible.utils.ipsubnet(24, 8) | ansible.utils.ipaddr('9') | ansible.utils.ipaddr('address') }}" # 10.142.8.9 (prod)
-  vector_ip:     "{{ docker_env_cidr[env] | ansible.utils.ipsubnet(24, 8) | ansible.utils.ipaddr('10') | ansible.utils.ipaddr('address') }}" # 10.142.8.10 (prod)
+  name:           "traefik_net"
+  subnet:         "{{ docker_env_cidr[env] | ansible.utils.ipsubnet(24, 8) }}" # 10.142.8.0/24 (prod)
+  adguard_ip:     "{{ docker_env_cidr[env] | ansible.utils.ipsubnet(24, 8) | ansible.utils.ipaddr('2') | ansible.utils.ipaddr('address') }}" # 10.142.8.2 (prod)
+  traefik_ip:     "{{ docker_env_cidr[env] | ansible.utils.ipsubnet(24, 8) | ansible.utils.ipaddr('3') | ansible.utils.ipaddr('address') }}" # 10.142.8.3 (prod)
+  crowdsec_ip:    "{{ docker_env_cidr[env] | ansible.utils.ipsubnet(24, 8) | ansible.utils.ipaddr('4') | ansible.utils.ipaddr('address') }}" # 10.142.8.4 (prod)
+  authelia_ip:    "{{ docker_env_cidr[env] | ansible.utils.ipsubnet(24, 8) | ansible.utils.ipaddr('5') | ansible.utils.ipaddr('address') }}" # 10.142.8.5 (prod)
+  loki_ip:        "{{ docker_env_cidr[env] | ansible.utils.ipsubnet(24, 8) | ansible.utils.ipaddr('6') | ansible.utils.ipaddr('address') }}" # 10.142.8.6 (prod)
+  grafana_ip:     "{{ docker_env_cidr[env] | ansible.utils.ipsubnet(24, 8) | ansible.utils.ipaddr('7') | ansible.utils.ipaddr('address') }}" # 10.142.8.7 (prod)
+  cadvisor_ip:    "{{ docker_env_cidr[env] | ansible.utils.ipsubnet(24, 8) | ansible.utils.ipaddr('8') | ansible.utils.ipaddr('address') }}" # 10.142.8.8 (prod)
+  prometheus_ip:  "{{ docker_env_cidr[env] | ansible.utils.ipsubnet(24, 8) | ansible.utils.ipaddr('9') | ansible.utils.ipaddr('address') }}" # 10.142.8.9 (prod)
+  vector_ip:      "{{ docker_env_cidr[env] | ansible.utils.ipsubnet(24, 8) | ansible.utils.ipaddr('10') | ansible.utils.ipaddr('address') }}" # 10.142.8.10 (prod)
+  homepage_ip:    "{{ docker_env_cidr[env] | ansible.utils.ipsubnet(24, 8) | ansible.utils.ipaddr('11') | ansible.utils.ipaddr('address') }}" # 10.142.8.11 (prod)
+  it_tools_ip:    "{{ docker_env_cidr[env] | ansible.utils.ipsubnet(24, 8) | ansible.utils.ipaddr('12') | ansible.utils.ipaddr('address') }}" # 10.142.8.12 (prod)
+  vaultwarden_ip: "{{ docker_env_cidr[env] | ansible.utils.ipsubnet(24, 8) | ansible.utils.ipaddr('13') | ansible.utils.ipaddr('address') }}" # 10.142.8.13 (prod)
 
 # * ---------------------------------- >>> /26 <<< ---------------------------------- * #
 # dc_app1_26_net:
@@ -58,31 +61,36 @@ dc_traefik_net:
 
 # * ---------------------------------- >>> /28 <<< ---------------------------------- * #
 dc_crowdsec_net:
-  name: "crowdsec_net"
-  subnet: "{{ docker_env_cidr[env] | ansible.utils.ipsubnet(28, 384) }}"  # 10.142.24.0/28 (prod)
-  crowdsec_ip: "{{ docker_env_cidr[env] | ansible.utils.ipsubnet(28, 384) | ansible.utils.ipaddr('2') | ansible.utils.ipaddr('address') }}" # 10.142.24.2 (prod)
-  traefik_ip: "{{ docker_env_cidr[env] | ansible.utils.ipsubnet(28, 384) | ansible.utils.ipaddr('3') | ansible.utils.ipaddr('address') }}" # 10.142.24.3 (prod)
+  name:             "crowdsec_net"
+  subnet:           "{{ docker_env_cidr[env] | ansible.utils.ipsubnet(28, 384) }}"  # 10.142.24.0/28 (prod)
+  crowdsec_ip:      "{{ docker_env_cidr[env] | ansible.utils.ipsubnet(28, 384) | ansible.utils.ipaddr('2') | ansible.utils.ipaddr('address') }}" # 10.142.24.2 (prod)
+  traefik_ip:       "{{ docker_env_cidr[env] | ansible.utils.ipsubnet(28, 384) | ansible.utils.ipaddr('3') | ansible.utils.ipaddr('address') }}" # 10.142.24.3 (prod)
 dc_authelia_net:
-  name: "authelia_net"
-  subnet: "{{ docker_env_cidr[env] | ansible.utils.ipsubnet(28, 385) }}"  # 10.142.24.16/28 (prod)
-  authelia_ip: "{{ docker_env_cidr[env] | ansible.utils.ipsubnet(28, 385) | ansible.utils.ipaddr('2') | ansible.utils.ipaddr('address') }}" # 10.142.24.18 (prod)
-  db_ip: "{{ docker_env_cidr[env] | ansible.utils.ipsubnet(28, 385) | ansible.utils.ipaddr('3') | ansible.utils.ipaddr('address') }}" # 10.142.24.19 (prod)
-  redis_ip: "{{ docker_env_cidr[env] | ansible.utils.ipsubnet(28, 385) | ansible.utils.ipaddr('4') | ansible.utils.ipaddr('address') }}" # 10.142.24.20 (prod)
+  name:             "authelia_net"
+  subnet:           "{{ docker_env_cidr[env] | ansible.utils.ipsubnet(28, 385) }}"  # 10.142.24.16/28 (prod)
+  authelia_ip:      "{{ docker_env_cidr[env] | ansible.utils.ipsubnet(28, 385) | ansible.utils.ipaddr('2') | ansible.utils.ipaddr('address') }}" # 10.142.24.18 (prod)
+  db_ip:            "{{ docker_env_cidr[env] | ansible.utils.ipsubnet(28, 385) | ansible.utils.ipaddr('3') | ansible.utils.ipaddr('address') }}" # 10.142.24.19 (prod)
+  redis_ip:         "{{ docker_env_cidr[env] | ansible.utils.ipsubnet(28, 385) | ansible.utils.ipaddr('4') | ansible.utils.ipaddr('address') }}" # 10.142.24.20 (prod)
 dc_grafana_net:
-  name: "grafana_net"
-  subnet: "{{ docker_env_cidr[env] | ansible.utils.ipsubnet(28, 386) }}"  # 10.142.24.32/28 (prod)
-  grafana_ip: "{{ docker_env_cidr[env] | ansible.utils.ipsubnet(28, 386) | ansible.utils.ipaddr('2') | ansible.utils.ipaddr('address') }}" # 10.142.24.34 (prod)
-  db_ip: "{{ docker_env_cidr[env] | ansible.utils.ipsubnet(28, 386) | ansible.utils.ipaddr('3') | ansible.utils.ipaddr('address') }}" # 10.142.24.35 (prod)
-  loki_ip: "{{ docker_env_cidr[env] | ansible.utils.ipsubnet(28, 386) | ansible.utils.ipaddr('4') | ansible.utils.ipaddr('address') }}" # 10.142.24.36 (prod)
-  prometheus_ip: "{{ docker_env_cidr[env] | ansible.utils.ipsubnet(28, 386) | ansible.utils.ipaddr('5') | ansible.utils.ipaddr('address') }}" # 10.142.24.37 (prod)
-  vector_ip: "{{ docker_env_cidr[env] | ansible.utils.ipsubnet(28, 386) | ansible.utils.ipaddr('6') | ansible.utils.ipaddr('address') }}" # 10.142.24.38 (prod)
-  cadvisor_ip: "{{ docker_env_cidr[env] | ansible.utils.ipsubnet(28, 386) | ansible.utils.ipaddr('7') | ansible.utils.ipaddr('address') }}" # 10.142.24.39 (prod)
-  promtail_ip: "{{ docker_env_cidr[env] | ansible.utils.ipsubnet(28, 386) | ansible.utils.ipaddr('8') | ansible.utils.ipaddr('address') }}" # 10.142.24.40 (prod)
-  nodeexporter_ip: "{{ docker_env_cidr[env] | ansible.utils.ipsubnet(28, 386) | ansible.utils.ipaddr('9') | ansible.utils.ipaddr('address') }}" # 10.142.24.41 (prod)
-  influxdb_ip: "{{ docker_env_cidr[env] | ansible.utils.ipsubnet(28, 386) | ansible.utils.ipaddr('10') | ansible.utils.ipaddr('address') }}" # 10.142.24.42 (prod)
+  name:             "grafana_net"
+  subnet:           "{{ docker_env_cidr[env] | ansible.utils.ipsubnet(28, 386) }}"  # 10.142.24.32/28 (prod)
+  grafana_ip:       "{{ docker_env_cidr[env] | ansible.utils.ipsubnet(28, 386) | ansible.utils.ipaddr('2') | ansible.utils.ipaddr('address') }}" # 10.142.24.34 (prod)
+  db_ip:            "{{ docker_env_cidr[env] | ansible.utils.ipsubnet(28, 386) | ansible.utils.ipaddr('3') | ansible.utils.ipaddr('address') }}" # 10.142.24.35 (prod)
+  loki_ip:          "{{ docker_env_cidr[env] | ansible.utils.ipsubnet(28, 386) | ansible.utils.ipaddr('4') | ansible.utils.ipaddr('address') }}" # 10.142.24.36 (prod)
+  prometheus_ip:    "{{ docker_env_cidr[env] | ansible.utils.ipsubnet(28, 386) | ansible.utils.ipaddr('5') | ansible.utils.ipaddr('address') }}" # 10.142.24.37 (prod)
+  vector_ip:        "{{ docker_env_cidr[env] | ansible.utils.ipsubnet(28, 386) | ansible.utils.ipaddr('6') | ansible.utils.ipaddr('address') }}" # 10.142.24.38 (prod)
+  cadvisor_ip:      "{{ docker_env_cidr[env] | ansible.utils.ipsubnet(28, 386) | ansible.utils.ipaddr('7') | ansible.utils.ipaddr('address') }}" # 10.142.24.39 (prod)
+  promtail_ip:      "{{ docker_env_cidr[env] | ansible.utils.ipsubnet(28, 386) | ansible.utils.ipaddr('8') | ansible.utils.ipaddr('address') }}" # 10.142.24.40 (prod)
+  nodeexporter_ip:  "{{ docker_env_cidr[env] | ansible.utils.ipsubnet(28, 386) | ansible.utils.ipaddr('9') | ansible.utils.ipaddr('address') }}" # 10.142.24.41 (prod)
+  influxdb_ip:      "{{ docker_env_cidr[env] | ansible.utils.ipsubnet(28, 386) | ansible.utils.ipaddr('10') | ansible.utils.ipaddr('address') }}" # 10.142.24.42 (prod)
   elasticsearch_ip: "{{ docker_env_cidr[env] | ansible.utils.ipsubnet(28, 386) | ansible.utils.ipaddr('11') | ansible.utils.ipaddr('address') }}" # 10.142.24.43 (prod)
-  testing_ip: "{{ docker_env_cidr[env] | ansible.utils.ipsubnet(28, 386) | ansible.utils.ipaddr('12') | ansible.utils.ipaddr('address') }}" # 10.142.24.44 (prod)
-  wud_ip: "{{ docker_env_cidr[env] | ansible.utils.ipsubnet(28, 386) | ansible.utils.ipaddr('13') | ansible.utils.ipaddr('address') }}" # 10.142.24.45 (prod)
+  testing_ip:       "{{ docker_env_cidr[env] | ansible.utils.ipsubnet(28, 386) | ansible.utils.ipaddr('12') | ansible.utils.ipaddr('address') }}" # 10.142.24.44 (prod)
+  wud_ip:           "{{ docker_env_cidr[env] | ansible.utils.ipsubnet(28, 386) | ansible.utils.ipaddr('13') | ansible.utils.ipaddr('address') }}" # 10.142.24.45 (prod)
+dc_vaultwarden_net:
+  name:             "vaultwarden_net"
+  subnet:           "{{ docker_env_cidr[env] | ansible.utils.ipsubnet(28, 387) }}"  # 10.142.24.48/28 (prod)
+  vaultwarden_ip:   "{{ docker_env_cidr[env] | ansible.utils.ipsubnet(28, 387) | ansible.utils.ipaddr('2') | ansible.utils.ipaddr('address') }}" # 10.142.24.50 (prod)
+  db_ip:            "{{ docker_env_cidr[env] | ansible.utils.ipsubnet(28, 387) | ansible.utils.ipaddr('3') | ansible.utils.ipaddr('address') }}" # 10.142.24.51 (prod)
 
 # dc_app63_28_net:
 #   name: "app63_net"
@@ -94,13 +102,14 @@ dc_grafana_net:
 
 # * ---------------------------------- >>> /29 <<< ---------------------------------- * #
 dc_traefik_socketproxy_net:
-  subnet: "{{ docker_env_cidr[env] | ansible.utils.ipsubnet(29, 896) }}"  # 10.142.28.0/29 (prod)
-  socketproxy_ip: "{{ docker_env_cidr[env] | ansible.utils.ipsubnet(29, 896) | ansible.utils.ipaddr('2') | ansible.utils.ipaddr('address') }}" # 10.142.28.2 (prod)
-  traefik_ip: "{{ docker_env_cidr[env] | ansible.utils.ipsubnet(29, 896) | ansible.utils.ipaddr('3') | ansible.utils.ipaddr('address') }}" # 10.142.28.3 (prod)
+  subnet:           "{{ docker_env_cidr[env] | ansible.utils.ipsubnet(29, 896) }}"  # 10.142.28.0/29 (prod)
+  socketproxy_ip:   "{{ docker_env_cidr[env] | ansible.utils.ipsubnet(29, 896) | ansible.utils.ipaddr('2') | ansible.utils.ipaddr('address') }}" # 10.142.28.2 (prod)
+  traefik_ip:       "{{ docker_env_cidr[env] | ansible.utils.ipsubnet(29, 896) | ansible.utils.ipaddr('3') | ansible.utils.ipaddr('address') }}" # 10.142.28.3 (prod)
+dc_homepage_socketproxy_net:
+  subnet:           "{{ docker_env_cidr[env] | ansible.utils.ipsubnet(29, 897) }}"  # 10.142.28.8/29 (prod)
+  socketproxy_ip:   "{{ docker_env_cidr[env] | ansible.utils.ipsubnet(29, 897) | ansible.utils.ipaddr('2') | ansible.utils.ipaddr('address') }}" # 10.142.28.10 (prod)
+  homepage_ip:      "{{ docker_env_cidr[env] | ansible.utils.ipsubnet(29, 897) | ansible.utils.ipaddr('3') | ansible.utils.ipaddr('address') }}" # 10.142.28.11 (prod)
 
-# dc_app2_29_net:
-#   name: "app2_net"
-#   subnet: "{{ docker_env_cidr[env] | ansible.utils.ipsubnet(29, 897) }}"  # 10.142.28.8/29 (prod)
 # dc_app127_29_net:
 #   name: "app127_net"
 #   subnet: "{{ docker_env_cidr[env] | ansible.utils.ipsubnet(29, 1022) }}"  # 10.142.31.232/29 (prod)

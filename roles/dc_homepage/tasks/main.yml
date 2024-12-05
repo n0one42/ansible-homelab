@@ -35,6 +35,8 @@
           ansible.builtin.import_role:
             name: filesystem_manager
           vars:
+            filesystem_manager_app_name: "{{ dc_homepage_container_name }}"
+            filesystem_manager_restart_container_on_template_change: true
             filesystem_manager_appdata_directories_to_create:
               - path: "config"
             # filesystem_manager_appdata_templates_to_copy:
@@ -43,8 +45,6 @@
             filesystem_manager_appdata_templates_in_directory_to_copy:
               - src: "{{ playbook_dir | dirname }}/roles/dc_homepage/templates"
                 dest: "config"
-          notify:
-            - Restart homepage
 
         - name: Install docker compose homepage with inline definition
           community.docker.docker_compose_v2:
@@ -64,7 +64,7 @@
               # * ---------------------------- App ------------------------------ * #
               services:
                 homepage:
-                  image: ghcr.io/gethomepage/homepage:{{ dc_homepage_image_version }}
+                  image: "{{ dc_homepage_image }}"
                   container_name: "{{ dc_homepage_container_name }}"
                   restart: unless-stopped
                   security_opt:
@@ -74,7 +74,8 @@
                   user: "{{ dc_homepage_u_g_id }}:{{ dc_homepage_u_g_id }}"
                   networks:
                     # socketproxy_net: "{{ {'ipv4_address': dc_homepage_socketproxy_net_app_ip} if dc_homepage_socketproxy_net_app_ip is defined and dc_homepage_socketproxy_net_app_ip | length > 0 else {} }}"
-                    traefik_net: "{{ {'ipv4_address': dc_traefik_net_homepage_ip} if dc_traefik_net_homepage_ip is defined and dc_traefik_net_homepage_ip | length > 0 else {} }}"
+                    traefik_net: # "{{ {'ipv4_address': dc_traefik_net_homepage_ip} if dc_traefik_net_homepage_ip is defined and dc_traefik_net_homepage_ip | length > 0 else {} }}"
+                      ipv4_address: "{{ dc_traefik_net.homepage_ip }}"
                   # ports:
                   #   - "{{ dc_homepage_port }}:3000"
                   volumes:
@@ -88,16 +89,13 @@
                     traefik.enable: "true"
                     ## HTTP Routers
                     traefik.http.routers.homepage-rtr.entrypoints: "websecure"
-                    traefik.http.routers.homepage-rtr.rule: "Host(`{{ dc_homepage_container_name }}.{{ domain_1 }}`)"
+                    traefik.http.routers.homepage-rtr.rule: "Host(`{{ dc_homepage_container_name }}{{ '' if env == 'prod' else '-' + env }}.{{ domain_1 }}`)"
                     ## Middlewares
                     traefik.http.routers.homepage-rtr.middlewares: "chain-authelia@file"
                     ## HTTP Services
                     traefik.http.routers.homepage-rtr.service: "homepage-svc"
                     traefik.http.services.homepage-svc.loadbalancer.server.port: "{{ dc_homepage_port }}"
 
-
-        - name: Flush handlers
-          ansible.builtin.meta: flush_handlers
 
 # ! --------------------------- Notes --------------------------- ! #
 # I just decided not to use any docker ingegration but manually manage them by config files. Its just up to you. It works otherwise.

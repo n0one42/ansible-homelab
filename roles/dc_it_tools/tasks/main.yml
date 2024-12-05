@@ -14,7 +14,7 @@
       # * ---------------------------- App ------------------------------ * #
       services:
         it-tools:
-          image: corentinth/it-tools:{{ dc_it_tools_image_version }}
+          image: "{{ dc_it_tools_image }}"
           container_name: "{{ dc_it_tools_container_name }}"
           restart: unless-stopped
           security_opt:
@@ -23,14 +23,15 @@
           userns_mode: "{{ 'host' if dc_it_tools_create_with_userns | bool == false else 'remap' }}"
           # user: "{{ dc_it_tools_u_g_id }}:{{ dc_it_tools_u_g_id }}"
           networks:
-            traefik_net: "{{ {'ipv4_address': dc_traefik_net_it_tools_ip} if dc_traefik_net_it_tools_ip is defined and dc_traefik_net_it_tools_ip | length > 0 else {} }}"
+            traefik_net: # "{{ {'ipv4_address': dc_traefik_net_it_tools_ip} if dc_traefik_net_it_tools_ip is defined and dc_traefik_net_it_tools_ip | length > 0 else {} }}"
+              ipv4_address: "{{ dc_traefik_net.it_tools_ip }}"
           # ports:
           #   - "8088:80"
           labels:
             traefik.enable: "true"
             ## HTTP Routers
             traefik.http.routers.it-tools-rtr.entrypoints: "websecure"
-            traefik.http.routers.it-tools-rtr.rule: "Host(`{{ dc_it_tools_container_name }}.{{ domain_1 }}`)"
+            traefik.http.routers.it-tools-rtr.rule: "Host(`{{ dc_it_tools_container_name }}{{ '' if env == 'prod' else '-' + env }}.{{ domain_1 }}`)"
             ## Middlewares
             traefik.http.routers.it-tools-rtr.middlewares: "chain-authelia@file"
             ## HTTP Services
