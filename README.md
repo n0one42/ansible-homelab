@@ -1,8 +1,7 @@
-🚧 Project Status Update 🚧
-Ongoing code refactoring in progress. Working to transform the current architecture into a more modular, standardized, and efficient system. Committed to delivering a cleaner, more robust codebase.
-
-
 # 🏠 Ansible-Powered Secure Docker Compose Environment
+
+## 🚧 Project Status Update 🚧
+Ongoing code refactoring in progress. Working to transform the current architecture into a more modular, standardized, and efficient system. Committed to delivering a cleaner, more robust codebase.
 
 ## 📚 Table of Contents
 
